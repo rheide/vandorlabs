@@ -75,7 +75,9 @@ public final class VehicleCruise {
             craft.getDataManager().set(ROUTE, new BlockPos(routeX,1,routeZ));
         }
         if (!cruising) relocate(craft.posX, SKY_OFFSET + height, craft.posZ);
-        else if(CruiseCoordinateProbe.FULL) craft.setPosition(routeX,SKY_OFFSET+height,routeZ);
+        // A restored empty craft stays at its canonical position until the saved pilot can find it.
+        else if(CruiseCoordinateProbe.FULL && craft.getPassengers().stream().anyMatch(EntityPlayerMP.class::isInstance))
+            craft.setPosition(routeX,SKY_OFFSET+height,routeZ);
         else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
         updateTerrain(height);
         return true;

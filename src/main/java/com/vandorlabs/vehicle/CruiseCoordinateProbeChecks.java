@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -128,8 +129,10 @@ final class CruiseCoordinateProbeChecks {
         pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
         world=pilot.getServerWorld();
         NBTTagCompound marker=pilot.getEntityData().getCompoundTag(ANCHOR_FIXTURE);
-        require(marker.hasUniqueId("Aircraft")&&pilot.getRidingEntity() instanceof EntityGroundVehicle,
-            "cold restart restores the saved mounted pilot");
+        require(marker.hasUniqueId("Aircraft"),"cold restart restores the player test marker");
+        Entity restored=world.getEntityFromUuid(marker.getUniqueId("Aircraft"));
+        require(pilot.getRidingEntity() instanceof EntityGroundVehicle,"cold restart restores the saved mounting; "
+            +"index reports "+restored+" rider="+pilot.posX+","+pilot.posY+","+pilot.posZ);
         craft=(EntityGroundVehicle)pilot.getRidingEntity();
         require(craft.getUniqueID().equals(marker.getUniqueId("Aircraft"))&&craft.cruise.active(),"same active saved aircraft");
         startX=marker.getDouble("AnchorX");startZ=marker.getDouble("AnchorZ");remoteX=marker.getDouble("RouteX");
