@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.vandorlabs.neoforge.redstone.NativeChannelMember;
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.neoforge.screen.NativeScreenControlService;
+import com.vandorlabs.neoforge.screen.NativeScreenCatalog;
 import com.vandorlabs.neoforge.screen.NativeScreenControls;
 import com.vandorlabs.neoforge.screen.NativeScreenPickerPolicy;
 import com.vandorlabs.neoforge.screen.NativeScreenRowEdit;
@@ -28,17 +29,17 @@ import net.minecraft.world.phys.Vec3;
 /** Authored cockpit control surfaces, with an independent row bank and receiver per face. */
 public final class NativeCockpitTouch implements NativeScreenControlService.Host {
     public static final int TOUCH=0,CENTER=1;
-    private record Surface(String id,String label,boolean monitor) {}
+    private record Surface(String id,String label,boolean monitor,String original) {}
     private static final Surface[] COCKPIT = {
-        new Surface("touch_right_keyboard","Right arm keyboard",false),
-        new Surface("screen_center","Center monitor",true),
-        new Surface("screen_left","Left monitor",true),
-        new Surface("screen_right","Right monitor",true),
-        new Surface("touch_left_forward","Left touch panel",false),
-        new Surface("touch_center_keyboard","Center keyboard",false),
-        new Surface("touch_right_forward","Right touch panel",false)
+        new Surface("touch_right_keyboard","Right arm keyboard",false,null),
+        new Surface("screen_center","Center monitor",true,null),
+        new Surface("screen_left","Left monitor",true,"bridge_bare_pilot"),
+        new Surface("screen_right","Right monitor",true,"bridge_bare_engineering"),
+        new Surface("touch_left_forward","Left touch panel",false,"console_controls_navigation_controls"),
+        new Surface("touch_center_keyboard","Center keyboard",false,"extra_bare_personal_terminal"),
+        new Surface("touch_right_forward","Right touch panel",false,"console_controls_sensor_controls")
     };
-    private static final Surface CHAIR = new Surface("touch_right_single","Right touch panel",false);
+    private static final Surface CHAIR = new Surface("touch_right_single","Right touch panel",false,"console_controls_communications_keyboard");
     public static final int MAX_SURFACES = COCKPIT.length;
     private static final double APRON=10.5/16;
     private static final List<Map<Direction,NativeYokeGeometry.Face>> FACES=faces("cockpit",COCKPIT);
@@ -66,8 +67,16 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
     }
 
     private NativeCockpitSurfaceEdit defaults(int slot){
-        int artwork=slot<=CENTER?NativeCockpitSurfaceEdit.REDSTONE:NativeCockpitSurfaceEdit.ORIGINAL;
+        int artwork=surfaces==COCKPIT&&slot<=CENTER?NativeCockpitSurfaceEdit.REDSTONE:NativeCockpitSurfaceEdit.ORIGINAL;
         return new NativeCockpitSurfaceEdit(artwork,2,1,0,ChannelList.EMPTY);
+    }
+
+    public int originalArtwork(int slot){
+        var surface=surfaces[slot];
+        if(surface.original==null)return NativeCockpitSurfaceEdit.BLACK;
+        var catalog=NativeScreenCatalog.INSTANCE;
+        int choice=surface.monitor?catalog.screenArtwork(surface.original):catalog.inputArtwork(surface.original);
+        return choice==0?NativeCockpitSurfaceEdit.BLACK:choice;
     }
 
     private NativeScreenControls empty(int slot){return new NativeScreenControls(redstone(slot),"",List.of());}

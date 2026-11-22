@@ -59,6 +59,8 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
             }else if(kind==NativeSeatKind.COCKPIT){
                 var control=NativeCockpitGeometry.button(lower(state,pos),state.getValue(FACING),pos,start,end);
                 if(control!=null)return control;
+                var grip=NativeCockpitThrottle.pick(owner,state.getValue(FACING),pos,start,end);
+                if(grip!=null)return grip.ray();
             }
             var panel=owner.cockpitTouch().pick(pos,start,end);
             if(panel!=null)return panel.hit();
@@ -93,6 +95,15 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
                         ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,control.getDirection(),actor.getMainHandItem()))
                         return InteractionResult.FAIL;
                     owner.pressLift(actor);
+                }
+                return InteractionResult.sidedSuccess(world.isClientSide);
+            }
+            var grip=NativeCockpitThrottle.pick(owner,state.getValue(FACING),pos,start,end);
+            if(grip!=null){
+                if(world instanceof ServerLevel server){
+                    if(!com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server)||!matchesAuthoredHit(world,actor,pos,grip.ray())
+                        ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,grip.ray().getDirection(),actor.getMainHandItem()))return InteractionResult.FAIL;
+                    owner.armrest(grip.index()).cycle();
                 }
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }

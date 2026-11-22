@@ -69,33 +69,48 @@ def generate(root,out):
     cockpit=source/'models/block/cockpits/cockpit'
     source_obj=(cockpit/'off.obj').read_text().replace('mtllib materials.mtl','mtllib cockpit.mtl',1)
     (native/'cockpit.obj').write_text(source_obj)
-    detached={'screen_bank':[],'screen_lift_button':[]}
-    body=[]
-    group=None
-    # Retain OBJ index declarations in each mesh. Select face groups from the
-    # authored composed pose so the bank and button retain their absolute pivots.
-    for line in source_obj.splitlines():
-        if line.startswith('g '):group=line[2:].split('__')[0]
-        if line.startswith(('f ','g ','usemtl ')):
-            (detached[group] if group in detached else body).append(line)
-        else:
-            body.append(line)
-            for lines in detached.values():lines.append(line)
+    def split_cockpit(source_obj):
+        detached={part:[] for part in ('screen_bank','screen_lift_button','throttle_left','throttle_right')}
+        body=[]
+        group=None
+        # Retain global OBJ indices in each projected mesh.
+        for line in source_obj.splitlines():
+            if line.startswith('g '):group=line[2:].split('__')[0]
+            if line.startswith(('f ','g ','usemtl ')):
+                (detached[group] if group in detached else body).append(line)
+            else:
+                body.append(line)
+                for lines in detached.values():lines.append(line)
+        return body,detached
+    body,detached=split_cockpit(source_obj)
     (native/'cockpit_body.obj').write_text('\n'.join(body)+'\n')
-    for part,lines in detached.items():
-        (native/f'cockpit_{part}.obj').write_text('\n'.join(lines)+'\n')
+    for part in ('screen_bank','screen_lift_button'):
+        (native/f'cockpit_{part}.obj').write_text('\n'.join(detached[part])+'\n')
+    single=cockpit.with_name('cockpit_single')
+    single_obj=(single/'off.obj').read_text().replace('mtllib materials.mtl','mtllib cockpit.mtl',1)
+    single_body,_=split_cockpit(single_obj)
+    (native/'cockpit_single_body.obj').write_text('\n'.join(single_body)+'\n')
+    if ((single/'throttle_left.obj').read_bytes()!=(cockpit/'throttle_left.obj').read_bytes()
+            or (single/'materials.mtl').read_bytes()!=(cockpit/'materials.mtl').read_bytes()):
+        raise ValueError('Single Cockpit lever dependencies differ from the double Cockpit')
     shutil.copyfile(cockpit/'materials.mtl',native/'cockpit.mtl')
     for entry in (cockpit/'materials.mtl').read_text().splitlines():
         if entry.startswith('map_Kd '):texture(entry.split(None,1)[1])
-    for name in ['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button']:
+    cockpit_models=['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button','cockpit_single_body']
+    for part in ('throttle_left','throttle_right'):
+        (native/f'cockpit_{part}.obj').write_text((cockpit/f'{part}.obj').read_text().replace('mtllib materials.mtl','mtllib cockpit.mtl',1))
+        cockpit_models.append(f'cockpit_{part}')
+    for name in cockpit_models:
         write(f'models/block/native_seating/{name}.json',
               {'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj',
                'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
                'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
-    for name in ['assembly','surfaces']:
+    for name in ['assembly','surfaces','rig']:
         asset=f'cockpits/cockpit/{name}.json'
         write(asset,json.loads((source/asset).read_text()))
-    names.extend(['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button'])
+    single_rig='cockpits/cockpit_single/rig.json'
+    write(single_rig,json.loads((source/single_rig).read_text()))
+    names.extend(cockpit_models)
     write('models/block/native_seating/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/bridge_chair_atlas')},'elements':[]})
     for kind in KINDS:
         base={'programmable_chair':'chair_0_1','pilot_seat':'pilot_0_0','chair_siderests':'advanced_chair','cockpit':'cockpit'}.get(kind,kind+'_1_0')

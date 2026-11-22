@@ -15,6 +15,6 @@ public record NativeSeatPayload(BlockPos pos,int window,int style,int height,int
         public void encode(RegistryFriendlyByteBuf b,NativeSeatPayload p){b.writeBlockPos(p.pos);b.writeInt(p.window);b.writeByte(p.style);b.writeByte(p.height);b.writeByte(p.angle);b.writeBoolean(p.join);}
     };
     @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
-    public static boolean apply(ServerPlayer actor,NativeSeatPayload p){var menu=NativeSeatMenu.editing(actor,p.pos,p.window);return menu!=null&&menu.tile.configure(actor,p.style,p.height,p.angle,p.join);}
+    public static boolean apply(ServerPlayer actor,NativeSeatPayload p){var menu=NativeSeatMenu.editing(actor,p.pos,p.window);return menu!=null&&menu.tile.kind()!=NativeSeatKind.COCKPIT&&menu.tile.configure(actor,p.style,p.height,p.angle,p.join);}
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer actor)apply(actor,p);}));}
 }

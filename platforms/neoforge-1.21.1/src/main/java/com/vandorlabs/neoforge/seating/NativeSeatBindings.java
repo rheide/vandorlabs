@@ -33,7 +33,7 @@ public final class NativeSeatBindings {
         event.register(Registries.ITEM,h->{for(var kind:NativeSeatKind.values()){var item=new NativeSeatItem(BLOCKS.get(kind),new Item.Properties());ITEMS.put(kind,item);h.register(id(kind.id),item);}});
         event.register(Registries.BLOCK_ENTITY_TYPE,h->{for(var root:new NativeSeatKind[]{NativeSeatKind.CHAIR,NativeSeatKind.LUXURY,NativeSeatKind.PILOT,NativeSeatKind.ADVANCED,NativeSeatKind.COCKPIT}){var kinds=root==NativeSeatKind.LUXURY?List.of(NativeSeatKind.LUXURY,NativeSeatKind.MILITARY):List.of(root);var type=BlockEntityType.Builder.of(NativeChairEntity::new,kinds.stream().map(BLOCKS::get).toArray(Block[]::new)).build(null);for(var kind:kinds)ENTITIES.put(kind,type);h.register(id(root==NativeSeatKind.LUXURY?"connected_seat":root.id),type);}});
         event.register(Registries.ENTITY_TYPE,h->{MOUNT=EntityType.Builder.<NativeChairMount>of(NativeChairMount::new,MobCategory.MISC).sized(.01F,.01F).clientTrackingRange(8).updateInterval(10).noSummon().build("vandorlabs:chair_seat");h.register(id("chair_seat"),MOUNT);});
-        event.register(Registries.MENU,h->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new NativeSeatMenu(MENU,window,inventory,buffer.readBlockPos()));h.register(id("programmable_chair"),MENU);});
+        event.register(Registries.MENU,h->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new NativeSeatMenu(MENU,window,inventory,buffer.readBlockPos(),buffer.isReadable()?buffer.readUnsignedByte():NativeChairArmrest.LEFT));h.register(id("programmable_chair"),MENU);});
     }
     @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){NativeSeatPayload.register(event);NativeChairArmrestPayload.register(event);}
     @SubscribeEvent public static void creative(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event){if(enabled()&&event.getTabKey().location().equals(id("vandorlabs")))for(var item:ITEMS.values())event.accept(item);}
@@ -46,6 +46,10 @@ public final class NativeSeatBindings {
         if(owner.cockpitTouch()!=null){
             var start=actor.getEyePosition();
             var end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
+            if(owner.kind()==NativeSeatKind.COCKPIT){
+                var grip=NativeCockpitThrottle.pick(owner,owner.getBlockState().getValue(NativeSeatBlock.FACING),pos,start,end);
+                if(grip!=null)return openThrottle(actor,owner,pos,grip);
+            }
             var panel=owner.cockpitTouch().pick(pos,start,end);
             if(panel!=null)return openSurface(actor,owner,pos,panel);
             if(owner.kind()==NativeSeatKind.COCKPIT)return openSurface(actor,owner,pos,null);
@@ -54,6 +58,21 @@ public final class NativeSeatBindings {
             if(!player.getServer().isSameThread())return false;
             player.openMenu(new SimpleMenuProvider((window,inventory,ignored)->new NativeSeatMenu(MENU,window,owner),
                 owner.getBlockState().getBlock().getName()),buffer->buffer.writeBlockPos(owner.getBlockPos()));
+        }
+        return true;
+    }
+
+    private static boolean openThrottle(Player actor,NativeChairEntity owner,BlockPos pos,NativeCockpitThrottle.Hit grip){
+        var world=owner.getLevel();
+        if(!NativeConfigurationAccess.canConfigure(actor)
+            ||!((NativeSeatBlock)owner.getBlockState().getBlock()).complete(world,owner.getBlockPos())
+            ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,grip.ray().getDirection(),actor.getMainHandItem()))return false;
+        if(actor instanceof ServerPlayer player){
+            if(!player.getServer().isSameThread()||!NativeSeatBlock.matchesAuthoredHit(world,actor,pos,grip.ray()))return false;
+            player.connection.send(owner.getUpdatePacket());
+            player.openMenu(new SimpleMenuProvider((window,inventory,ignored)->new NativeSeatMenu(MENU,window,owner,grip.index()),
+                net.minecraft.network.chat.Component.literal("Cockpit Throttles")),
+                buffer->{buffer.writeBlockPos(owner.getBlockPos());buffer.writeByte(grip.index());});
         }
         return true;
     }

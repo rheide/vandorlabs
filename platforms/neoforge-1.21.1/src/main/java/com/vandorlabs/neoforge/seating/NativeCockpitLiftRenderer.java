@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import com.vandorlabs.animation.VisualClock;
 import com.vandorlabs.neoforge.seating.NativeChairEntity;
 import com.vandorlabs.neoforge.seating.NativeCockpitSurfaceEdit;
+import com.vandorlabs.neoforge.seating.NativeCockpitThrottle;
 import com.vandorlabs.neoforge.seating.NativeSeatKind;
 import com.vandorlabs.neoforge.client.NativeMaterialPlayback;
 import com.vandorlabs.neoforge.screen.NativeYokeGeometry;
@@ -91,6 +92,15 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
                 stack.translate(-.5,0,-.5);
                 part(false,bank*NativeCockpitLift.TRAVEL,stack,buffer,light,overlay);
                 part(true,pose.button(clock),stack,buffer,light,overlay);
+                for(int side=0;side<tile.throttleCount();side++){
+                    stack.pushPose();
+                    try{
+                        var pivot=NativeCockpitThrottle.pivot(side,tile.throttleCount());
+                        stack.translate(pivot.x,pivot.y,pivot.z);
+                        stack.mulPose(Axis.XP.rotationDegrees((float)NativeCockpitThrottle.angle(side,tile.throttleStep(side),tile.throttleCount())));
+                        quads(NativeSeatModels.cockpitThrottle(side),stack,buffer,light,overlay);
+                    }finally{stack.popPose();}
+                }
             }finally{stack.popPose();}
         }
         var panel=tile.cockpitTouch();
@@ -103,13 +113,15 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
             if(pixels==0||settings.playback()==0)continue;
             if(settings.artwork()==NativeCockpitSurfaceEdit.REDSTONE)
                 touch.emitCockpit(face,panel.controls(slot),stack,buffers,FULL_LIGHT,tile.getLevel().getGameTime(),pixels);
-            else if(settings.artwork()>=0) artwork(settings,face,pixels,stack,buffers,overlay);
+            else{
+                int choice=settings.artwork()==NativeCockpitSurfaceEdit.ORIGINAL?panel.originalArtwork(slot):settings.artwork();
+                if(choice>=0)artwork(choice,settings,face,pixels,stack,buffers,overlay);
+            }
         }
     }
 
-    private void artwork(NativeCockpitSurfaceEdit settings,NativeYokeGeometry.Face face,int pixels,
+    private void artwork(int choice,NativeCockpitSurfaceEdit settings,NativeYokeGeometry.Face face,int pixels,
                          PoseStack stack,MultiBufferSource buffers,int overlay){
-        int choice=settings.artwork();
         var entry=ModernFinishCatalog.entry(choice);
         if(!artwork.containsKey(choice)){
             artwork.put(choice,NativeMaterialPlayback.capture(entry));
@@ -150,13 +162,18 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
         stack.pushPose();
         try{
             stack.translate(0,-drop,0);
-            for(var quad:NativeSeatModels.cockpitPart(button)){
-                var direction=quad.getDirection();
-                float shade=direction.getAxis()==Direction.Axis.Y?(direction==Direction.UP?1:.5F)
-                    :direction.getAxis()==Direction.Axis.X?.6F:.8F;
-                buffer.putBulkData(stack.last(),quad,shade,shade,shade,1,light,overlay);
-            }
+            quads(NativeSeatModels.cockpitPart(button),stack,buffer,light,overlay);
         }finally{stack.popPose();}
+    }
+
+    private static void quads(java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads,
+                              PoseStack stack,VertexConsumer buffer,int light,int overlay){
+        for(var quad:quads){
+            var direction=quad.getDirection();
+            float shade=direction.getAxis()==Direction.Axis.Y?(direction==Direction.UP?1:.5F)
+                :direction.getAxis()==Direction.Axis.X?.6F:.8F;
+            buffer.putBulkData(stack.last(),quad,shade,shade,shade,1,light,overlay);
+        }
     }
 
     @Override public AABB getRenderBoundingBox(NativeChairEntity tile){return new AABB(tile.getBlockPos()).inflate(1.5,1,1.5);}

@@ -34,7 +34,7 @@ final class NativeChairArmrest implements NativeChannelLatch {
     @Override public int transmissionRange() { return TransmissionSettings.DEFAULT_RANGE; }
     @Override public boolean isChannelMemberActive() {
         return NativeChannelLatch.super.isChannelMemberActive() && !owner.inert()
-            && ((NativeSeatBlock) owner.getBlockState().getBlock()).complete(owner.getLevel(), owner.getBlockPos());
+            && owner.armrestEnabled(this) && ((NativeSeatBlock) owner.getBlockState().getBlock()).complete(owner.getLevel(), owner.getBlockPos());
     }
     @Override public boolean isChannelLatch() { return true; }
     @Override public int latchedLevel(int channel) { return levels.getOrDefault(channel, 0); }
@@ -75,11 +75,16 @@ final class NativeChairArmrest implements NativeChannelLatch {
         return step == 0 ? 0 : min + (max - min) * (step - 1) / 2;
     }
 
-    void cycle() {
+    int step() {
         int step = 0;
         for (int i = 1; i < 4; i++) {
             if (Math.abs(detent(i) - level) < Math.abs(detent(step) - level)) step = i;
         }
+        return step;
+    }
+
+    void cycle() {
+        int step = step();
         int next = detent((step + 1) % 4);
         if (next == detent(step)) next = detent((step + 2) % 4);
         if (channels.isEmpty()) {
