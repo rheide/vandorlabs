@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.vehicle;
 import com.vandorlabs.neoforge.seating.NativeSeatBindings;
 import com.vandorlabs.neoforge.seating.NativeSeatBlock;
 import com.vandorlabs.neoforge.seating.NativeSeatKind;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,7 +21,9 @@ public final class NativeVehicleCouplerChecks {
             world.setBlock(controller, NativeVehicleBindings.CONTROLLER.defaultBlockState(), Block.UPDATE_ALL);
             world.setBlock(pilot, seat, Block.UPDATE_ALL);
             world.setBlock(pilot.above(), seat.setValue(NativeSeatBlock.UPPER, true), Block.UPDATE_ALL);
-            var scan = NativeVehicleScan.scan(world, controller);
+            UUID owner = new UUID(0, 1);
+            ((NativeVehicleControllerEntity)world.getBlockEntity(controller)).placedBy(owner);
+            var scan = NativeVehicleScan.scan(world, controller, owner);
             var cells = scan.physical().cells();
             check.accept(cells.size() == (paired ? 7 : 5)
                             && cells.stream().anyMatch(cell -> cell.pos.equals(head.east(2))) == paired,

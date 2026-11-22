@@ -76,7 +76,8 @@ a **Channel status** row shows the received level.
 With Mekanism installed, a Basic, Advanced, Elite or Ultimate Fluid Tank can supply
 a Fluid Port. An Energy Cube of the same four tiers can exchange energy through a
 Power Port. Set the Cube’s faces and empty its charging slots before assembly.
-Mekanism’s owner and security settings still apply. Face settings rotate with the
+Both the player scanning or assembling the hull and the Vehicle Controller’s
+owner need access to its Mekanism storage and RFTools cells. Face settings rotate with the
 parked vehicle. Immersive Engineering ethanol works in the Maxwell tank.
 
 RFTools Power’s Simple, regular and Advanced **Dimensional Cells** can exchange

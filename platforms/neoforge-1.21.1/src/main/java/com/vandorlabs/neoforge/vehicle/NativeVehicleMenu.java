@@ -85,7 +85,7 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
 
     private void scan(ServerPlayer player) {
         try {
-            var source=NativeVehicleScan.scan(player.serverLevel(),controller.getBlockPos());
+            var source=NativeVehicleScan.scan(player.serverLevel(),controller.getBlockPos(),player.getUUID());
             var info=NativeVehiclePropulsion.preview(source.local(),player.serverLevel(),controller.getBlockPos());
             put(0,source.local().cells().size());
             number(1,info.mass()); number(2,info.effectiveMass()); put(3,info.drives()); put(4,info.fuel());

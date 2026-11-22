@@ -175,7 +175,7 @@ public final class NativeVehicleFlightFixture {
                 var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, engine.maxwellPort(side), side);
                 require(inlet != null && inlet.fill(new FluidStack(fuel, 1), FluidAction.EXECUTE) == 1, "real Maxwell fuel inlet");
                 actor.teleportTo(root.getX() + 1.5, root.getY() - 1, root.getZ() - 1.5);
-                var hull = NativeVehicleScan.scan(world, root);
+                var hull = NativeVehicleScan.scan(world, root, actor.getUUID());
                 var admissionProbe = new NativeGroundVehicle(NativeVehicleBindings.VEHICLE, world);
                 admissionProbe.install(hull.local(), hull.pilot(), hull.facing());
                 require(admissionProbe.statusPanels().size() == 1, "Flight monitor present in verified assembly preview");

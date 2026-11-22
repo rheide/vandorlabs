@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 
@@ -16,8 +18,13 @@ import net.minecraft.world.phys.AABB;
 final class NativeVehicleScan {
     record Result(NativeTransferSnapshot physical, NativeTransferSnapshot local, BlockPos pilot, Direction facing) {}
 
-    static Result scan(ServerLevel world, BlockPos controller) {
+    static Result scan(ServerLevel world, BlockPos controller, UUID actor) {
         if (!world.getServer().isSameThread()) throw new IllegalStateException("Vehicle scan requires its server thread");
+        requireLoaded(world, controller);
+        if (!(world.getBlockEntity(controller) instanceof NativeVehicleControllerEntity root)) {
+            throw new IllegalArgumentException("Missing Vehicle Controller");
+        }
+        UUID owner = root.ownerId();
         var visited = new HashSet<BlockPos>();
         var pending = new ArrayDeque<BlockPos>();
         var cells = new ArrayList<NativeRawCell>();
@@ -47,17 +54,9 @@ final class NativeVehicleScan {
             if (tile != null && !NativeVehicleStructure.supportsTile(tile)) {
                 throw new IllegalArgumentException("Unsupported or retained vehicle data at " + pos.toShortString());
             }
-            boolean rfCell = NativeVehicleRftoolsCell.supports(state);
-            if (rfCell) {
-                var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
-                NativeVehicleRftoolsCell.requireAccess(tile, owner.ownerId());
-            }
+            requireStorageAccess(world, pos, state, tile, owner, actor);
             var raw = tile == null ? null : tile.saveWithFullMetadata(world.registryAccess());
-            if (raw != null && (NativeVehicleMekanismTank.supports(state) || NativeVehicleMekanismCube.supports(state))) {
-                var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
-                NativeVehicleMekanismAccess.require(owner.ownerId(), world, pos, state, tile);
-            }
-            if (rfCell) NativeVehicleRftoolsCell.contents(raw);
+            if (NativeVehicleRftoolsCell.supports(state)) NativeVehicleRftoolsCell.contents(raw);
             if (raw != null && (tileBytes += raw.sizeInBytes()) > NativeVehicleStructure.LIMITS.bytes()) {
                 throw new IllegalArgumentException("Vehicle storage exceeds the capture byte bound");
             }
@@ -86,6 +85,16 @@ final class NativeVehicleScan {
         var local = NativeVehicleStructure.translate(physical, BlockPos.ZERO.subtract(controller), Rotation.NONE);
         NativeVehicleStructure.validate(local, pilot, facing, world.registryAccess());
         return new Result(physical, local, pilot, facing);
+    }
+
+    static void requireStorageAccess(ServerLevel world, BlockPos pos, BlockState state, BlockEntity tile, UUID owner, UUID actor) {
+        if (NativeVehicleRftoolsCell.supports(state)) {
+            NativeVehicleRftoolsCell.requireAccess(tile, owner);
+            if (!Objects.equals(owner, actor)) NativeVehicleRftoolsCell.requireAccess(tile, actor);
+        } else if (NativeVehicleMekanismTank.supports(state) || NativeVehicleMekanismCube.supports(state)) {
+            NativeVehicleMekanismAccess.require(owner, world, pos, state, tile);
+            if (!Objects.equals(owner, actor)) NativeVehicleMekanismAccess.require(actor, world, pos, state, tile);
+        }
     }
 
     /** Checks for hull edits in the gap before the durable reservation becomes active. */

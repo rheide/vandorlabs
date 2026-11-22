@@ -131,7 +131,7 @@ final class NativeVehicleRftoolsCellFixture {
 
     private void refuse(String expected) {
         try {
-            NativeVehicleScan.scan(world, root);
+            NativeVehicleScan.scan(world, root, ((NativeVehicleControllerEntity)world.getBlockEntity(root)).ownerId());
         } catch (IllegalArgumentException refused) {
             need(refused.getMessage().contains(expected), "expected " + expected + ", got " + refused.getMessage());
             return;

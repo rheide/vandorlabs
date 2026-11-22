@@ -67,10 +67,12 @@ final class NativeVehicleMekanismCubeFixture {
     void verifyRefusals() {
         var source = world.getBlockEntity(sourceCube);
         var correct = source.saveWithFullMetadata(world.registryAccess());
+        UUID visitor = new UUID(0, 99);
+        requireRefusal(visitor, "Mekanism security refused");
         var wrongOwner = correct.copy();
-        wrongOwner.getCompound("component_security").putUUID("owner", new UUID(0, 99));
+        wrongOwner.getCompound("component_security").putUUID("owner", visitor);
         source.loadWithComponents(wrongOwner, world.registryAccess());
-        requireRefusal("Mekanism security refused");
+        requireRefusal(visitor, "Mekanism security refused");
         source.loadWithComponents(correct.copy(), world.registryAccess());
 
         var occupied = correct.copy();
@@ -83,15 +85,15 @@ final class NativeVehicleMekanismCubeFixture {
         occupied.put("items", rows);
         source.loadWithComponents(occupied, world.registryAccess());
         require(!packed(sourceCube).getList("items", 10).isEmpty(), "actual Cube retained its charging item");
-        requireRefusal("Empty both Mekanism Energy Cube charging slots");
+        requireRefusal(owner, "Empty both Mekanism Energy Cube charging slots");
         clearSlots(source);
         source.loadWithComponents(correct, world.registryAccess());
         require(contents(sourceCube) == OUTPUT_WITH_REMAINDER, "failed capture retained the exact source");
     }
 
-    private void requireRefusal(String reason) {
+    private void requireRefusal(UUID actor, String reason) {
         try {
-            NativeVehicleScan.scan(world, root);
+            NativeVehicleScan.scan(world, root, actor);
         } catch (IllegalArgumentException refused) {
             require(refused.getMessage().contains(reason), "expected refusal " + reason + " got " + refused.getMessage());
             return;
