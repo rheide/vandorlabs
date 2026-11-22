@@ -242,13 +242,15 @@ public final class VehicleClient {
     @SubscribeEvent public void camera(net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup event) {
         if(PlacedSeatCamera.camera(event))return;
         Minecraft mc=Minecraft.getMinecraft();
-        if(mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
+        if(mc.gameSettings.debugCamEnable||mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle e=(EntityGroundVehicle)mc.player.getRidingEntity();if(e.structure==null)return;cameraFor(e);
         float partial=(float)event.getRenderPartialTicks();
-        Vec3d at=e.seatPosition(e.visualPose(partial),mc.player,partial);
-        Vec3d delta=at.subtract(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*partial,
-                mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial,
+        VehiclePose pose=e.visualPose(partial);
+        Vec3d eye=e.seatEye(pose,mc.player,partial);
+        Vec3d vanillaEye=new Vec3d(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*partial,
+                mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial+mc.player.getEyeHeight(),
                 mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*partial);
+        Vec3d delta=eye.subtract(vanillaEye);
         // CameraSetup precedes vanilla's final pitch/yaw rotations. Express the world
         // anchor correction in that camera basis, including first-person views.
         double yaw=Math.toRadians(event.getYaw()+180),pitch=Math.toRadians(event.getPitch());
@@ -258,15 +260,16 @@ public final class VehicleClient {
                 -(Math.sin(pitch)*delta.y+Math.cos(pitch)*dz));
         if(mc.gameSettings.thirdPersonView==0)return;
         // Vanilla mouse look already orbits the pilot; extend its camera arm and clip it against terrain.
-        Vec3d eye=at.addVector(0,mc.player.getEyeHeight(),0);
-        Vec3d away=mc.player.getLook((float)event.getRenderPartialTicks()).scale(mc.gameSettings.thirdPersonView==2?1:-1);
-        double distance=cameraDistance,vanilla=4;
+        boolean front=mc.gameSettings.thirdPersonView==2;
+        Vec3d away=mc.player.getLook(partial).scale(front?1:-1);
+        double distance=cameraDistance;
         for(int n=0;n<8;n++) {
             Vec3d start=eye.addVector((n%2==0?-.1:.1),(n/2%2==0?-.1:.1),(n/4==0?-.1:.1));
             RayTraceResult hit=mc.world.rayTraceBlocks(start,start.add(away.scale(cameraDistance)),false,true,false);
-            if(hit!=null){double d=Math.max(0,start.distanceTo(hit.hitVec)-.1);distance=Math.min(distance,d);vanilla=Math.min(vanilla,d);}
+            if(hit!=null)distance=Math.min(distance,Math.max(0,start.distanceTo(hit.hitVec)-.1));
         }
-        GlStateManager.translate(0,0,(mc.gameSettings.thirdPersonView==2?1:-1)*Math.max(0,distance-vanilla));
+        double adjustment=pose.tilted()?distance-PlacedSeatCamera.vanillaArm(mc,vanillaEye,front):Math.max(0,distance-4);
+        GlStateManager.translate(0,0,(front?1:-1)*adjustment);
     }
     @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){cruisePilotDraws=0;GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {

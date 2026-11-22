@@ -60,13 +60,13 @@ final class VehicleFlightMotion {
         return combined == null ? pose.world(craft.collision.bounds,px,pz) : combined;
     }
 
-    Result move(double dx, double dy, double dz, float yaw, float pitch) {
+    Result move(double dx, double dy, double dz, float yaw, float pitch, float bank) {
         prepare();
         VehiclePose from = craft.flightPose();
-        VehiclePose to = new VehiclePose(from.x + dx, from.y + dy, from.z + dz, yaw, pitch, from.facing);
+        VehiclePose to = new VehiclePose(from.x + dx, from.y + dy, from.z + dz, yaw, pitch, bank, from.facing);
         AxisAlignedBB envelope = bounds(from).union(bounds(to)).grow(.2);
         if (!loaded(envelope)) return Result.UNLOADED;
-        double angular = Math.abs(MathHelper.wrapDegrees(yaw - from.yaw)) + Math.abs(pitch - from.pitch);
+        double angular = Math.abs(MathHelper.wrapDegrees(yaw - from.yaw)) + Math.abs(pitch - from.pitch) + Math.abs(bank - from.bank);
         int steps = Math.max(1, (int) Math.ceil(Math.toRadians(angular) * radius / .12));
         VehiclePose accepted = from;
         double ceiling = craft.world.provider.getDimension()==0?Double.POSITIVE_INFINITY:craft.world.getActualHeight();
@@ -89,10 +89,27 @@ final class VehicleFlightMotion {
         return Result.MOVED;
     }
 
+    /** Separate a tilted aircraft from its contact without rotating it through the terrain. */
+    boolean retreat() {
+        VehiclePose pose = craft.flightPose();
+        double angle = Math.toRadians(pose.yaw), cos = Math.cos(angle), sin = Math.sin(angle);
+        double dx = pose.facing.getFrontOffsetX() * cos - pose.facing.getFrontOffsetZ() * sin;
+        double dz = pose.facing.getFrontOffsetX() * sin + pose.facing.getFrontOffsetZ() * cos;
+        return move(-dx*.30,0,-dz*.30,pose.yaw,pose.pitch,pose.bank)==Result.MOVED
+                || move(-dx*.24,.12,-dz*.24,pose.yaw,pose.pitch,pose.bank)==Result.MOVED
+                || move(0,.16,0,pose.yaw,pose.pitch,pose.bank)==Result.MOVED;
+    }
+
     private boolean blocked(VehiclePose from, VehiclePose to) {
         double dx=to.x-from.x,dy=to.y-from.y,dz=to.z-from.z;
-        VehiclePose beforeTravel=new VehiclePose(from.x,from.y,from.z,to.yaw,to.pitch,to.facing);
-        RigidTransform root = beforeTravel.transform(craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
+        boolean turned=from.yaw!=to.yaw||from.pitch!=to.pitch||from.bank!=to.bank;
+        if(!turned)return sweeps(from,dx,dy,dz);
+        if((dx!=0||dy!=0||dz!=0)&&sweeps(from,dx,dy,dz))return true;
+        return sweeps(new VehiclePose(from.x,from.y,from.z,to.yaw,to.pitch,to.bank,to.facing),dx,dy,dz);
+    }
+
+    private boolean sweeps(VehiclePose pose,double dx,double dy,double dz){
+        RigidTransform root = pose.transform(craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
         for (Map.Entry<Integer,VehicleCollision> body : hull.entrySet()) {
             RigidTransform transform = root.then(craft.articulation.physicalBody(body.getKey()));
             if (body.getValue().overlapsFlight(craft.world,craft,transform,dx,dy,dz)) return true;
@@ -109,10 +126,10 @@ final class VehicleFlightMotion {
         return true;
     }
 
-    double ceiling(float yaw,float pitch) {
+    double ceiling(float yaw,float pitch,float bank) {
         prepare();
         if(craft.world.provider.getDimension()==0)return com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE;
-        return craft.world.getActualHeight() - (bounds(new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw,pitch,craft.structure.facing)).maxY - craft.posY) - 1;
+        return craft.world.getActualHeight() - (bounds(new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw,pitch,bank,craft.structure.facing)).maxY - craft.posY) - 1;
     }
 
     static OrientedBounds oriented(AxisAlignedBB box, RigidTransform transform) {

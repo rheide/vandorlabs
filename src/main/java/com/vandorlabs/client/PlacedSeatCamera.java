@@ -91,7 +91,7 @@ final class PlacedSeatCamera {
     static boolean owns(BlockPos pos){return cells.containsKey(pos);}
     static String diagnostic(Minecraft mc){net.minecraft.entity.Entity ride=mc.player.getRidingEntity();return "mount="+(ride==null?"none":ride.getClass().getSimpleName()+"@"+ride.getPositionVector()+" bbox="+ride.getEntityBoundingBox())+", resolvedSeat="+seat(mc)+", cachedSeat="+seat+", dirty="+dirty+", ignored="+cells.size()+", desired="+distance+", vanilla="+lastVanilla+", arm="+lastArm+", debugCam="+mc.gameSettings.debugCamEnable+", callbacks="+blockCallbacks+"/"+bulkCallbacks+" relevantBulk="+relevantBulk+" lastBulk="+lastBulk+", "+discovery;}
     /** Match vanilla's eight rays, including its diagonal end-X offset. */
-    private static double vanillaArm(Minecraft mc,Vec3d eye,boolean front){
+    static double vanillaArm(Minecraft mc,Vec3d eye,boolean front){
         float yaw=mc.player.rotationYaw,pitch=mc.player.rotationPitch+(front?180:0);double x=-MathHelper.sin(yaw*.017453292F)*MathHelper.cos(pitch*.017453292F)*4,z=MathHelper.cos(yaw*.017453292F)*MathHelper.cos(pitch*.017453292F)*4,y=-MathHelper.sin(pitch*.017453292F)*4,d=4;
         for(int n=0;n<8;n++){double a=((n&1)*2-1)*.1F,b=(((n>>1)&1)*2-1)*.1F,c=(((n>>2)&1)*2-1)*.1F;RayTraceResult hit=mc.world.rayTraceBlocks(eye.addVector(a,b,c),eye.addVector(-x+a+c,-y+b,-z+c));if(hit!=null)d=Math.min(d,eye.distanceTo(hit.hitVec));}return d;
     }

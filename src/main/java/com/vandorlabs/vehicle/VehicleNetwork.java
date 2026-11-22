@@ -16,6 +16,7 @@ public final class VehicleNetwork {
     public static final int FRAGMENT=28000;
     static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
     private static final int FLIGHT_STATE_MAGIC=0x4d574633, FLIGHT_STATE_BYTES=35;
+    private static final int FLIGHT_BANK_MAGIC=0x4d57424b;
     static final int SNAPSHOT_SCOPE_MAGIC=0x43535331,SNAPSHOT_SCOPE_BYTES=45;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -33,7 +34,7 @@ public final class VehicleNetwork {
         public UUID associationGeneration,associationOwner;
         public double x,y,z,dy,speed;public float yaw,steering;
         public int flightPhase;
-        public float flightPitch;
+        public float flightPitch,flightBank;
         public boolean flightLanded;
         public VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
         public Packet(){}
@@ -53,30 +54,32 @@ public final class VehicleNetwork {
             b.writeInt(flightReadout.drives);b.writeInt(flightReadout.fuel);b.writeInt(flightReadout.capacity);
             b.writeFloat((float)flightReadout.mass);b.writeFloat((float)flightReadout.effectiveMass);
             b.writeFloat((float)flightReadout.thrust);b.writeFloat((float)flightReadout.ratedThrust);b.writeBoolean(flightReadout.partialMass);
+            if(flightBank!=0){b.writeInt(FLIGHT_BANK_MAGIC);b.writeFloat(flightBank);}
         }
         private boolean readFlightState(ByteBuf b){
             if(b.readableBytes()<FLIGHT_STATE_BYTES)return false;
             flightPhase=b.readUnsignedByte();flightPitch=b.readFloat();flightLanded=b.readBoolean();
             int drives=b.readInt(),fuel=b.readInt(),capacity=b.readInt();
             float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat(),rated=b.readFloat();boolean partial=b.readBoolean();
-            if(flightPhase>5||!Float.isFinite(flightPitch)||Math.abs(flightPitch)>com.vandorlabs.physics.FlightEnvelope.MAX_PITCH||
+            if(flightPhase>5||!com.vandorlabs.physics.AircraftAttitude.validPitch(flightPitch)||
                 drives<0||fuel<0||capacity<fuel||!Float.isFinite(mass)||mass<0||!Float.isFinite(effective)||effective<0||effective>mass||
                 !Float.isFinite(thrust)||thrust<0||!Float.isFinite(rated)||rated<thrust)return false;
             flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,rated,partial);return true;
         }
         public void fromBytes(ByteBuf b){
-            valid=false;flightPhase=0;flightPitch=0;flightLanded=false;flightReadout=VehicleFlightReadout.EMPTY;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
+            valid=false;flightPhase=0;flightPitch=flightBank=0;flightLanded=false;flightReadout=VehicleFlightReadout.EMPTY;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
             try{
                 type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
                 if(type==STATE){
                     flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
-                    boolean joints=false,arms=false,bodies=false,scope=false,flight=false;
+                    boolean joints=false,arms=false,bodies=false,scope=false,flight=false,bank=false;
                     while(b.isReadable()){
                         if(b.readableBytes()<4)return;int marker=b.readInt();
                         if(marker==0x4A4F494E&&!joints&&!arms&&!bodies&&!scope){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
                         else if(marker==VehicleArmMotionFrame.MAGIC&&!arms&&!bodies&&!scope){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
                         else if(marker==VehicleBodyPoseFrame.MAGIC&&!bodies&&!scope){bodies=true;bodyPose=VehicleBodyPoseFrame.read(b);}
                         else if(marker==FLIGHT_STATE_MAGIC&&!flight&&!scope){if(!readFlightState(b))return;flight=true;}
+                        else if(marker==FLIGHT_BANK_MAGIC&&flight&&!bank&&!scope){if(b.readableBytes()<4)return;flightBank=b.readFloat();if(flightPhase==0||!com.vandorlabs.physics.AircraftAttitude.validBank(flightBank))return;bank=true;}
                         else if(marker==COUPLER_SCOPE_MAGIC&&!scope){if(b.readableBytes()!=17||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;scope=true;long most=b.readLong(),least=b.readLong();if(most==0&&least==0)return;associationGeneration=new UUID(most,least);}
                         else return;
                     }
@@ -127,7 +130,7 @@ public final class VehicleNetwork {
     }
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
-        p.flightPhase=e.flightPhase();p.flightPitch=e.flightPitch();p.flightLanded=e.flightLandedState();p.flightReadout=e.flightReadout();
+        p.flightPhase=e.flightPhase();p.flightPitch=e.flightPitch();p.flightBank=e.flightBank();p.flightLanded=e.flightLandedState();p.flightReadout=e.flightReadout();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.networkDriveSpeed();p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
         p.armMotion=e.articulation.armMotion();p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();

@@ -38,7 +38,7 @@ public final class VehicleFlight {
     public static boolean canParkHover(EntityGroundVehicle craft){return VehicleLandingGear.extended(craft)&&clearance(craft)<=3;}
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null||craft.flightAltitude()>=com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING)return Double.POSITIVE_INFINITY;
-        AxisAlignedBB box=craft.flightPitch()!=0?craft.getEntityBoundingBox():craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
+        AxisAlignedBB box=craft.flightTilted()?craft.getEntityBoundingBox():craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
         double bottom=box.minY,highest=Double.NEGATIVE_INFINITY;
         int minX=net.minecraft.util.math.MathHelper.floor(box.minX+.001),maxX=net.minecraft.util.math.MathHelper.floor(box.maxX-.001);
         int minZ=net.minecraft.util.math.MathHelper.floor(box.minZ+.001),maxZ=net.minecraft.util.math.MathHelper.floor(box.maxZ-.001);
