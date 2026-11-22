@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class TileEntityModuleRack extends TileEntityAutopilot implements net.minecraft.util.ITickable {
     private static final AtomicLong NEXT_EPOCH = new AtomicLong();
+    private static final int MAX_NAVIGATION_LABEL = 256;
     // A new physical server tile owns a new appearance epoch, even when its
     // saved revision comes from an older copied/restored snapshot. Keep this
     // out of saved NBT so exact structure comparisons and transfers stay stable.
@@ -283,8 +284,16 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
             data.setInteger("AutopilotTrigger", config.activation); data.setString("RouteMarker", config.marker); data.setInteger("RouteMarkerMeta", config.markerMetadata);
             tag.setTag("ModuleConfig" + slot, data);
         }
+        if (canDepart()) {
+            tag.setBoolean("RackNavigationEnabled", enabled());
+            tag.setString("RackNavigationLabel", navigationLabel(status));
+        }
         tag.setLong("RackEpoch", localEpoch);
         return tag;
+    }
+
+    private static String navigationLabel(String value) {
+        return value.length() > MAX_NAVIGATION_LABEL ? value.substring(0, MAX_NAVIGATION_LABEL) : value;
     }
 
     /** Chunk-load tags contain placement identity but never actual items or arbitrary item NBT. */
@@ -345,6 +354,9 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
                 com.vandorlabs.rack.ModuleBatteryData.receive(modules[slot],Math.max(0,Math.min(com.vandorlabs.rack.ModuleBatteryData.CAPACITY,tag.getInteger("BatteryCharge"+slot))),false);
             } else modules[slot] = ItemStack.EMPTY;
         }
+        String label = canDepart() && tag.hasKey("RackNavigationLabel", 8)
+                ? navigationLabel(tag.getString("RackNavigationLabel")) : "Off";
+        readAutopilotVisual(canDepart() && tag.getBoolean("RackNavigationEnabled"), label);
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
         emitRedstone = tag.getBoolean("RackEmit");
         powerOut=tag.getBoolean("RackPowerOut");

@@ -112,6 +112,7 @@ final class ModuleRackAutopilotLiveChecks {
                 net.minecraft.tileentity.TileEntity restored=com.vandorlabs.copier.PhysicalTileFactory.create(player.getServerWorld(),player.world.getBlockState(at()),before);
                 need(restored instanceof TileEntityModuleRack&&((TileEntityModuleRack)restored).moduleSettings(0).channels.equals(ChannelList.of(73,74)),"physical module settings survive native reload factory");
                 need(!host.getUpdateTag().hasKey("Items")&&!host.getUpdateTag().hasKey(LegacyAutopilotMigration.BACKUP),"public Rack data excludes owned items and legacy backup");
+                navigationVisual();
             });
             if("write".equals(System.getProperty("vandorlabs.moduleRackMigrationPhase","")))ModuleRackMigrationLiveChecks.write(mc,directory);
             done=true;
@@ -119,6 +120,31 @@ final class ModuleRackAutopilotLiveChecks {
         }
         return false;
     }
+    private static void navigationVisual() {
+        TileEntityModuleRack source=new TileEntityModuleRack(),viewer=new TileEntityModuleRack();
+        ItemStack module=new ItemStack(ModItems.AUTOPILOT_MODULE);
+        NBTTagCompound privateState=new NBTTagCompound();
+        privateState.setString("PrivateRouteMarker","private-rack-snapshot");
+        ModuleAutopilotData.state(module,privateState);
+        need(source.insertModule(0,module,false),"standalone rack owns navigation module");
+        source.departureOwner=java.util.UUID.randomUUID();
+        source.departureSeat=new BlockPos(13,45,67);
+        source.setEnabled(true);
+        source.setStatus("Waiting for owner");
+        NBTTagCompound update=source.getUpdateTag();
+        need(!update.hasKey("Items")&&!update.toString().contains("private-rack-snapshot")
+                &&!update.toString().contains("AutopilotDeparture"),"public navigation label keeps ownership and departure positions private");
+        viewer.handleUpdateTag(update);
+        need(viewer.enabled()&&viewer.status.equals("Waiting for owner")&&viewer.departureSeat==null
+                &&viewer.departureOwner==null,"chunk update installs only public navigation state");
+        source.setEnabled(false);
+        viewer.onDataPacket(null,source.getUpdatePacket());
+        need(!viewer.enabled()&&viewer.status.equals("Off"),"live update clears the navigation label and flag");
+        source.setStatus(new String(new char[300]).replace('\0','x'));
+        viewer.onDataPacket(null,source.getUpdatePacket());
+        need(viewer.status.length()==256,"public navigation label is bounded");
+    }
+
     private static void navigation(net.minecraft.world.WorldServer world) {
         BlockPos base=at().south(12);for(int x=0;x<=3;x++)world.setBlockState(base.east(x).down(),net.minecraft.init.Blocks.CONCRETE.getDefaultState(),2);
         TileEntityModuleRack rack=new TileEntityModuleRack();rack.setPos(BlockPos.ORIGIN);rack.insertModule(0,new ItemStack(ModItems.AUTOPILOT_MODULE),false);

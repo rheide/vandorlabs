@@ -22,6 +22,11 @@ public class TileEntityAutopilot extends TileEntity implements RedstoneChannelMe
     public boolean departureDirect=true;
     public net.minecraft.util.math.BlockPos departureWaypoint;
     public boolean enabled(){return enabled;}
+    protected final void readAutopilotVisual(boolean running,String label){
+        enabled=running;
+        status=label;
+    }
+
     public void pulseDeparture(){setEnabled(true);scheduleStart();}
     protected boolean hasNavigationReceiver(){return true;}
     protected boolean canDepart(){return true;}
