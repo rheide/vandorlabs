@@ -43,7 +43,7 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
     public static final int MAX_SURFACES = COCKPIT.length;
     private static final double APRON=10.5/16;
     private static final List<Map<Direction,NativeYokeGeometry.Face>> FACES=faces("cockpit",COCKPIT);
-    private static final Map<Direction,NativeYokeGeometry.Face> CHAIR_FACES=faces("chair_siderests",CHAIR).getFirst();
+    private static final Map<Direction,List<NativeYokeGeometry.Face>> CHAIR_FACES=chairFaces();
     private final NativeChairEntity owner;
     private final NativeScreenControlService service;
     private final Surface[] surfaces;
@@ -246,10 +246,7 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
 
     public NativeYokeGeometry.Face surface(Direction facing,int slot,double lift){
         if(surfaces==COCKPIT)return face(facing,slot,lift);
-        var face=CHAIR_FACES.get(facing);
-        var p=face.topLeft();
-        var top=new Vec3(p.x,NativeAdvancedChairGeometry.height(p.y,owner.pilotHeight()),p.z);
-        return new NativeYokeGeometry.Face(top,face.right(),face.down(),face.normal(),face.height());
+        return CHAIR_FACES.get(facing).get(owner.pilotHeight());
     }
 
     public static NativeYokeGeometry.Face face(Direction facing){return face(facing,TOUCH,0);}
@@ -294,6 +291,20 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
                 nearest=hit;
         }
         return nearest;
+    }
+
+    private static Map<Direction,List<NativeYokeGeometry.Face>> chairFaces(){
+        var result=new EnumMap<Direction,List<NativeYokeGeometry.Face>>(Direction.class);
+        faces("chair_siderests",CHAIR).getFirst().forEach((facing,face)->{
+            var forms=new java.util.ArrayList<NativeYokeGeometry.Face>(4);
+            for(int step=0;step<4;step++){
+                var p=face.topLeft();
+                var top=new Vec3(p.x,NativeAdvancedChairGeometry.height(p.y,step),p.z);
+                forms.add(new NativeYokeGeometry.Face(top,face.right(),face.down(),face.normal(),face.height()));
+            }
+            result.put(facing,List.copyOf(forms));
+        });
+        return Map.copyOf(result);
     }
 
     private static List<Map<Direction,NativeYokeGeometry.Face>> faces(String design,Surface... surfaces){

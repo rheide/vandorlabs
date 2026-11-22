@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.seating;
 import com.vandorlabs.neoforge.redstone.NativeChannelLatch;
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.persistence.SignalControlData;
 import com.vandorlabs.redstone.TransmissionSettings;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,10 +73,12 @@ final class NativeChairArmrest implements NativeChannelLatch {
     }
 
     private int detent(int step) {
-        return step == 0 ? 0 : min + (max - min) * (step - 1) / 2;
+        return owner.kind()==NativeSeatKind.COCKPIT ? SignalControlData.levelForStep(step,min,max)
+            : step == 0 ? 0 : min + (max - min) * (step - 1) / 2;
     }
 
     int step() {
+        if(owner.kind()==NativeSeatKind.COCKPIT)return SignalControlData.stepForLevel(level,min,max);
         int step = 0;
         for (int i = 1; i < 4; i++) {
             if (Math.abs(detent(i) - level) < Math.abs(detent(step) - level)) step = i;
