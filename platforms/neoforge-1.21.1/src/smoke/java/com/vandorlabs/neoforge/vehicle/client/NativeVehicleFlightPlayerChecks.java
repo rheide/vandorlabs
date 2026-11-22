@@ -4,6 +4,7 @@ import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleFlightFixture;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
 import com.vandorlabs.physics.FlightEnvelope;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -84,11 +85,7 @@ public final class NativeVehicleFlightPlayerChecks {
                             + " target=" + at + " eye=" + player.getEyePosition() + " pose=" + craft.position());
                     return;
                 }
-                try {
-                    USE_ITEM.invoke(mc);
-                } catch (ReflectiveOperationException failure) {
-                    throw new IllegalStateException("Invoke ordinary right-click", failure);
-                }
+                rightClick(mc);
                 System.out.println("[vandorlabs][vehicle-flight-player] used actual mouse dispatch on carried Status");
                 stage++;
             }
@@ -121,14 +118,29 @@ public final class NativeVehicleFlightPlayerChecks {
                         return;
                     }
                     if (!captured && craft.flightAltitude() > 1000) {
-                        player.setXRot(70);
-                        if (++cameraTicks < 8 || !NativeCruiseSky.ready(craft)) return;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                        mc.options.hideGui = true;
+                        player.setYRot(-90);
+                        player.setXRot(38);
+                        if (++cameraTicks < 8 || cameraTicks % 8 != 0 || !NativeCruiseSky.ready(craft)) return;
                         try (var image = net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+                            int terrainPixels = 0;
+                            for (int y = image.getHeight() / 3; y < image.getHeight(); y += 3) {
+                                for (int x = 0; x < image.getWidth(); x += 3) {
+                                    int color = image.getPixelRGBA(x, y);
+                                    if (Math.abs((color & 255) - 66) <= 10 && Math.abs((color >>> 8 & 255) - 116) <= 10
+                                            && Math.abs((color >>> 16 & 255) - 64) <= 10) terrainPixels++;
+                                }
+                            }
+                            if (terrainPixels < 64 && cameraTicks < 64) return;
                             image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve("maxwell-flight-cruise.png"));
+                            NativeVehicleFlightFixture.require(terrainPixels >= 64, "camera can see seeded terrain, pixels=" + terrainPixels);
                         } catch (java.io.IOException error) {
                             throw new IllegalStateException("Native high-flight capture", error);
                         }
                         captured = true;
+                        mc.options.setCameraType(CameraType.FIRST_PERSON);
+                        mc.options.hideGui = false;
                     }
                     return;
                 }
@@ -143,7 +155,15 @@ public final class NativeVehicleFlightPlayerChecks {
         }
     }
 
-    private static void aim(Minecraft mc, Vec3 target) {
+    static void rightClick(Minecraft mc) {
+        try {
+            USE_ITEM.invoke(mc);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Invoke ordinary right-click", failure);
+        }
+    }
+
+    static void aim(Minecraft mc, Vec3 target) {
         var player = mc.player;
         var delta = target.subtract(player.getEyePosition());
         player.setYRot((float)(Math.atan2(-delta.x, delta.z) * Mth.RAD_TO_DEG));
