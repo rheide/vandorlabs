@@ -31,7 +31,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 /** Real debug overlay and carried controls while the aircraft crosses untracked columns. */
 @SideOnly(Side.CLIENT)
 final class CruiseProjectionGameplayChecks {
-    private static final BlockPos SWITCH = new BlockPos(0,2,2);
+    private static final BlockPos SWITCH = new BlockPos(0,2,2), CONTROLLER = BlockPos.ORIGIN.east();
     private static final int CHANNEL = 24791;
     private static int stage, ticks;
     private static boolean wasDebug, hudWasHidden;
@@ -66,7 +66,7 @@ final class CruiseProjectionGameplayChecks {
             hudWasHidden=mc.gameSettings.hideGUI;
             mc.gameSettings.showDebugInfo=true;
             mc.gameSettings.hideGUI=false;
-            aim(mc,clientCraft);
+            aim(mc,clientCraft,SWITCH);
             stage=1;
             return false;
         }
@@ -82,35 +82,53 @@ final class CruiseProjectionGameplayChecks {
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"cruise-geographic-f3.png"));
             mc.gameSettings.showDebugInfo=wasDebug;
-            require(isTarget(mc.player,clientCraft), "corrected client ray points at the carried rocker");
+            require(isTarget(mc.player,clientCraft,SWITCH), "corrected client ray points at the carried rocker");
             stage=2;
         }
-        if (stage == 2) {
+        if (stage == 2 || stage == 4) {
+            BlockPos target=stage==2?SWITCH:CONTROLLER;
             if(serverCheck==null){
                 serverCheck=mc.getIntegratedServer().callFromMainThread(()->{
                     EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                     return pilot.getRidingEntity()==serverCraft && pilot.getHeldItemMainhand().isEmpty()
-                            && isTarget(pilot,serverCraft);
+                            && isTarget(pilot,serverCraft,target);
                 });
                 return false;
             }
             if(!serverCheck.isDone())return false;
             boolean ready=serverCheck.get();
             serverCheck=null;
-            if(!ready){aim(mc,clientCraft);return false;}
-            require(!powered(clientCraft),"rocker starts off");
+            if(!ready){aim(mc,clientCraft,target);return false;}
+            require(isTarget(mc.player,clientCraft,target),"client ray aligned with the authorized server target " + target);
+            if(stage==2)require(!powered(clientCraft),"rocker starts off");
             MinecraftForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
-            stage=3;
+            stage++;
             return false;
         }
-        if(!powered(clientCraft))return false;
-        if(serverCheck==null){serverCheck=mc.getIntegratedServer().callFromMainThread(()->powered(serverCraft));return false;}
-        if(!serverCheck.isDone())return false;
-        require(serverCheck.get(),"real interaction toggles the authoritative carried rocker");
+        if (stage == 3) {
+            if(!powered(clientCraft))return false;
+            if(serverCheck==null){serverCheck=mc.getIntegratedServer().callFromMainThread(()->powered(serverCraft));return false;}
+            if(!serverCheck.isDone())return false;
+            require(serverCheck.get(),"real interaction toggles the authoritative carried rocker");
+            serverCheck=null;
+            ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
+                    "png",new File(output,"cruise-geographic-carried-control.png"));
+            aim(mc,clientCraft,CONTROLLER);
+            stage=4;
+            return false;
+        }
+        if(stage==5){
+            if(mc.currentScreen==null)return false;
+            require(mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview"),
+                    "real carried Controller use opens its protected dialog");
+            stage=6;
+            return false;
+        }
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
-                "png",new File(output,"cruise-geographic-carried-control.png"));
+                "png",new File(output,"cruise-geographic-controller.png"));
+        mc.displayGuiScreen(null);
         mc.gameSettings.hideGUI=hudWasHidden;
-        System.out.println("[vandorlabs][coordinate-probe] geographic HUD + real carried switch PASS");
+        System.out.println("[vandorlabs][coordinate-probe] geographic HUD + real carried switch and Controller PASS");
         return true;
     }
 
@@ -118,14 +136,14 @@ final class CruiseProjectionGameplayChecks {
         return craft.view.getBlockState(SWITCH).getValue(BlockVandorSwitch.ON);
     }
 
-    private static boolean isTarget(EntityPlayer player, EntityGroundVehicle craft) {
+    private static boolean isTarget(EntityPlayer player, EntityGroundVehicle craft, BlockPos target) {
         VehicleInteraction.Target hit=VehicleInteraction.pointed(player);
-        return hit!=null && hit.craft==craft && hit.hit.cell.pos.equals(SWITCH) && VehicleInteraction.supported(player,hit);
+        return hit!=null && hit.craft==craft && hit.hit.cell.pos.equals(target) && VehicleInteraction.supported(player,hit);
     }
 
-    private static void aim(Minecraft mc,EntityGroundVehicle craft) {
-        AxisAlignedBB box=craft.view.getBlockState(SWITCH).getBoundingBox(craft.view,SWITCH);
-        Vec3d local=new Vec3d(SWITCH).addVector((box.minX+box.maxX)/2,(box.minY+box.maxY)/2,(box.minZ+box.maxZ)/2);
+    private static void aim(Minecraft mc,EntityGroundVehicle craft,BlockPos target) {
+        AxisAlignedBB box=craft.view.getBlockState(target).getBoundingBox(craft.view,target);
+        Vec3d local=new Vec3d(target).addVector((box.minX+box.maxX)/2,(box.minY+box.maxY)/2,(box.minZ+box.maxZ)/2);
         Vec3d delta=craft.toWorld(local).subtract(mc.player.getPositionEyes(1));
         float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));
         float pitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));

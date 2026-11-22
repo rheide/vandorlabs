@@ -472,6 +472,12 @@ public final class VehicleService {
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");
     }
     static void carriedPermission(EntityPlayerMP player,EntityGroundVehicle craft,BlockPos point){
+        if(craft.cruise.active()&&CruiseCoordinateProbe.FULL){
+            // The carried cell has live route coordinates, but its terrain ownership remains at the loaded departure.
+            double x=point.getX()+.5+craft.cruise.storageX()-craft.posX;
+            double z=point.getZ()+.5+craft.cruise.storageZ()-craft.posZ;
+            point=new BlockPos(x,point.getY(),z);
+        }
         if(craft.flying()||craft.cruise.active())point=new BlockPos(point.getX(),MathHelper.clamp(point.getY(),0,player.world.getHeight()-1),point.getZ());
         permission(player,point);
     }
