@@ -8,7 +8,8 @@
 - Select Flight from Vehicle Status, build speed on a runway or accelerate from Hover, and use A/D to bank into turns. Above 45 degrees nose-up, acceleration falls and pitch eases back toward 45 degrees. Keep the pilot’s viewpoint aligned with the tilted seat and recover to a level pose after terrain contact. The Controller's Flight tab shows actual weight, the reduction from lift plates, and effective weight. Compare the current takeoff limit with the theoretical maximum from every installed drive.
 - On Forge, show cruise coordinates and waypoints in JourneyMap, start preparing the seed view at Y=200, and render it at twice the previous resolution along each axis. Selecting a manual Taxi or Hover transition above Y=256 displays a descent reminder.
 - Stretch a single texture across side-by-side Canopies or Long Canopies.
-- Cruise above Y=256 in the Overworld using geographic coordinates and seed terrain. Restore the aircraft and riders at the destination on descent.
+- Choose anchored, resident-only, or continuous physical X/Z cruise in the Forge server config. Anchored cruise is the default. A solo pilot can use physical mode to fly and operate the cockpit at the geographic coordinates shown by F3. Normal descent restores terrain at the destination.
+- Teleporting through JourneyMap or a vanilla command releases the rider. When the last pilot leaves, the craft lands at the surface beneath its geographic position.
 - Supply onboard engines and observers through Thermal Dynamics, Mekanism and Galacticraft conduits. Route RF, fluids or items through settled Arm endpoints.
 - On Vehicle Status, select Park, Taxi, Hover or Flight from a two-row grid. Unavailable modes are gray and fuel stays within the screen.
 - On Forge, choose Status or four flight instruments in the Vehicle Status folder. The Controller projects maximum speed and altitude, and lighter Maxwell aircraft gain speed sooner above Y=256.
