@@ -16,7 +16,7 @@ See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](d
 
 **Joined arm platforms:** regular and Large [Extender and Rotating Arms](docs/joined-arm-platforms.md) move connected platforms from floors, walls or ceilings. Extenders support rectangles with air holes and intermediate supports; Rotating Arms fold matching rows together. See the [construction guides and animations](docs/joined-arm-platforms.md), including editable native endpoints and optional loads on vertical Extenders.
 
-**Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
+**Vehicle systems:** [Maxwell flight and high-altitude cruise](docs/versions/version-3.0.md#taking-off), [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
 Block availability can be configured by category in the generated `config/vandorlabs-blocks.cfg`; see [category settings](docs/block-categories.md). Disabled categories are hidden from creative menus and cannot be crafted, while existing world blocks remain intact.
 

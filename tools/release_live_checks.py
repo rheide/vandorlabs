@@ -26,7 +26,7 @@ LEGACY_FOCI = (
     'vehicle-ramps', 'vehicle-taxi')
 RELEASE_FOCI = LEGACY_FOCI + (
     'navigation-vehicle', 'navigation-world', 'navigation-module', 'module-rack',
-    'appliances', 'synthesis-tower', 'maxwell-drive', 'infuser-gui', 'ramp-dialog', 'core-icons',
+    'appliances', 'synthesis-tower', 'maxwell-drive', 'vehicle-status', 'maxwell-cruise', 'infuser-gui', 'ramp-dialog', 'core-icons',
     'observer-performance', 'navigation-performance')
 OPTIONAL_FOCI = {'mekanism-tanks': 'VANDOR_LABS_TEST_MEKANISM',
                  'machine-jei': 'VANDOR_LABS_TEST_JEI'}
@@ -36,7 +36,7 @@ PRIORITY = (
     'navigation-vehicle', 'navigation-world', 'navigation-module',
     'coupler-articulation', 'ramp-axis', 'screen-chips', 'glass-migration',
     'vehicle-design', 'bridge-machines', 'utility26', 'furniture',
-    'module-rack', 'appliances', 'synthesis-tower', 'maxwell-drive', 'infuser-gui', 'ramp-dialog',
+    'module-rack', 'appliances', 'synthesis-tower', 'maxwell-drive', 'vehicle-status', 'maxwell-cruise', 'infuser-gui', 'ramp-dialog',
     'segmented-door', 'segmented-door-legacy', 'segmented-door-tall',
     'fluids', 'utility22_card_mounts', 'render-regressions', 'glass-appearance',
     'core-icons', 'vehicle-render-cost', 'render-density',

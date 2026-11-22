@@ -78,7 +78,7 @@ Vehicle security uses a retained card. It does not accept a pulse, a remembered 
 
 ## Estimated vehicle weight
 
-A completed scan stores an informational weight estimate in the Vehicle Controller, alongside its name and last-scanned shape. The Vehicle tab shows the estimate; it survives parking, saving and Vehicle Chip recording. It is the **last scanned** value: changing cargo later updates it on the next scan. It does not affect Hover speed, Taxi acceleration, collision or permissions.
+A completed scan stores a weight estimate in the Vehicle Controller, alongside its name and last-scanned shape. The Vehicle tab shows the **last scanned** value, which survives parking, saving and Vehicle Chip recording. For aircraft, the **Flight** tab compares effective weight to the thrust available from fueled Maxwell Drives. Antigravity Plates and Repulsor Arrays reduce effective weight. [Flying a Maxwell-equipped vehicle](versions/version-3.0.md#taking-off).
 
 The unit is a game weight unit, with one full stone block as the reference. Material names and block variants are used first, followed by Minecraft's material classification. Selected artwork and custom display names do not change weight.
 

@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.function.IntFunction;
 import java.util.regex.Pattern;
 
-/** Informational scan estimate. One full stone block is one weight unit; no physics reads this value. */
+/** Bounded mass estimate used by Flight. One full stone block is one weight unit. */
 public final class VehicleWeight {
     public static final int VERSION=1;
     private static final int MAX_DEPTH=8,MAX_WORK=262144,MAX_SLOTS=8192;
