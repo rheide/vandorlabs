@@ -103,15 +103,17 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
             text(g,94,count<0?"Scan failed. See the message in chat.":"Scan the connected craft to read its weight.");
             return;
         }
-        if(!flight) {text(g,92,"Actual weight: "+format.format(data.mass()));return;}
-        text(g,53,"Actual / effective weight: "+format.format(data.mass())+" / "+format.format(data.effectiveMass()));
+        String weight=FlightEnvelope.weightEquation(data.mass(),data.effectiveMass());
+        if(!flight) {text(g,92,weight);return;}
+        text(g,53,weight);
         text(g,67,"Maxwell Drives: "+data.drives()+"     Fuel: "+data.fuel()+" / "+data.capacity()+" mB");
-        text(g,81,"Available thrust: "+format.format(data.thrust())+"     Takeoff limit: "+format.format(data.takeoffMass()));
+        text(g,79,"Theoretical Max Takeoff Weight: "+(long)Math.floor(data.ratedTakeoffMass()));
+        text(g,91,"Current takeoff limit: "+(long)Math.floor(data.takeoffMass()));
         boolean supported=FlightEnvelope.canFly(data.effectiveMass(),data.thrust());
         double ceiling=minecraft.level.dimension()==Level.OVERWORLD?data.ceiling():Math.min(data.ceiling(),minecraft.level.getMaxBuildHeight()-1);
-        text(g,95,"Maximum altitude: "+(supported?"Y "+Math.round(ceiling):"unavailable"));
-        if(!supported)verse(g,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
-        else if(ceiling<FlightEnvelope.MAX_ALTITUDE && minecraft.level.dimension()==Level.OVERWORLD)
+        text(g,103,"Maximum altitude: "+(supported?"Y "+Math.round(ceiling):"unavailable"));
+        if(!supported&&data.thrust()>0)verse(g,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
+        else if(supported&&ceiling<FlightEnvelope.MAX_ALTITUDE && minecraft.level.dimension()==Level.OVERWORLD)
             verse(g,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
     }
     private void text(GuiGraphics g,int y,String message){g.drawString(font,message,12,y,0xffc4dbe8,false);}

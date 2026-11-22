@@ -20,6 +20,12 @@ public final class FlightEnvelope {
         return mass * (.25 + .75 / (1 + reduction / Math.max(1, mass)));
     }
 
+    public static String weightEquation(double actual, double effective) {
+        long gross = Math.round(actual);
+        long net = Math.round(effective);
+        return "Weight: " + gross + " actual - " + (gross - net) + " hover plates = " + net;
+    }
+
     public static double takeoffMass(double thrust) {
         return thrust * MASS_PER_THRUST;
     }

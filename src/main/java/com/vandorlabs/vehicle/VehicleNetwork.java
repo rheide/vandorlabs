@@ -15,7 +15,7 @@ public final class VehicleNetwork {
     public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18;
     public static final int FRAGMENT=28000;
     static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
-    private static final int FLIGHT_STATE_MAGIC=0x4d574632, FLIGHT_STATE_BYTES=31;
+    private static final int FLIGHT_STATE_MAGIC=0x4d574633, FLIGHT_STATE_BYTES=35;
     static final int SNAPSHOT_SCOPE_MAGIC=0x43535331,SNAPSHOT_SCOPE_BYTES=45;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -52,17 +52,17 @@ public final class VehicleNetwork {
             b.writeInt(FLIGHT_STATE_MAGIC);b.writeByte(flightPhase);b.writeFloat(flightPitch);b.writeBoolean(flightLanded);
             b.writeInt(flightReadout.drives);b.writeInt(flightReadout.fuel);b.writeInt(flightReadout.capacity);
             b.writeFloat((float)flightReadout.mass);b.writeFloat((float)flightReadout.effectiveMass);
-            b.writeFloat((float)flightReadout.thrust);b.writeBoolean(flightReadout.partialMass);
+            b.writeFloat((float)flightReadout.thrust);b.writeFloat((float)flightReadout.ratedThrust);b.writeBoolean(flightReadout.partialMass);
         }
         private boolean readFlightState(ByteBuf b){
             if(b.readableBytes()<FLIGHT_STATE_BYTES)return false;
             flightPhase=b.readUnsignedByte();flightPitch=b.readFloat();flightLanded=b.readBoolean();
             int drives=b.readInt(),fuel=b.readInt(),capacity=b.readInt();
-            float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat();boolean partial=b.readBoolean();
+            float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat(),rated=b.readFloat();boolean partial=b.readBoolean();
             if(flightPhase>5||!Float.isFinite(flightPitch)||Math.abs(flightPitch)>com.vandorlabs.physics.FlightEnvelope.MAX_PITCH||
                 drives<0||fuel<0||capacity<fuel||!Float.isFinite(mass)||mass<0||!Float.isFinite(effective)||effective<0||effective>mass||
-                !Float.isFinite(thrust)||thrust<0)return false;
-            flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,partial);return true;
+                !Float.isFinite(thrust)||thrust<0||!Float.isFinite(rated)||rated<thrust)return false;
+            flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,rated,partial);return true;
         }
         public void fromBytes(ByteBuf b){
             valid=false;flightPhase=0;flightPitch=0;flightLanded=false;flightReadout=VehicleFlightReadout.EMPTY;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;

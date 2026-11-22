@@ -12,6 +12,22 @@ The Maxwell Drive supplies thrust for Flight on Forge 1.12.2 and NeoForge 1.21.1
 
 The construction below shows the 3 × 3 × 4 frame. Use the same base, pillars and roof rim for each size. Drive mass and thrust increase with the enclosed volume.
 
+## How many drives do I need?
+
+Read the **effective weight** on the Vehicle Controller. It includes the installed drives and cargo, after lift from Antigravity Plates and Repulsor Arrays. Each column below shows the maximum whole weight units **one fueled drive at full thrust** can support at that altitude in the Overworld.
+
+| Drive size | Takeoff / Y=256 | Y=1,000 | Y=5,000 | Y=10,000 | Example ceiling with one drive |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 3 × 3 × 4 | 512 | 433 | 232 | 142 | 400 units reach Y≈1,406 |
+| 4 × 4 × 5 | 1,137 | 963 | 517 | 316 | 1,000 units reach Y≈825 |
+| 5 × 5 × 7 | 2,488 | 2,108 | 1,132 | 691 | 1,000 units reach Y≈6,082 |
+| 6 × 6 × 8 | 4,096 | 3,470 | 1,863 | 1,138 | 1,000 units reach Y=10,000 |
+| 9 × 9 × 12 | 13,824 | 11,711 | 6,287 | 3,841 | 5,000 units reach Y≈7,088 |
+
+Choose the column for your target altitude and add the capacities of the drives you plan to run. For example, a finished craft weighing **1,000 effective units** can take off with **two 3 × 3 × 4 drives** (2 × 512), but needs **five** of that size for Y=5,000 (5 × 232). **One 5 × 5 × 7** also covers that climb. Recheck the weight after adding engines or loading cargo.
+
+The Controller’s **Theoretical Max Takeoff Weight** includes every installed drive at full power. The **current takeoff limit** responds to fuel and redstone throttle. The altitude ceiling uses that current thrust.
+
 ## 1. Build the base
 
 Lay out a solid 3-block-wide by 4-block-deep floor. Place the Core in a bottom corner, facing the front of the drive. The nozzle will point toward the opposite end.

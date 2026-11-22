@@ -33,8 +33,8 @@ public final class NativeVehiclePropulsion {
     private static final int GAUGE_LIMIT = 2 * (NativeVehicleStructure.LIMITS.cells() /
             (MaxwellEngine.BASE_WIDTH * MaxwellEngine.BASE_WIDTH * MaxwellEngine.depth(MaxwellEngine.BASE_WIDTH)));
     public record Readout(double mass, double effectiveMass, int drives, int fuel, int capacity,
-                          double thrust, double takeoffMass, double ceiling, boolean canHover) {
-        static final Readout EMPTY = new Readout(0, 0, 0, 0, 0, 0, 0, 0, false);
+                          double thrust, double takeoffMass, double ratedTakeoffMass, double ceiling, boolean canHover) {
+        static final Readout EMPTY = new Readout(0, 0, 0, 0, 0, 0, 0, 0, 0, false);
     }
 
     public static Readout preview(NativeTransferSnapshot blocks, ServerLevel level, BlockPos origin) {
@@ -219,13 +219,15 @@ public final class NativeVehiclePropulsion {
         int fuel = fuel();
         double mass = dryMass + fluidMass + fuel / 1000D;
         double effective = FlightEnvelope.effectiveMass(mass, plates, repulsors);
-        double available = 0;
+        double available = 0, rated = 0;
         for (var drive : drives.values()) {
             int signal = signals.applyAsInt(drive);
-            available += MaxwellEngine.thrustUnits(drive.width) * drive.tank.throttle(drive.settings, signal, true) / 15;
+            double full = MaxwellEngine.thrustUnits(drive.width);
+            rated += full;
+            available += full * drive.tank.throttle(drive.settings, signal, true) / 15;
         }
         return new Readout(mass, effective, drives.size(), fuel, drives.size() * MaxwellEngine.CAPACITY, available,
-                FlightEnvelope.takeoffMass(available), FlightEnvelope.maximumAltitude(effective, available), canHover());
+                FlightEnvelope.takeoffMass(available), FlightEnvelope.takeoffMass(rated), FlightEnvelope.maximumAltitude(effective, available), canHover());
     }
 
     private int previewSignal(Drive drive, ServerLevel world, BlockPos origin) {

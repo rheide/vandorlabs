@@ -7,6 +7,7 @@ public final class FlightEnvelopeTest {
     }
 
     public static void main(String[] args) {
+        require(FlightEnvelope.weightEquation(230,200).equals("Weight: 230 actual - 30 hover plates = 200"),"displayed lift reduction");
         double limit=FlightEnvelope.takeoffMass(1);
         require(FlightEnvelope.canFly(limit,1)&&!FlightEnvelope.canFly(Math.nextUp(limit),1),"maximum weight inclusive");
         require(!FlightEnvelope.canFly(1,0)&&FlightEnvelope.maximumAltitude(1,0)==0,"no fueled drive");

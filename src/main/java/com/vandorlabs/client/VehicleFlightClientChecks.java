@@ -225,7 +225,7 @@ final class VehicleFlightClientChecks {
             }
             if(craft.flying()){settled=0;return false;}
             if(++settled<5)return false;
-            need(!craft.hover&&craft.vehicleMode()==1&&Math.abs(craft.flightPitch())<.01&&Math.abs(craft.posY-runwayY)<.15&&craft.flightReadout().fuel==0,
+            need(!craft.hover&&craft.vehicleMode()==1&&Math.abs(craft.flightPitch())<.01&&Math.abs(craft.posY-runwayY)<.15&&craft.flightReadout().fuel==0&&craft.flightReadout().ratedThrust==1&&craft.flightReadout().thrust==0,
                     "power loss returns a level craft to Taxi on the runway; Y="+craft.posY+" runway="+runwayY+" pitch="+craft.flightPitch()+" fuel="+craft.flightReadout().fuel);
             need(sawDeparture&&sawDescent&&sawLongClearance,"observed powered entry, recovery and measured clearance beyond 32 blocks");
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys pitch yaw coast powered-threshold fuel-loss reentry exact-clearance touchdown");

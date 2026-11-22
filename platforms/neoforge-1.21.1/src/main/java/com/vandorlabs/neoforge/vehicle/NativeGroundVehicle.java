@@ -175,7 +175,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var data = entityData.get(FLIGHT_READOUT);
         clientReadout = new NativeVehiclePropulsion.Readout(data.getDouble("Mass"), data.getDouble("EffectiveMass"),
                 data.getInt("Drives"), data.getInt("Fuel"), data.getInt("Capacity"), data.getDouble("Thrust"),
-                data.getDouble("TakeoffMass"), data.getDouble("Ceiling"), data.getBoolean("CanHover"));
+                data.getDouble("TakeoffMass"), data.getDouble("RatedTakeoffMass"), data.getDouble("Ceiling"), data.getBoolean("CanHover"));
         clientGauges.clear();
         int[] gauges = data.getIntArray("Gauges");
         if (!NativeVehiclePropulsion.gaugeArrayValid(gauges)) return;
@@ -192,6 +192,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         data.putInt("Capacity", readout.capacity());
         data.putDouble("Thrust", readout.thrust());
         data.putDouble("TakeoffMass", readout.takeoffMass());
+        data.putDouble("RatedTakeoffMass", readout.ratedTakeoffMass());
         data.putDouble("Ceiling", readout.ceiling());
         data.putBoolean("CanHover", readout.canHover());
         data.putIntArray("Gauges", propulsion.gauges());

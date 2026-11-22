@@ -273,6 +273,7 @@ public final class NativeDualMaxwellFixture {
                 && actual.mass() >= MaxwellEngine.dryMass(WIDTHS[0]) + MaxwellEngine.dryMass(WIDTHS[1])
                 && Math.abs(actual.effectiveMass() - FlightEnvelope.effectiveMass(actual.mass(), 1, 1)) < 1e-7
                 && actual.effectiveMass() < actual.mass()
+                && Math.abs(actual.ratedTakeoffMass() - FlightEnvelope.takeoffMass(MaxwellEngine.thrustUnits(WIDTHS[0]) + MaxwellEngine.thrustUnits(WIDTHS[1]))) < 1e-7
                 && Math.abs(actual.takeoffMass() - FlightEnvelope.takeoffMass(thrust)) < 1e-7
                 && Math.abs(actual.ceiling() - FlightEnvelope.maximumAltitude(actual.effectiveMass(), thrust)) < 1e-7,
                 "combined fuel capacity, reduced weight, takeoff limit and ceiling: " + actual);

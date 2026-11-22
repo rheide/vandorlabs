@@ -7,18 +7,19 @@ import net.minecraft.util.math.BlockPos;
 
 /** One controller's preflight measurements and the carried craft's current propulsion. */
 public final class VehicleFlightReadout {
-    public static final VehicleFlightReadout EMPTY = new VehicleFlightReadout(0, 0, 0, 0, 0, 0, false);
+    public static final VehicleFlightReadout EMPTY = new VehicleFlightReadout(0, 0, 0, 0, 0, 0, 0, false);
     public final int drives, fuel, capacity;
-    public final double mass, effectiveMass, thrust;
+    public final double mass, effectiveMass, thrust, ratedThrust;
     public final boolean partialMass;
 
-    public VehicleFlightReadout(int drives, int fuel, int capacity, double mass, double effectiveMass, double thrust, boolean partialMass) {
+    public VehicleFlightReadout(int drives, int fuel, int capacity, double mass, double effectiveMass, double thrust, double ratedThrust, boolean partialMass) {
         this.drives = drives;
         this.fuel = fuel;
         this.capacity = capacity;
         this.mass = mass;
         this.effectiveMass = effectiveMass;
         this.thrust = thrust;
+        this.ratedThrust = ratedThrust;
         this.partialMass = partialMass;
     }
 
@@ -26,10 +27,25 @@ public final class VehicleFlightReadout {
     public double maximumAltitude() { return FlightEnvelope.maximumAltitude(effectiveMass, thrust); }
     public boolean canFly() { return FlightEnvelope.canFly(effectiveMass, thrust); }
 
+    private static int liftUnits(VehicleStructure structure) {
+        int units = 0;
+        for (VehicleStructure.Cell cell : structure.liftCells) {
+            if (!structure.isActive(cell.pos)) continue;
+            String name = cell.state.getBlock().getRegistryName().getResourcePath();
+            if (name.startsWith("antigravity_plate")) units++;
+            if (name.startsWith("repulsor_array")) units += 2;
+        }
+        return units;
+    }
+
+    public static double effectiveWeight(VehicleStructure structure, double mass) {
+        return FlightEnvelope.effectiveMass(mass, liftUnits(structure), 0);
+    }
+
     static final class Sampler {
         private VehicleStructure structure;
         private VehicleWorld view;
-        private int plates, repulsors;
+        private int liftUnits;
         private VehicleWeight estimate;
         private double mass;
         private boolean partial;
@@ -47,13 +63,7 @@ public final class VehicleFlightReadout {
                         || !structure.bounds.equals(current.structure.bounds);
                 view = current;
                 structure = view.structure;
-                plates = repulsors = 0;
-                for (VehicleStructure.Cell cell : structure.liftCells) {
-                    if (!structure.isActive(cell.pos)) continue;
-                    String name = cell.state.getBlock().getRegistryName().getResourcePath();
-                    if (name.startsWith("antigravity_plate")) plates++;
-                    if (name.startsWith("repulsor_array")) repulsors++;
-                }
+                liftUnits = liftUnits(structure);
                 if (worldChanged) {
                     mass = scannedMass;
                     partial = scannedPartial;
@@ -76,7 +86,7 @@ public final class VehicleFlightReadout {
                 }
             }
             int count = 0, fuel = 0, capacity = 0;
-            double thrust = 0;
+            double thrust = 0, ratedThrust = 0;
             for (VehicleStructure.Cell cell : structure.maxwellCells) {
                 BlockPos pos=cell.pos;
                 if(!structure.isActive(pos))continue;
@@ -85,14 +95,16 @@ public final class VehicleFlightReadout {
                 TileEntityConstructor drive = (TileEntityConstructor) tile;
                 if (!drive.maxwell() || !drive.formed()) continue;
                 count++;
+                double fullThrust = drive.maxwellThrustUnits();
+                ratedThrust += fullThrust;
                 fuel += drive.maxwellFuel();
                 capacity += drive.maxwellCapacity();
                 if (drive.maxwellFuel() > 0) {
                     int throttle=current.parent.isRemote&&drive.screenSettings().redstone?drive.maxwellActiveLevel():drive.maxwellThrustLevel(true);
-                    thrust += drive.maxwellThrustUnits() * throttle / 15;
+                    thrust += fullThrust * throttle / 15;
                 }
             }
-            return new VehicleFlightReadout(count, fuel, capacity, mass, FlightEnvelope.effectiveMass(mass, plates, repulsors), thrust, partial);
+            return new VehicleFlightReadout(count, fuel, capacity, mass, FlightEnvelope.effectiveMass(mass, liftUnits, 0), thrust, ratedThrust, partial);
         }
     }
 

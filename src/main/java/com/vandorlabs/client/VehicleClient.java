@@ -295,7 +295,14 @@ public final class VehicleClient {
         private String observed,sent,error="";private int delay,page;
         Preview(Incoming data){
             this.data=data;if(!hasSettings())return;
-            net.minecraft.nbt.NBTTagCompound settings=settingsData();weightLabel=settings.hasKey("VehicleWeight",99)?com.vandorlabs.vehicle.VehicleWeight.label(settings.getDouble("VehicleWeight"))+(settings.getBoolean("VehicleWeightIncomplete")?" (partial)":""):"not scanned";previewShape=data.structure!=null?VehicleShapeRenderer.shape(data.structure):VehicleShapeRenderer.shape(settings);
+            net.minecraft.nbt.NBTTagCompound settings=settingsData();weightLabel="Weight: not scanned";
+            if(data.structure!=null&&settings.hasKey("VehicleWeight",99)){
+                double mass=settings.getDouble("VehicleWeight");
+                weightLabel=com.vandorlabs.physics.FlightEnvelope.weightEquation(mass,
+                        com.vandorlabs.vehicle.VehicleFlightReadout.effectiveWeight(data.structure,mass))
+                        +(settings.getBoolean("VehicleWeightIncomplete")?" (partial)":"");
+            }
+            previewShape=data.structure!=null?VehicleShapeRenderer.shape(data.structure):VehicleShapeRenderer.shape(settings);
             security=settings.getBoolean("VehicleSecurity");acceptedCard=MathHelper.clamp(settings.getInteger("VehicleCard"),0,6);sentDesign=settings.getString("VehicleName")+"|"+security+"|"+acceptedCard;
             pilotHeight=settings.getInteger("PilotHeight");
             pilotMode=settings.hasKey("PilotRedstoneMode",3)?settings.getInteger("PilotRedstoneMode"):1;
@@ -410,7 +417,7 @@ public final class VehicleClient {
                     fontRenderer.drawString("Vehicle name",l+14,t+63,0xdae8f0);
                     if(!hasMount(true))fontRenderer.drawSplitString("Attach a Data Chip Mount to write vehicle data.",l+14,t+100,(w-28)/2-4,0xaabbcc);
                     fontRenderer.drawString("Mode: "+new String[]{"Block / Park","Taxi","Hover","Flight"}[MathHelper.clamp(data.header.strafe,0,3)],l+14,t+130,0xdae8f0);
-                    if(structure!=null){fontRenderer.drawString(structure.cells.size()+" blocks / "+structure.pilotSeats().size()+" Pilot Seats",l+14,t+144,0xc4d0d8);fontRenderer.drawString(fontRenderer.trimStringToWidth(structure.gearCount+" supports / Weight: "+weightLabel,w-28),l+14,t+157,0xc4d0d8);}
+                    if(structure!=null){fontRenderer.drawString(structure.cells.size()+" blocks / "+structure.pilotSeats().size()+" Pilot Seats / "+structure.gearCount+" supports",l+14,t+144,0xc4d0d8);fontRenderer.drawString(weightLabel,l+14,t+157,0xc4d0d8);}
                     VehicleShapeRenderer.draw(previewShape,l+w*3/4F,t+100,w/2F-24,72);
                     String status=!error.isEmpty()?error:structure==null||data.header.sequence==-1?data.header.text:"Choose Taxi or Hover to assemble. Park restores native blocks.";
                     java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status==null?"Selection unavailable":status,w-28);
@@ -451,17 +458,19 @@ public final class VehicleClient {
             }
             fontRenderer.drawString("Maxwell Drives: "+readout.drives,x,y,0xdae8f0);
             String partial=readout.partialMass?" (partial)":"";
-            fontRenderer.drawString("Actual weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.mass)+partial,x,y+16,0xc4d0d8);
-            fontRenderer.drawString("Effective weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.effectiveMass)+partial,x,y+30,0xc4d0d8);
-            fontRenderer.drawString("Maximum takeoff weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.takeoffMass()),x,y+44,0xc4d0d8);
+            fontRenderer.drawString(com.vandorlabs.physics.FlightEnvelope.weightEquation(readout.mass,readout.effectiveMass)+partial,x,y+16,0xc4d0d8);
+            fontRenderer.drawString("Theoretical Max Takeoff Weight: "+weightLimit(readout.ratedThrust),x,y+30,0xc4d0d8);
+            fontRenderer.drawString("Current takeoff limit: "+weightLimit(readout.thrust),x,y+44,0xc4d0d8);
             double dimensionCeiling=mc.world.provider.getDimension()==0?com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE
                     :mc.world.getActualHeight()-(data.structure==null?1:data.structure.bounds.maxY+1);
             String altitude=readout.canFly()?String.format(java.util.Locale.ROOT,"Y %,.0f",Math.max(0,Math.min(readout.maximumAltitude(),dimensionCeiling))):"Unavailable";
             fontRenderer.drawString("Maximum flight altitude: "+altitude,x,y+58,0xc4d0d8);
-            if(readout.thrust<=0)fontRenderer.drawString("Fuel and enable the drive to calculate available thrust.",x,y+76,0xffdd88);
-            else if(!readout.canFly())haiku(x,y+76,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
-            else if(readout.maximumAltitude()<com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)haiku(x,y+76,0x9fc8ff,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
+            if(!readout.canFly() && readout.thrust>0)haiku(x,y+76,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
+            else if(readout.canFly() && readout.maximumAltitude()<com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)haiku(x,y+76,0x9fc8ff,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
             fontRenderer.drawSplitString("Select Flight on the Vehicle Status screen.",x,y+114,width,0xaabbcc);
+        }
+        private static String weightLimit(double thrust) {
+            return String.format(java.util.Locale.ROOT,"%,d units",(long)Math.floor(com.vandorlabs.physics.FlightEnvelope.takeoffMass(thrust)));
         }
         private void haiku(int x,int y,int color,String first,String second,String third){
             fontRenderer.drawString(first,x,y,color);

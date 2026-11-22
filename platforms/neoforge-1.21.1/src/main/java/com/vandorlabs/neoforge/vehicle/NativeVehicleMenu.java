@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
 
 public final class NativeVehicleMenu extends AbstractContainerMenu {
     public static final int CONVERT=0, SCAN=1, SECURITY_ON=2, SECURITY_OFF=3, EMERGENCY_PARK=4;
-    private final SimpleContainerData metrics=new SimpleContainerData(23);
+    private final SimpleContainerData metrics=new SimpleContainerData(26);
     public final NativeVehicleControllerEntity controller;
     public final NativeGroundVehicle craft;
 
@@ -70,7 +70,7 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
     public NativeVehiclePropulsion.Readout flightReadout() {
         if (craft!=null) return craft.flightReadout();
         if (get(0)<=0) return null;
-        return new NativeVehiclePropulsion.Readout(number(1),number(2),get(3),get(4),get(5),number(6),number(7),number(8),get(9)!=0);
+        return new NativeVehiclePropulsion.Readout(number(1),number(2),get(3),get(4),get(5),number(6),number(7),number(12),number(8),get(9)!=0);
     }
 
     public boolean securityEnabled(){return metrics.get(20)!=0;}
@@ -89,7 +89,7 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
             var info=NativeVehiclePropulsion.preview(source.local(),player.serverLevel(),controller.getBlockPos());
             put(0,source.local().cells().size());
             number(1,info.mass()); number(2,info.effectiveMass()); put(3,info.drives()); put(4,info.fuel());
-            put(5,info.capacity()); number(6,info.thrust()); number(7,info.takeoffMass()); number(8,info.ceiling()); put(9,info.canHover()?1:0);
+            put(5,info.capacity()); number(6,info.thrust()); number(7,info.takeoffMass()); number(12,info.ratedTakeoffMass()); number(8,info.ceiling()); put(9,info.canHover()?1:0);
         } catch (IllegalArgumentException | IllegalStateException failure) {
             put(0,-1);
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(failure.getMessage()));

@@ -36,7 +36,7 @@ For an engine, follow the [Maxwell Drive construction guide](multiblocks/maxwell
 
 Use a formed Maxwell Drive and install an onboard Vehicle Status screen. Set its thrust
 and check the Controller’s Flight tab before boarding. The tab shows total weight,
-weight after antigravity, available thrust and the highest altitude the current thrust can sustain.
+the reduction from lift plates, effective weight, and the highest altitude the current thrust can sustain. Compare the current takeoff limit with the theoretical maximum for all installed drives at full power.
 Select Flight from Vehicle Status. On a runway, build forward speed and then hold **S**
 to raise the nose. **W** lowers it and **A/D** steer. Above Y=256 the pilot sees a
 seed map of the Overworld and the instruments follow the aircraft’s geographic
