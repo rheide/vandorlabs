@@ -40,7 +40,13 @@ The Autopilot Module uses a cyan NAV label in its Module Rack, Waypoint an amber
 
 `vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1â€“32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.
 
-On Forge 1.12.2, `vehicles.reanchorResidentCruise` in `vandorlabs-blocks.cfg` defaults to `false`. High Flight then keeps its departure anchor while the geographic route advances. With the setting enabled, a piloted craft can move its physical anchor every 40 ticks after advancing at least 64 blocks. The whole rotated hull and current rider view distance must already be loaded and populated. If a column is missing or queued to unload, the craft keeps its last anchor and the geographic route continues. The hop leaves terrain between resident areas untouched. Once the craft moves its anchor, Minecraft manages already visited terrain around that new location normally. Restart the game or server after changing the setting.
+Forge 1.12.2 servers select High Flight coordinates with `vehicles.cruiseCoordinates` in `config/vandorlabs-blocks.cfg`. Restart after changing it.
+
+- `anchored` is the default. The occupied departure stays loaded while the geographic route advances. Keeping Minecraft’s ordinary entity coordinates at the anchor also prevents unrelated mods from following those positions and requesting route terrain.
+- `resident` occasionally moves the physical anchor to a destination where the full rotated hull and rider view already fit in loaded, populated columns. It tries every 40 ticks once the route is at least 64 blocks from the anchor. If a column is absent or queued to unload, travel continues with the current anchor. Minecraft manages previously visited terrain normally after a hop.
+- `physical` moves the aircraft and seated players to geographic X/Z while Minecraft tracks and saves them at the anchor. F3 shows geographic X/Z and a sky-offset Y. Use the aircraft instruments for flight altitude. Unrelated mods that read terrain at the rider’s actual position may still load route columns. Nearby players outside the anchor’s tracking area may not see the aircraft. The server falls back to anchored travel when the required Forge hooks or rider connection support are unavailable.
+
+If the selector is absent, a previous `reanchorResidentCruise=true` setting migrates to `resident`.
 
 `vehicles.maxArticulationPoints` in the same config limits independent articulation hinges in new assemblies and attachments. The default is 7 (eight movable segments); 0 allows rigid assemblies only. Its range is 0–16384, subject to the other geometry and data limits. Parallel coupling pairs, rigid couplers and loops do not add hinge points. Lowering this startup limit does not block saved vehicle loading, recovery or parking. Restart after editing.
 

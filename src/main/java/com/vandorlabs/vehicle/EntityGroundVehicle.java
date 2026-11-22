@@ -283,6 +283,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
+        if(world.isRemote&&cruise.projected()) {
+            flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;
+            driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
+            snapPosition(p.x,p.y,p.z,p.yaw);
+            for(Entity passenger:getPassengers())updatePassenger(passenger);
+            return;
+        }
         if(longPositionChange(p.x,p.y,p.z)){
             flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
             snapPosition(p.x,p.y,p.z,p.yaw);
@@ -598,6 +605,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(world.isRemote || collision==null || VehicleTransfer.isMutating(world) || passenger==teleportingPassenger)return;
         if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
         else if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
+        if(cruise.projected()) { cruise.riderLeft(passenger);return; }
         Vec3d exit=null;
         if(exitSeat!=null){Vec3d near=toWorld(new Vec3d(exitSeat).addVector(.5,0,.5));AxisAlignedBB seatArea=new AxisAlignedBB(near.x-.5,near.y,near.z-.5,near.x+.5,near.y+2,near.z+.5);exit=com.vandorlabs.entity.SafeDismount.findNear(world,passenger,seatArea,near);}
         if(exit==null)exit=com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox());
@@ -622,7 +630,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(teleport){previousVisual=currentVisual=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;}
     }
     private boolean longPositionChange(double x,double y,double z){return Math.abs(x-posX)>128||Math.abs(y-posY)>128||Math.abs(z-posZ)>128;}
-    private void snapPosition(double x,double y,double z,float yaw){
+    void snapPosition(double x,double y,double z,float yaw){
         targetX=prevPosX=lastTickPosX=x;targetY=prevPosY=lastTickPosY=y;targetZ=prevPosZ=lastTickPosZ=z;
         targetYaw=prevRotationYaw=rotationYaw=yaw;interpolation=0;
         previousVisual=currentVisual=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;

@@ -84,7 +84,7 @@ final class CruiseResidentChecks {
         File fixture=new File(client.mcDataDir,"config/cruise-resident-fixture.cfg");
         Configuration config=new Configuration(fixture);
         config.load();
-        config.get("vehicles","reanchorResidentCruise",false).set(true);
+        config.get("vehicles","cruiseCoordinates","anchored").set("resident");
         config.save();
         BlockAvailability.load(fixture);
         require(BlockAvailability.reanchorResidentCruise(),"real config selects resident-only reanchoring");

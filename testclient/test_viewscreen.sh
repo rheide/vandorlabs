@@ -285,6 +285,10 @@ case "${1:-}" in
         elif [ "$TARGET" = screen-modes ]; then
             PREFIX=shot_screen_status_to_redstone_
             export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
+        elif [ "$TARGET" = cruise-physical ]; then
+            PREFIX=cruise-physical
+            export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cruisePhysicalChecks=true"
         elif [ "$TARGET" = cruise-resident ]; then
             PREFIX=cruise-resident
             export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
@@ -560,7 +564,7 @@ fi
 if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
     cp "$VANDOR_LABS_TEST_JEI" "$TEST_RUNTIME_GAME/mods/"
 fi
-if [ "${TARGET:-}" = maxwell-cruise ] && [ -n "${VANDOR_LABS_TEST_JOURNEYMAP:-}" ]; then
+if { [ "${TARGET:-}" = maxwell-cruise ] || [ "${TARGET:-}" = cruise-physical ]; } && [ -n "${VANDOR_LABS_TEST_JOURNEYMAP:-}" ]; then
     cp "$VANDOR_LABS_TEST_JOURNEYMAP" "$TEST_RUNTIME_GAME/mods/"
 fi
 if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
@@ -1098,6 +1102,10 @@ PYIMAGE
         grep -q "screen-mode-client PASS" "$RUN_OUT/client.log"
         echo "Screen mode live checks passed: $RUN_OUT"
         exit 0
+    fi
+    if [ "$TARGET" = cruise-physical ]; then
+        grep -q "cruise-physical PASS" "$RUN_OUT/client.log"
+        exit $?
     fi
     if [ "$TARGET" = cruise-resident ]; then
         grep -q "cruise-resident PASS" "$RUN_OUT/client.log"

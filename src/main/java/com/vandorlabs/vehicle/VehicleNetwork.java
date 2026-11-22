@@ -119,6 +119,7 @@ public final class VehicleNetwork {
                 if(!(raw instanceof EntityGroundVehicle) || !raw.getUniqueID().equals(message.token))return;
                 EntityGroundVehicle vehicle=(EntityGroundVehicle)raw;
                 if(message.type==FLIGHT){if(message.sequence==1){vehicle.exitFlight(player);return;}if(message.strafe==0||message.strafe==1)vehicle.flightInput(player,message.forward,message.flag,message.strafe==1);return;}
+                if(message.type==REQUEST&&message.flag)CruiseTracking.ready(player);
                 if(message.type==INPUT){if(!VehicleNetworkLab.input(player,message,vehicle))vehicle.input(player,message.sequence,message.forward,message.strafe,message.flag);}
                 else if(player.getDistanceSq(vehicle)<256*256 && vehicle.structure!=null && VehicleService.allowSnapshot(player,vehicle))
                     send(player,vehicle.structure,vehicle.getEntityId(),vehicle.getUniqueID(),new BlockPos(vehicle),false,false);
@@ -142,7 +143,7 @@ public final class VehicleNetwork {
         if(VehicleNetworkLab.state(p,e))return;
         com.vandorlabs.network.TrackingPackets.send(p,e);
     }
-    public static void request(EntityGroundVehicle entity){Packet p=new Packet(REQUEST);p.entity=entity.getEntityId();p.token=entity.getUniqueID();PacketHandler.INSTANCE.sendToServer(p);}
+    public static void request(EntityGroundVehicle entity){Packet p=new Packet(REQUEST);p.entity=entity.getEntityId();p.token=entity.getUniqueID();p.flag=CruiseTracking.clientReady();PacketHandler.INSTANCE.sendToServer(p);}
     public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking) {
         send(player,snapshot,entity,token,origin,preview,parking,"");
     }

@@ -473,6 +473,8 @@ public final class VehicleService {
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");
     }
     static void carriedPermission(EntityPlayerMP player,EntityGroundVehicle craft,BlockPos point){
+        if(craft.cruise.projected())point=new BlockPos(point.getX()+craft.cruise.anchorX()-craft.posX,
+                point.getY(),point.getZ()+craft.cruise.anchorZ()-craft.posZ);
         if(craft.flying()||craft.cruise.active())point=new BlockPos(point.getX(),MathHelper.clamp(point.getY(),0,player.world.getHeight()-1),point.getZ());
         permission(player,point);
     }

@@ -1,5 +1,6 @@
 package com.vandorlabs.vehicle;
 
+import com.vandorlabs.config.BlockAvailability;
 import com.vandorlabs.navigation.NavigationService;
 import com.vandorlabs.network.MessageCruiseTerrain;
 import com.vandorlabs.network.PacketHandler;
@@ -23,16 +24,27 @@ import net.minecraft.world.border.WorldBorder;
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class VehicleCruise {
     private static final DataParameter<BlockPos> ROUTE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
+    private static final DataParameter<BlockPos> ANCHOR=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BLOCK_POS);
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
-    private double routeX, routeZ;
+    private double routeX, routeZ, anchorX, anchorZ;
     private MessageCruiseTerrain pending, published;
     private final java.util.Set<EntityPlayerMP> viewers = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     private int nextPixel, publishedX, publishedZ, publishedStep;
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
-    static void define(EntityGroundVehicle craft) { craft.getDataManager().register(ROUTE, BlockPos.ORIGIN); }
+    static void define(EntityGroundVehicle craft) {
+        craft.getDataManager().register(ROUTE,BlockPos.ORIGIN);
+        craft.getDataManager().register(ANCHOR,BlockPos.ORIGIN);
+    }
+    public boolean projected() { return active()&&craft.getDataManager().get(ANCHOR).getY()==1; }
+    double anchorX() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getX():anchorX; }
+    double anchorZ() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getZ():anchorZ; }
+    private void anchor(double x,double z) { anchorX=x;anchorZ=z; }
+    private void projection(boolean enabled) {
+        craft.getDataManager().set(ANCHOR,enabled?new BlockPos(anchorX,1,anchorZ):BlockPos.ORIGIN);
+    }
     public boolean active() { return craft.getDataManager().get(ROUTE).getY() == 1; }
     public double altitude() { return active() ? craft.posY - SKY_OFFSET : craft.posY; }
     public double x() { return !active() ? craft.posX : craft.world.isRemote ? craft.getDataManager().get(ROUTE).getX() : routeX; }
@@ -50,6 +62,7 @@ public final class VehicleCruise {
             if (dy < 0 || height <= FlightEnvelope.WORLD_CEILING) return false;
             routeX = craft.posX;
             routeZ = craft.posZ;
+            anchor(craft.posX,craft.posZ);
         }
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
@@ -59,18 +72,30 @@ public final class VehicleCruise {
             double bottomOffset = craft.posY - craft.getEntityBoundingBox().minY;
             double arrivalY = FlightEnvelope.WORLD_CEILING + Math.max(0, bottomOffset) + .01;
             craft.world.getChunkFromBlockCoords(new BlockPos(routeX, 0, routeZ));
-            craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
-            relocate(routeX, arrivalY, routeZ);
-            clearTerrain();
+            endForLanding();
+            relocate(routeX, arrivalY, routeZ, true);
             return true;
         }
         boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);
         if (!cruising || residentHop || craft.ticksExisted % 3 == 0) {
             craft.getDataManager().set(ROUTE, new BlockPos(routeX,1,routeZ));
         }
-        if (!cruising) relocate(craft.posX, SKY_OFFSET + height, craft.posZ);
-        else if (residentHop) relocate(routeX, SKY_OFFSET + height, routeZ, true);
-        else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
+        boolean physical=BlockAvailability.cruiseCoordinates()==BlockAvailability.CruiseCoordinates.PHYSICAL
+                && CruiseTracking.ready(craft);
+        if(!cruising)relocate(craft.posX,SKY_OFFSET+height,craft.posZ);
+        if(physical) {
+            if(!projected()) {
+                projection(true);
+                craft.snapPosition(routeX,SKY_OFFSET+height,routeZ,craft.rotationYaw);
+                for(Entity rider:craft.getPassengers())craft.updatePassenger(rider);
+            } else craft.setPosition(routeX,SKY_OFFSET+height,routeZ);
+        } else if(projected()) {
+            projection(false);
+            relocate(anchorX,SKY_OFFSET+height,anchorZ,true);
+        } else if(residentHop) {
+            relocate(routeX,SKY_OFFSET+height,routeZ,true);
+            anchor(routeX,routeZ);
+        } else if(cruising) craft.setPosition(craft.posX,SKY_OFFSET+height,craft.posZ);
         updateTerrain(routeX, routeZ, height);
         return true;
     }
@@ -81,18 +106,35 @@ public final class VehicleCruise {
         EntityPlayerMP player = (EntityPlayerMP) event.player;
         if (player.dimension != 0 || player.posY < SKY_OFFSET || player.isRiding()) return;
         WorldServer world = player.getServerWorld();
-        AxisAlignedBB nearby = player.getEntityBoundingBox().grow(4,64,4);
-        for (EntityGroundVehicle craft : VehicleLookup.near(world,nearby)) {
-            if (!craft.cruise.active() || craft.structure == null || craft.transferInProgress ||
-                    world.getEntityFromUuid(craft.getUniqueID()) != craft) continue;
-            NBTTagCompound assignments = craft.occupiedSeatAssignments();
-            String rider = player.getUniqueID().toString();
-            if (!assignments.hasKey(rider,4)) continue;
-            if (craft.board(player,BlockPos.fromLong(assignments.getLong(rider)))) {
-                craft.updatePassenger(player);
-                return;
-            }
+        NBTTagCompound saved=player.getEntityData();
+        if(saved.hasUniqueId(CruiseTracking.SAVED_CRAFT)) {
+            Entity vehicle=world.getEntityFromUuid(saved.getUniqueId(CruiseTracking.SAVED_CRAFT));
+            saved.removeTag(CruiseTracking.SAVED_CRAFT+"Most");
+            saved.removeTag(CruiseTracking.SAVED_CRAFT+"Least");
+            if(vehicle instanceof EntityGroundVehicle && resume(player,(EntityGroundVehicle)vehicle))return;
         }
+        AxisAlignedBB nearby = player.getEntityBoundingBox().grow(4,64,4);
+        for(EntityGroundVehicle craft:VehicleLookup.near(world,nearby))if(resume(player,craft))return;
+    }
+
+    private static boolean resume(EntityPlayerMP player,EntityGroundVehicle craft) {
+        if(!craft.cruise.active() || craft.structure==null || craft.transferInProgress
+                || player.getServerWorld().getEntityFromUuid(craft.getUniqueID())!=craft)return false;
+        NBTTagCompound assignments=craft.occupiedSeatAssignments();
+        String rider=player.getUniqueID().toString();
+        if(!assignments.hasKey(rider,4)||!craft.board(player,BlockPos.fromLong(assignments.getLong(rider))))return false;
+        craft.updatePassenger(player);
+        return true;
+    }
+
+    void riderLeft(Entity rider) {
+        if(!projected()||craft.world.isRemote)return;
+        // Move an ordinary dismount back to an already watched column before vanilla can index it.
+        double x=anchorX+rider.posX-craft.posX,z=anchorZ+rider.posZ-craft.posZ;
+        if(rider instanceof EntityPlayerMP) {
+            EntityPlayerMP player=(EntityPlayerMP)rider;
+            player.connection.setPlayerLocation(x,rider.posY,z,rider.rotationYaw,rider.rotationPitch);
+        } else rider.setPosition(x,rider.posY,z);
     }
 
     private void relocate(double x, double y, double z) { relocate(x,y,z,false); }
@@ -181,6 +223,7 @@ public final class VehicleCruise {
     }
 
     void endForLanding() {
+        projection(false);
         craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
         clearTerrain();
     }
@@ -196,12 +239,15 @@ public final class VehicleCruise {
         if (!active()) return;
         tag.setDouble("CruiseRouteX", routeX);
         tag.setDouble("CruiseRouteZ", routeZ);
+        if(projected())CruiseTracking.writePosition(tag,anchorX,anchorZ);
     }
     void read(NBTTagCompound tag) {
         if (craft.dimension != 0 || !tag.hasKey("CruiseRouteX",6) || !tag.hasKey("CruiseRouteZ",6)) return;
         routeX = tag.getDouble("CruiseRouteX");
         routeZ = tag.getDouble("CruiseRouteZ");
-        if (Double.isFinite(routeX) && Double.isFinite(routeZ) && Math.abs(routeX)<=30000000 && Math.abs(routeZ)<=30000000)
+        if (Double.isFinite(routeX) && Double.isFinite(routeZ) && Math.abs(routeX)<=30000000 && Math.abs(routeZ)<=30000000) {
+            anchor(craft.posX,craft.posZ);
             craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+        }
     }
 }
