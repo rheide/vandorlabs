@@ -5,6 +5,8 @@ import com.vandorlabs.neoforge.builders.NativeBuilderProtection;
 import com.vandorlabs.neoforge.builders.NativeBuilderTransfer;
 import com.vandorlabs.neoforge.navigation.observer.NativeObserverProtection;
 import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;
+import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
+import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.transfer.*;
 import java.util.*;
 import java.util.concurrent.CompletionException;
@@ -50,6 +52,10 @@ public final class NativeVehicleTransfer {
 
     public static void register() {
         NativeCellTransactions.register(FAMILY);
+    }
+
+    public static boolean holdsScreenChannels(ServerLevel world, BlockPos pos) {
+        return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos);
     }
 
     public static void assemble(ServerPlayer player, BlockPos controller) {
@@ -430,8 +436,11 @@ public final class NativeVehicleTransfer {
             for (var position : receipt.held) {
                 if (world.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4) == null) continue;
                 world.invalidateCapabilities(position);
-                if (world.getBlockEntity(position) instanceof com.vandorlabs.neoforge.coupler.NativeCouplerEntity coupler)
-                    com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(coupler);
+                var tile = world.getBlockEntity(position);
+                if (tile instanceof com.vandorlabs.neoforge.coupler.NativeCouplerEntity coupler) {
+                    NativeRedstoneChannels.queueRegistration(coupler);
+                }
+                if (tile instanceof NativeScreenEntity screen) NativeRedstoneChannels.queueRegistration(screen);
                 var state = world.getBlockState(position);
                 world.sendBlockUpdated(position, state, state, Block.UPDATE_CLIENTS);
             }
@@ -439,8 +448,11 @@ public final class NativeVehicleTransfer {
                 && craft.getPersistentData().getCompound(ESCROW).equals(marker(header))) {
                 // APPLIED assembly has a fresh identity. ROLLED_BACK parking already cleared retirement.
                 NativeVehicleRetirements.active(craft);
+                craft.getPersistentData().remove(ESCROW);
             }
             var player = world.getServer().getPlayerList().getPlayer(header.actor());
+            if (rollback && !error.isEmpty()) com.mojang.logging.LogUtils.getLogger()
+                .warn("Vehicle transfer rolled back at {}: {}", header.root().toShortString(), error);
             if (player != null) player.displayClientMessage(Component.literal(rollback
                 ? error.isEmpty() ? "Vehicle transfer rolled back" : error
                 : receipt.parking ? "Vehicle parked" : "Vehicle assembled"), true);

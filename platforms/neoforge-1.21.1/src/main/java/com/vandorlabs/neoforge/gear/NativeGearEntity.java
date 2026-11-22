@@ -147,7 +147,8 @@ public class NativeGearEntity extends BlockEntity implements NativeChannelMember
         return root != null && !root.settings.join() && root.columns.equals(List.of(BlockPos.ZERO))
             && !root.settings.pushBlocks() && !root.settings.carryLoad() && root.payload == null
             && !root.hasStoredSections() && !root.ownsCaptured() && root.progress == 1 && root.target
-            && root.resourceEndpointAvailable() && !root.blocked && !inert;
+            && root.resourceEndpointAvailable() && !root.blocked && !inert
+            && !root.rebuild && (root.settings.trigger() == 0 || root.signalKnown);
     }
 
     /** Updates only the detached carried pose. This instance has no physical-world authority. */
