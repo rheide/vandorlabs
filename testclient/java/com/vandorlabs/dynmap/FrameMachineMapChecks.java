@@ -36,6 +36,35 @@ public final class FrameMachineMapChecks {
             for(double[] point:polygon){boolean inside=side==0?point[axis]>=boundary:point[axis]<=boundary;if(inside!=was){double t=(boundary-previous[axis])/(point[axis]-previous[axis]);double[] cross=new double[3];for(int k=0;k<3;k++)cross[k]=previous[k]+t*(point[k]-previous[k]);next.add(cross);}if(inside)next.add(point);previous=point;was=inside;}polygon=next;
         }return area(polygon.toArray(new double[0][]));
     }
+    private static void maxwellFront(JsonArray faces, int width, int height) {
+        List<double[]> rectangles = new ArrayList<>();
+        double frontArea = 0;
+        for (JsonElement face : faces) {
+            JsonArray vertices = face.getAsJsonObject().getAsJsonArray("vertices");
+            double left = width, right = 0, bottom = height, top = 0;
+            boolean planar = true;
+            for (JsonElement vertex : vertices) {
+                JsonArray point = vertex.getAsJsonArray();
+                double x = point.get(0).getAsDouble(), y = point.get(1).getAsDouble(), z = point.get(2).getAsDouble();
+                planar &= Math.abs(z) < 1e-8;
+                left = Math.min(left, x);
+                right = Math.max(right, x);
+                bottom = Math.min(bottom, y);
+                top = Math.max(top, y);
+            }
+            if (!planar) continue;
+            require(left >= 0 && bottom >= 0 && right <= width && top <= height, "Maxwell front envelope");
+            for (double[] previous : rectangles) {
+                require(Math.min(right, previous[1]) - Math.max(left, previous[0]) < 1e-8
+                        || Math.min(top, previous[3]) - Math.max(bottom, previous[2]) < 1e-8,
+                        "Maxwell front trim and casing have no coplanar overlap");
+            }
+            rectangles.add(new double[]{left, right, bottom, top});
+            frontArea += (right - left) * (top - bottom);
+        }
+        require(Math.abs(frontArea - width * height) < 1e-8, "Maxwell front has complete casing and trim coverage");
+    }
+
     public static void run()throws Exception{
         JsonObject catalog;
         try(InputStream input=FrameMachineMapChecks.class.getResourceAsStream("/assets/vandorlabs/data/dynmap_frame_models.json")){catalog=new JsonParser().parse(new InputStreamReader(input,"UTF-8")).getAsJsonObject();}
@@ -58,6 +87,7 @@ public final class FrameMachineMapChecks {
             require(coreArea>0&&Math.abs(coreArea-expectedCoreArea)<1e-7,"complete authored scaffold surface area");cores++;
             for(int mode=0;mode<states.size();mode++){
                 boolean maxwell=block.equals("longburn_drive_core");
+                if (maxwell) maxwellFront(states.get(mode).getAsJsonArray(), w, h);
                 boolean observer=block.equals("standalone_dish_core")||block.equals("standalone_antenna_core");
                 for(int factor:maxwell?new int[]{3,4,9}:observer?new int[]{1,2}:new int[]{1}){
                 final int fw=maxwell?factor:w*factor,fh=maxwell?factor:h*factor;
