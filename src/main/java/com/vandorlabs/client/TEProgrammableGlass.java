@@ -112,9 +112,10 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
-        // Artwork is a two-sheet plane: cull the far sheet and give the visible one
-        // the stacked opacity, halving translucent fragment work with the same look.
-        boolean culled=tile.getMaterial()>=0&&!opaque;
+        // Animated artwork is a two-sheet plane: cull the far sheet and give the visible
+        // one the stacked opacity, halving translucent fragment work with the same look.
+        // Static atlas panes here are moving-vehicle glass; they keep the batch's two sheets.
+        boolean culled=tile.getMaterial()>=0&&!opaque&&!placed;
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
         if(culled)opacity=com.vandorlabs.render.GlassRenderPolicy.singleLayerOpacity(opacity);
         GlStateManager.depthMask(opaque);

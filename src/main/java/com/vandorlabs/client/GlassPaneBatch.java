@@ -16,7 +16,6 @@ final class GlassPaneBatch implements AutoCloseable {
     private boolean drawing;
     private IBlockState batchState;
     private int batchShaderKey=GlassShaderMaterial.UNAVAILABLE;
-    private boolean batchCulled;
     private final BufferBuilder buffer=Tessellator.getInstance().getBuffer();
     private static final java.lang.reflect.Method SHADER_TILE=shaderTile();
     private static final GlassShaderMaterial SHADER_MATERIAL=GlassShaderMaterial.detect();
@@ -40,22 +39,19 @@ final class GlassPaneBatch implements AutoCloseable {
         // the exact blockEntityId helper; keep full-state separation as fallback.
         int shaderKey=shaderFormat?SHADER_MATERIAL.key(tile):GlassShaderMaterial.UNAVAILABLE;
         if(drawing&&shaderFormat&&GlassShaderMaterial.split(batchState,batchShaderKey,state,shaderKey))flush();
-        // Artwork draws one culled sheet; native palette panes keep their two-sided state.
-        boolean culled=tile.getMaterial()>=0;
-        if(drawing&&culled!=batchCulled)flush();
         if(!drawing){
             // The dispatcher normally selects the block-entity shader material.
             // A batch bypasses its per-tile calls; select the same glass context once.
             if(shaderFormat)try{SHADER_TILE.invoke(null,tile);}catch(ReflectiveOperationException error){com.vandorlabs.VandorLabs.logger.warn("Glass batching could not select shader material",error);return false;}
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            GlStateManager.disableLighting();if(culled)GlStateManager.enableCull();else GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);GlStateManager.color(1,1,1,1);
-            buffer.setTranslation(0,0,0);buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawing=true;batchState=state;batchShaderKey=shaderKey;batchCulled=culled;
+            GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);GlStateManager.color(1,1,1,1);
+            buffer.setTranslation(0,0,0);buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawing=true;batchState=state;batchShaderKey=shaderKey;
         }
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0),block=GlassInsertLighting.block(tile,light&65535),sky=light>>>16;
         boolean rotated=state.getValue(BlockGlassWall.ROTATED);int depth=state.getValue(BlockGlassWall.DEPTH);
         if(tile.getMaterial()>=0){
             TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
-            float opacity=com.vandorlabs.render.GlassRenderPolicy.singleLayerOpacity(GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));double offset=PanelDepth.offset(depth)/16D;
+            float opacity=GlassMaterials.opacity(tile.getMaterial(),tile.getTint());double offset=PanelDepth.offset(depth)/16D;
             StaticSurfaceMesh mesh=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),sprite,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout());
             // The old TESR applies depth before its -90-degree Y rotation.
             mesh.drawPlacedColored(buffer,x-(rotated?offset:0),y,z+(rotated?0:offset),rotated?3:0,(sky<<16)|block,opacity);
