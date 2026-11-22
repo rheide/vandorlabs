@@ -199,6 +199,9 @@ final class DuplifierRuntimeChecks {
             world.setBlockState(slab, ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(), 2);
             world.setBlockState(facing, ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState().withProperty(
                     com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING, net.minecraft.util.EnumFacing.EAST), 2);
+            java.util.Map<BlockPos,NBTTagCompound> excluded=new java.util.LinkedHashMap<>();
+            for(BlockPos pos:new BlockPos[]{barrier,behind,hiddenFaces,slab})
+                excluded.put(pos,ProgrammableSettings.capture(world,pos));
             boolean couldEdit = player.capabilities.allowEdit;
             try {
                 player.capabilities.allowEdit = false;
@@ -212,9 +215,9 @@ final class DuplifierRuntimeChecks {
                 require(tile.getHousingTexture() == 20 && tile.getRedstoneChannel() == 0,
                         "connected apply changed excluded properties or missed a match");
             }
-            for (BlockPos pos : new BlockPos[]{barrier, behind, hiddenFaces, slab})
-                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture() == 0,
-                        "connected apply crossed a type, configuration or adjacency boundary");
+            for(java.util.Map.Entry<BlockPos,NBTTagCompound> entry:excluded.entrySet())
+                require(entry.getValue().equals(ProgrammableSettings.capture(world,entry.getKey())),
+                        "connected apply changed excluded settings at "+entry.getKey());
             require(((TileEntityAnimatedScreenSelector)world.getTileEntity(facing)).getHousingTexture() == 20
                     && world.getBlockState(facing).getValue(
                             com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING) == net.minecraft.util.EnumFacing.EAST,
@@ -239,6 +242,7 @@ final class DuplifierRuntimeChecks {
                         i%2==0 ? net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
                                 : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),2);
             world.setBlockState(separate,ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(),2);
+            NBTTagCompound separateSettings=ProgrammableSettings.capture(world,separate);
             tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,copy.copy());
             require(com.vandorlabs.items.DuplifierConnectedApply.apply(world,origin,tool,player,
                     net.minecraft.util.EnumFacing.UP)==slabChain.length,"vertical and corner-touching slabs missed");
@@ -249,8 +253,7 @@ final class DuplifierRuntimeChecks {
                         ==(i%2==0 ? net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
                                 : net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),"copy changed slab half");
             }
-            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(separate)).getHousingTexture()==0,
-                    "copy crossed an air gap");
+            require(separateSettings.equals(ProgrammableSettings.capture(world,separate)),"copy crossed an air gap");
         } finally {
             for(BlockPos pos:slabChain)world.setBlockToAir(pos);
             world.setBlockToAir(separate);
@@ -299,8 +302,9 @@ final class DuplifierRuntimeChecks {
             require(com.vandorlabs.items.DuplifierConnectedApply.apply(world, largeOrigin, tool, player,
                     net.minecraft.util.EnumFacing.UP) == -1, "oversized matching group was accepted");
             for (BlockPos pos : largeRegion)
-                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture() == 0,
-                        "oversized group was partially changed");
+                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture()
+                        ==com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_PROGRAMMABLE_BLOCK,
+                        "oversized group was partially changed at "+pos);
         } finally { for (BlockPos pos : largeRegion) world.setBlockToAir(pos); }
         ItemStack held = player.getHeldItemMainhand();
         double oldX = player.posX, oldY = player.posY, oldZ = player.posZ;
