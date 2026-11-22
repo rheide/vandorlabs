@@ -41,6 +41,7 @@ public final class NativeVehiclePlayerChecks {
         NativeVehiclePlayerFixture.require(++ticks<1500,"client stage "+stage+" ticks="+ticks+" pos="+p.position()+
                 " mode="+mc.gameMode.getPlayerMode()+" slot="+p.getInventory().selected+" hand="+p.getMainHandItem()+
                 " screen="+mc.screen+" vehicle="+p.getVehicle()+" craft="+craft+" controller="+mc.level.getBlockState(root)+" nearby="+mc.level.getEntitiesOfClass(NativeGroundVehicle.class,new AABB(root).inflate(6)).size()+" message="+lastMessage);
+        mc.getToasts().clear();mc.gui.getChat().clearMessages(false);
         frames++;
         switch(stage){
             case 0 -> {

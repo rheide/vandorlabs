@@ -246,6 +246,20 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     }
 
     @Override public Vec3 getDismountLocationForPassenger(LivingEntity passenger) {
+        if (admitted() && mode()==TAXI && onGround()) {
+            var seat=BlockPos.containing(toWorld(pilotSeat()));
+            var heading=Direction.fromYRot(getYRot()+facing().toYRot());
+            var offsets=net.minecraft.world.entity.vehicle.DismountHelper.offsetsForDirection(heading);
+            for(int radius=1;radius<=4;radius++)for(var direction:offsets){
+                var at=seat.offset(direction[0]*radius,0,direction[1]*radius);
+                if(!level().hasChunkAt(at))continue;
+                for(int dy=1;dy>=-2;dy--){
+                    var feet=net.minecraft.world.entity.vehicle.DismountHelper.findSafeDismountLocation(
+                        passenger.getType(),level(),at.above(dy),true);
+                    if(feet!=null&&!getBoundingBox().intersects(passenger.getDimensions(passenger.getPose()).makeBoundingBox(feet)))return feet;
+                }
+            }
+        }
         return super.getDismountLocationForPassenger(passenger).add(0, .02, 0);
     }
 

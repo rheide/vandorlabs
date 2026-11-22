@@ -79,8 +79,8 @@ public final class NativeVehiclePlayerFixture {
             rode=true;
             if (craft.position().subtract(origin).horizontalDistanceSqr()>=1) drove=true;
         } else if (rode && drove && !positioned && craft.canPark()) {
-            // Move only the dismounted test observer back into ordinary reach of the Controller.
-            actor.teleportTo(craft.getX()-.5,craft.getY()-1,craft.getZ()-1.7);
+            require(actor.isAlive() && actor.position().distanceToSqr(craft.position())<36,
+                "ordinary dismount lands beside the vehicle within Controller reach");
             landing=craft.blockPosition(); positioned=true;
         }
         if (craft.isRemoved() && positioned && landing!=null) {
