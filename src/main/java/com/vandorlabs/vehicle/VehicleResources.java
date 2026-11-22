@@ -49,7 +49,11 @@ public final class VehicleResources {
         if(tile==null||tile.isInvalid()||!(tile.getWorld() instanceof VehicleWorld))return false;
         VehicleWorld view=(VehicleWorld)tile.getWorld();
         if(view.getTileEntity(tile.getPos())!=tile||!view.structure.isActive(tile.getPos())||!serverThread(view))return false;
-        if(view.craft!=null)return view.craft.view==view&&!view.craft.isDead&&!view.craft.transferInProgress&&!view.craft.ownershipBlocked;
+        if(view.craft!=null){
+            EntityGroundVehicle craft=view.craft;
+            return craft.view==view&&craft.world==view.parent&&craft.world.getEntityByID(craft.getEntityId())==craft
+                    &&!craft.isDead&&!craft.transferInProgress&&!craft.ownershipBlocked;
+        }
         GearTileEntity arm=view.navigationArm;
         return arm!=null&&arm.getWorld() instanceof VehicleWorld&&arm.payload()!=null&&!arm.payload().materialized()
                 &&!arm.payload().hasOwnershipJournal()&&live(arm)&&arm.payload().view(arm)==view;

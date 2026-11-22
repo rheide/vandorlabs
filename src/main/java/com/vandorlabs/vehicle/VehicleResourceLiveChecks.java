@@ -36,7 +36,7 @@ import java.util.concurrent.Future;
 /** Installed-mod networks moved through player placement, the real vehicle journal and parking. */
 @SideOnly(Side.CLIENT)
 public final class VehicleResourceLiveChecks {
-    private static final BlockPos ROOT=new BlockPos(149,122,149), ARM=ROOT.add(6,1,4), LEVER=ROOT.east(12);
+    private static final BlockPos ROOT=new BlockPos(149,122,149), ARM=ROOT.add(6,1,4), LEVER=ROOT.east(20);
     private static final ChannelList STORAGE=ChannelList.of(512), DRIVE=ChannelList.of(513);
     private static final String[] DOMAINS={"thermaldynamics","mekanism","galacticraftcore"};
     private static final String[] POWER={"TileDuctEnergy$Basic","TileEntityUniversalCable","TileEntityAluminumWire"};
@@ -103,6 +103,7 @@ public final class VehicleResourceLiveChecks {
             VehicleScan scan=new VehicleScan(world,ROOT);scan.holdSource();for(int i=0;i<300&&!scan.step(128);i++){}
             require(scan.result!=null,"source scan admitted six complete loaded networks "+scan.error);
             origin=scan.origin;
+            require(scan.result.at(LEVER.subtract(origin))==null,"test actuator stays off the vehicle's construction deck");
             require(scan.result.matches(world,origin),"source preimage remains exact before durable assembly "+mismatch(world,scan.result,origin));
             VehicleTransfer.submit(world,()->{craft=VehicleTransfer.assemble(world,scan.result,origin,actor);scan.releaseSource();},error->{scan.releaseSource();failure=error;});
             next();return false;
@@ -175,8 +176,13 @@ public final class VehicleResourceLiveChecks {
             VehicleTransfer.submit(world,()->VehicleTransfer.park(world,craft,park,actor,false),error->failure=error);next();return false;
         }
         if(VehicleTransfer.busy(world)||ticks<20)return false;
-        for(VehicleStructure.Cell cell:parked.cells)if(TransferNetworkCompat.onboard(world.getTileEntity(park.add(cell.pos))))
-            require(world.getTileEntity(park.add(cell.pos)).getWorld()==world,"parked conduit returns to the native world");
+        int conduits=0,diamonds=0;
+        for(VehicleStructure.Cell cell:parked.cells){
+            TileEntity tile=world.getTileEntity(park.add(cell.pos));
+            if(TransferNetworkCompat.onboard(tile)){require(tile.getWorld()==world,"parked conduit returns to the native world");conduits++;}
+            if(tile instanceof TileEntityChest){ItemStack stack=((TileEntityChest)tile).getStackInSlot(0);if(stack.getItem()==Items.DIAMOND)diamonds+=stack.getCount();}
+        }
+        require(conduits==17&&diamonds==14,"parked native network and cargo match the carried owners: ducts="+conduits+" diamonds="+diamonds);
         require(craft.isDead,"parking retired the carried owner");
         System.out.println("[vandorlabs] vehicle-resources PASS installed Thermal Dynamics/Mekanism/Galacticraft RF and fluid, RFTools Power Cell feeds Survey Dish, Maxwell fuel, analog storage, redstone arm items pause/resume, reload and rotated parking");
         return true;
@@ -185,6 +191,7 @@ public final class VehicleResourceLiveChecks {
     private static TileEntity local(BlockPos physical){return craft.view.getTileEntity(physical.subtract(origin));}
     private static void armSignal(WorldServer world,boolean powered){
         TileEntityRedstoneChannel tile=(TileEntityRedstoneChannel)world.getTileEntity(LEVER);
+        require(tile!=null,"off-vehicle redstone actuator remains loaded");
         tile.setLocalOn(powered);RedstoneChannels.latchChanged(tile,powered);
     }
     private static BlockPos point(int x,int z){return ROOT.add(x,0,z);}
