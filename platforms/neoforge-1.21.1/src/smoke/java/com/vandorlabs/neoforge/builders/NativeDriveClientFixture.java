@@ -95,23 +95,38 @@ final class NativeDriveClientFixture {
         }
         var settings = tile.driveSettings();
         switch (operation % 4) {
-            case 0 -> held(player, tile.drive().manualActivity()?new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()):ItemStack.EMPTY, aim(machine, 1));
+            case 0 -> {
+                if (tile.maxwell()) {
+                    var side = tile.facing();
+                    var inlet = player.serverLevel().getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                            tile.maxwellPort(side), side);
+                    need(inlet != null && inlet.fill(NativeMaxwellRuntimeChecks.fuel(250),
+                            net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE) == 250,
+                            "actual placed Maxwell inlet fills the visible gauge");
+                }
+                held(player, tile.drive().manualActivity()?new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()):ItemStack.EMPTY, aim(machine, 1));
+            }
             case 1 -> {
                 need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine() && settings.levels()==tile.drive().engine()
-                        && !settings.animated() && settings.speed() == 0 && settings.particles() == 0
-                        && settings.threshold() == (tile.drive().exhaust ? 7 : 8) && tile.channels().equals(BANK),
+                        && (tile.maxwell() ? tile.maxwellFuel() > 0 && settings.equals(NativeDriveSettings.maxwell(true, true, true))
+                        : !settings.animated() && settings.speed() == 0 && settings.particles() == 0 && settings.threshold() == 8)
+                        && tile.channels().equals(BANK),
                         "ordinary open sends real Drive controls and reverse cycling");
                 held(player, tile.drive().manualActivity()?ItemStack.EMPTY:new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()), aim(machine, 2));
             }
             case 2 -> {
                 need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine()
-                        && tile.driveLevel() == (tile.drive().engine()?15:0) && (!tile.drive().manualActivity()||tile.driveActivity()==(tile.drive().defaultActivity()+1)%3), "same drive session or Oculus state click preserves configured power");
+                        && tile.driveLevel() == (tile.drive().engine()&&!tile.maxwell()?15:0) && (!tile.maxwell()||tile.maxwellFuel()==0) && (!tile.drive().manualActivity()||tile.driveActivity()==(tile.drive().defaultActivity()+1)%3), "same drive session or Oculus state click preserves configured power");
                 held(player, NativeCredentialItems.dataChip(3), aim(machine, 3));
             }
             case 3 -> {
                 if(tile.drive().hasChip()){
                     need(player.getMainHandItem().isEmpty()&&NativeCredentialItems.company(tile.getItem(3))==3,
                             "one mounted chip transfers through the authored hit");
+                }else if(tile.maxwell()){
+                    need(player.containerMenu == player.inventoryMenu && NativeCredentialItems.company(player.getMainHandItem()) == 3
+                            && tile.getItem(3).isEmpty(), "Maxwell opens its controls without taking the held chip");
+                    System.out.println("[vandorlabs][builder-client] maxwell-controls PASS filledGauge/normalAndConfigurator/analog/purge/noChip");
                 }else{
                     need(NativeCredentialItems.company(player.getMainHandItem())==3&&tile.getItem(3).isEmpty()
                             &&tile.driveActivity()==(tile.drive().defaultActivity()+2)%3,
@@ -161,7 +176,7 @@ final class NativeDriveClientFixture {
                 }
                 if (disconnected && mc.level == null) {
                     complete = true;
-                    System.out.println("[vandorlabs][builder-client] client PASS LongburnMeridianOculusVectorFoldComputers physicalSurvival/dialogs/Configurator/mount");
+                    System.out.println("[vandorlabs][builder-client] client PASS MaxwellMeridianOculusVectorFoldComputers physicalSurvival/dialogs/Configurator/mount");
                     mc.stop();
                     return;
                 }
@@ -209,17 +224,27 @@ final class NativeDriveClientFixture {
                     builder.onClose();
                 }else if (action == 1 || action == 2&&!manual) {
                     if (!(mc.screen instanceof NativeDriveScreen drive)) return;
-                    if (action == 1) edit(drive, tile.drive());
+                    if (action == 1) {
+                        if (tile.maxwell() && tile.maxwellFuel() <= 0) return;
+                        edit(drive, tile.drive());
+                    }
                     else {
                         click(drive, "Redstone", 0);
                         need(drive.children().stream().anyMatch(widget -> widget instanceof EditBox field && BANK.equals(ChannelList.parse(field.getValue()))),
                                 "Configurator opens identical controls and persisted channels");
+                        if (tile.maxwell()){
+                            click(drive, "Engine", 0);
+                            click(drive, "Purge Tank", 0);
+                        }
                     }
                     drive.onClose();
                 }
                 if(action==3){
                     if(tile.drive().hasChip()){
                         if(tile.getItem(3).isEmpty()||!mc.player.getMainHandItem().isEmpty())return;
+                    }else if(tile.maxwell()){
+                        if (!(mc.screen instanceof NativeDriveScreen drive)) return;
+                        drive.onClose();
                     }else if(tile.driveActivity()!=(tile.drive().defaultActivity()+2)%3)return;
                 }
                 PacketDistributor.sendToServer(new NativeBuilderClientFixture.Mode(step++));
@@ -257,6 +282,17 @@ final class NativeDriveClientFixture {
         }
 
         private static void edit(NativeDriveScreen screen, NativeDriveDesign design) {
+            if (design == NativeDriveDesign.LONGBURN) {
+                need(screen.children().stream().noneMatch(w->w instanceof AbstractWidget b
+                        && (b.getMessage().getString().equals("Keyboard") || b.getMessage().getString().equals("Displays"))),
+                        "Maxwell exposes its Engine and Redstone tabs");
+                click(screen, "Redstone", 0);
+                for (var child : screen.children()) if (child instanceof EditBox box) box.setValue("317,318");
+                click(screen, "Activation Automatic", 0);
+                click(screen, "Engine Redstone On", 1);
+                click(screen, "Throttle Digital", 0);
+                return;
+            }
             click(screen, "Animated", 0);
             click(screen, "Speed Normal", 1);
             if(design.computer()){

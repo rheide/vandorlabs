@@ -428,13 +428,19 @@ public final class NativeBuilderRuntimeChecks {
   if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
   checkFrame(true);
   var drive=NativeDriveDesign.SUPPORTED.get(caseIndex);
-  need(owner.drive()==drive&&owner.driveLevel()==15&&!owner.production()&&owner.layout().cornerZ==desiredZ,
+  need(owner.drive()==drive&&owner.driveLevel()==(owner.maxwell()?0:15)&&!owner.production()&&owner.layout().cornerZ==desiredZ,
         "standalone drive activates after its deferred inputs and forms in selected orientation");
   if(drive.computer()){
    need(!NativeBuilderProducts.output("synthesis_tower","vandorlabs:"+drive.block),"computer cores keep Creative-only supply");
   }else{
    var output=NativeBuilderProducts.result(NativeBuilderProducts.LONGBURN+caseIndex);
    need(output.is(NativeBuilderBindings.CORES.get(drive.id).asItem()),"Tower uses the exact drive core item");
+  }
+  if(owner.maxwell()){
+   need(owner.maxwellFuel()==0&&owner.maxwellThrustLevel(true)==0&&!drive.hasChip(), "empty Maxwell supplies no thrust or chip mount");
+   need(!actor.gameMode.destroyBlock(ROOT)&&owner.transactionBlocked(), "Maxwell Core mining waits for durable publication");
+   stage=201;
+   return;
   }
   if(drive.manualActivity()){
    int first=drive.defaultActivity();
@@ -540,7 +546,7 @@ public final class NativeBuilderRuntimeChecks {
   need(!publicCopy.inert()&&ItemStack.matches(publicCopy.getItem(1),expected),"drive core public representation");
   owner.removeItem(1,1);
   if(recipe<NativeBuilderProducts.MAX_TOWER_PRODUCT){recipe++;beginDriveCore(owner);return;}
-  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculusVectorFoldComputers asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
+  System.out.println("[vandorlabs][builder-runtime] PASS MaxwellMeridianOculusVectorFoldComputers asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
   var server=world.getServer();world=null;server.halt(false);
  }
  private static void beginDriveCore(NativeBuilderEntity owner){
