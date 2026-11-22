@@ -83,7 +83,8 @@ public final class CruiseCoordinateProbeTransformer implements IClassTransformer
         if (MAP.equals(owner)) return name(method,"addPlayer","func_72683_a") || name(method,"updateMovingPlayer","func_72685_d")
             || name(method,"setPlayerViewRadius","func_152622_a");
         if (TRACKER.equals(owner)) return name(method,"isVisibleTo","func_180233_c");
-        if (WORLD.equals(owner)) return name(method,"updateEntityWithOptionalForce","func_72866_a");
+        if (WORLD.equals(owner)) return name(method,"updateEntityWithOptionalForce","func_72866_a")
+            || name(method,"spawnEntity","func_72838_d");
         if (CHUNK.equals(owner)) return name(method,"addEntity","func_76612_a");
         if (NETWORK.equals(owner)) return name(method,"processPlayer","func_147347_a") || name(method,"update","func_73660_a");
         if (PLAYER.equals(owner)) return name(method,"writeEntityToNBT","func_70014_b");

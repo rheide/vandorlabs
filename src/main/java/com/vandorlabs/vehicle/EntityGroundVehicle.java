@@ -486,8 +486,17 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);}
-    @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
-    @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
+    @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){
+        buffer.writeInt(VehicleStructure.SCHEMA);
+        buffer.writeBoolean(transferInProgress);
+        cruise.writeProbeSpawn(buffer);
+    }
+    @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){
+        if(buffer.readInt()!=VehicleStructure.SCHEMA)return;
+        if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());
+        cruise.readProbeSpawn(buffer);
+        VehicleNetwork.request(this);
+    }
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
         tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeCouplerOwnershipMetadata(tag);
         writeFlightMode(tag);cruise.write(tag);
