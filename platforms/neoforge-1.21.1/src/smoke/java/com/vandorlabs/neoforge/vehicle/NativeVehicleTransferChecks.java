@@ -80,7 +80,7 @@ public final class NativeVehicleTransferChecks {
     @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
     public static final class Fuels {
         @SubscribeEvent public static void register(RegisterEvent event) {
-            if (!phase().equals("roundtrip")) return;
+            if (!phase().equals("roundtrip") || registeredEthanol()) return;
             event.register(Registries.FLUID, helper -> {
                 fuel = new WaterFluid.Source() {
                     @Override public net.neoforged.neoforge.fluids.FluidType getFluidType() {
@@ -93,6 +93,8 @@ public final class NativeVehicleTransferChecks {
     }
 
     public static boolean armGallery() { return Boolean.getBoolean("vandorlabs.vehicleArmGallery"); }
+
+    private static boolean registeredEthanol() { return Boolean.getBoolean("vandorlabs.vehicleRegisteredEthanol"); }
 
     private static String phase() { return System.getProperty("vandorlabs.vehicleTransferPhase", ""); }
     private static void require(boolean ok, String message) {
@@ -260,6 +262,8 @@ public final class NativeVehicleTransferChecks {
                 return;
             }
             requireMaxwellParked();
+            if (registeredEthanol()) System.out.println("[vandorlabs][vehicle-transfer] installed ethanol PASS " + FUEL_MB
+                + " mB retained plus " + NativeVehicleResourceFixture.FUEL_REFILL + " mB delivered through the genuine registered fluid");
             transit.parked(PARK);
             requireParkedSecurity();
             require(!new ChunkPos(ROOT).equals(new ChunkPos(PARK)), "parking crossed to a different entity storage chunk");
@@ -359,6 +363,9 @@ public final class NativeVehicleTransferChecks {
     }
 
     private static void stageMaxwell() {
+        if (registeredEthanol()) fuel = net.minecraft.core.registries.BuiltInRegistries.FLUID
+            .getOptional(ResourceLocation.parse("immersiveengineering:ethanol"))
+            .orElseThrow(() -> new IllegalStateException("The installed Immersive Engineering did not register ethanol"));
         var core = NativeBuilderBindings.CORES.get(MaxwellEngine.DESIGN);
         world.setBlock(ENGINE.below(), Blocks.IRON_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
         world.setBlock(ENGINE, core.defaultBlockState(), Block.UPDATE_ALL);
