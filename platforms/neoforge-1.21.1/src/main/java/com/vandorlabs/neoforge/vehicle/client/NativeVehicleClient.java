@@ -25,6 +25,8 @@ public final class NativeVehicleClient {
             if (bindings.keyLeft.isDown()) keys |= NativeVehicleInput.LEFT;
             if (bindings.keyRight.isDown()) keys |= NativeVehicleInput.RIGHT;
             if (bindings.keyJump.isDown()) keys |= NativeVehicleInput.BRAKE;
+            if (bindings.keyShift.isDown()) keys |= NativeVehicleInput.DOWN;
+            if (bindings.keySprint.isDown()) keys |= NativeVehicleInput.SPRINT;
         }
         PacketDistributor.sendToServer(new NativeVehicleInput(craft.getId(), keys));
     }

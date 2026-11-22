@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge.vehicle.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.vandorlabs.neoforge.NativeVehicleStatusRenderer;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette.Palette;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
@@ -43,7 +44,12 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
     private record Cell(BlockPos pos, Palette palette) {}
     private record Mesh(List<Cell> cells, int bytes) {}
 
-    public NativeGroundVehicleRenderer(EntityRendererProvider.Context context) { super(context); }
+    private final NativeVehicleStatusRenderer status;
+
+    public NativeGroundVehicleRenderer(EntityRendererProvider.Context context) {
+        super(context);
+        status = new NativeVehicleStatusRenderer(context.getFont());
+    }
 
     @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event) {
         if (NativeVehicleBindings.VEHICLE != null) event.registerEntityRenderer(NativeVehicleBindings.VEHICLE, NativeGroundVehicleRenderer::new);
@@ -133,6 +139,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                     poses.popPose();
                 }
             }
+            status.render(craft, poses, buffers);
         } finally {
             poses.popPose();
         }

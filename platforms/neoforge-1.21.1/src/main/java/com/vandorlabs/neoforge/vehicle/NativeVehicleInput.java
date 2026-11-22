@@ -12,7 +12,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 /** A short held-key sample. Position, attitude, permission and movement belong to the server. */
 @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
 public record NativeVehicleInput(int entity, int keys) implements CustomPacketPayload {
-    public static final int FORWARD = 1, BACK = 2, LEFT = 4, RIGHT = 8, BRAKE = 16, USE = 32;
+    public static final int FORWARD = 1, BACK = 2, LEFT = 4, RIGHT = 8, BRAKE = 16, DOWN = 32, SPRINT = 64, USE = 128;
     public static final Type<NativeVehicleInput> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("vandorlabs", "vehicle_input"));
     private static final StreamCodec<RegistryFriendlyByteBuf, NativeVehicleInput> CODEC = new StreamCodec<>() {
         @Override public NativeVehicleInput decode(RegistryFriendlyByteBuf buffer) {

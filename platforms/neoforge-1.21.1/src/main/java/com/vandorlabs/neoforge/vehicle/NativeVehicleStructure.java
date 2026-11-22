@@ -154,6 +154,8 @@ public final class NativeVehicleStructure {
             || block instanceof NativeBuilderPartBlock
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
+            || block instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionBlock
+            || NativeVehicleStatus.supports(state)
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
             || programmable(state);
         if ((!plainVanilla && !nativeBlock) || state.isAir() || !state.getFluidState().isEmpty()
@@ -167,6 +169,10 @@ public final class NativeVehicleStructure {
 
     static boolean supportsTile(BlockEntity tile) {
         if (tile instanceof NativeVehicleControllerEntity) return true;
+        if (tile instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionEntity propulsion) return !propulsion.inert();
+        if (tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen) {
+            return NativeVehicleStatus.supports(screen.getBlockState()) && !screen.inert();
+        }
         if (tile instanceof NativeBuilderEntity builder) {
             return builder.maxwell() && builder.formed() && !builder.inert() && !builder.pendingFormation();
         }

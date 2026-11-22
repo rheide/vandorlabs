@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -131,6 +132,57 @@ final class NativeVehicleHull {
             }
         }
         return contacts;
+    }
+
+    int launchTicks() { return Math.max(5, (int)Math.ceil(radius * .31) + 2); }
+
+    double ceiling(NativeGroundVehicle craft, float yaw, float pitch) {
+        return craft.level().getMaxBuildHeight() - bounds(Vec3.ZERO, yaw, pitch, craft.facing()).maxY;
+    }
+
+    float clearance(NativeGroundVehicle craft) {
+        if (craft.getY() >= com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING) return -1;
+        var world = craft.level();
+        var box = craft.getBoundingBox();
+        if (!loadedColumns(world, box)) return -1;
+        var pos = new BlockPos.MutableBlockPos();
+        double highest = Double.NEGATIVE_INFINITY;
+        int top = Math.min(world.getMaxBuildHeight() - 1, Mth.floor(box.minY));
+        for (int x = Mth.floor(box.minX + .001); x <= Mth.floor(box.maxX - .001); x++) {
+            for (int z = Mth.floor(box.minZ + .001); z <= Mth.floor(box.maxZ - .001); z++) {
+                var chunk = world.getChunkSource().getChunkNow(x >> 4, z >> 4);
+                int start = Math.min(top, chunk.getHeight(Heightmap.Types.MOTION_BLOCKING, x & 15, z & 15));
+                for (int y = start; y >= world.getMinBuildHeight() && y + 1 > highest; y--) {
+                    pos.set(x, y, z);
+                    var state = chunk.getBlockState(pos);
+                    if (state.isAir() || state.liquid()) continue;
+                    var shape = state.getCollisionShape(world, pos);
+                    if (shape.isEmpty()) continue;
+                    double surface = y + shape.max(Direction.Axis.Y);
+                    if (surface <= box.minY + .001) highest = Math.max(highest, surface);
+                }
+                if (highest >= box.minY - .001) return 0;
+            }
+        }
+        return highest == Double.NEGATIVE_INFINITY ? -1 : (float)Math.max(0, box.minY - highest);
+    }
+
+    boolean groundWithin(NativeGroundVehicle craft, double distance) {
+        var contacts = contacts(craft, craft.position(), craft.getYRot(), craft.hullPitch(), new Vec3(0, -distance, 0));
+        return contacts != null && blocked(contacts, new Vec3(0, -distance, 0), 1);
+    }
+
+    boolean clearMotion(NativeGroundVehicle craft, float yaw, float pitch, Vec3 travel) {
+        float yawChange = Mth.wrapDegrees(yaw - craft.getYRot());
+        float pitchChange = pitch - craft.hullPitch();
+        int steps = Math.max(1, (int)Math.ceil(radius * Math.toRadians(Math.abs(yawChange) + Math.abs(pitchChange)) / .15));
+        for (int step = 1; step <= steps; step++) {
+            float fraction = (float)step / steps;
+            var contacts = contacts(craft, craft.position(), craft.getYRot() + yawChange * fraction,
+                    craft.hullPitch() + pitchChange * fraction, travel);
+            if (contacts == null || blocked(contacts, travel, 1)) return false;
+        }
+        return true;
     }
 
     float turn(NativeGroundVehicle craft, float yaw, float amount) {

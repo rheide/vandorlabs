@@ -48,6 +48,8 @@ public final class NativeSnapshotAppearance {
             return com.vandorlabs.neoforge.rack.NativeRackData.appearance(raw);
         }else if(name.equals("vandorlabs:turntable_surface")){
             return com.vandorlabs.neoforge.surface.NativeSurfaceAppearance.project(raw);
+        }else if(com.vandorlabs.neoforge.vehicle.NativeVehicleStatus.supports(state)){
+            return com.vandorlabs.neoforge.vehicle.NativeVehicleStatus.appearance(state,raw);
         }else if(state.getBlock() instanceof SignBlock){
             for(String side:List.of("front_text","back_text")){
                 CompoundTag face=raw.contains(side,Tag.TAG_COMPOUND)?raw.getCompound(side):new CompoundTag();
