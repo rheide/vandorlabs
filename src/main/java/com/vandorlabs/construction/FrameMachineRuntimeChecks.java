@@ -52,7 +52,13 @@ public final class FrameMachineRuntimeChecks {
                 require(reloaded.pivot().equals(tile.pivot()) && reloaded.cell(0,0,0).equals(tile.cell(0,0,0)),"saved corner offset");
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
-                tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
+                tile.dismantle();
+                net.minecraft.block.state.IBlockState dismantled=world.getBlockState(root);
+                require(!tile.formed()&&dismantled==formed.withProperty(BlockConstructorCore.FORMED,false)
+                        &&world.getTileEntity(root)==tile,"manual dismantling restores the seed model state and retains its tile "+scenario);
+                for(EnumFacing side:EnumFacing.values())require(dismantled.isSideSolid(world,root,side),
+                        "dismantled core supports adjacent blocks "+side+" "+scenario);
+                checkRestored(world,original,matter);
                 require(((TileEntityAnimatedScreenSelector)world.getTileEntity(missing)).getHousingTexture()==0,
                         "mixed finish restored through formation and dismantling");
                 checkCosmeticTicks(tile,spec);require(!tile.formed(),"dismantled frame never automatically reforms");
