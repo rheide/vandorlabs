@@ -8,6 +8,10 @@ public final class NativeBufferBlock extends BaseEntityBlock {
  public BlockState legacyState(int meta){Direction face=battery?(meta==4?Direction.UP:meta==5?Direction.DOWN:Direction.from2DDataValue(meta)):Direction.from3DDataValue(meta&7);return defaultBlockState().setValue(FACING,face);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return battery?new NativeBatteryEntity(pos,state):new NativeHexTankEntity(pos,state);}
  @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block block,BlockPos from,boolean moving){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeBatteryEntity owner)owner.neighborChanged();}
+ @Override protected boolean isSignalSource(BlockState state){return true;}
+ @Override protected int getSignal(BlockState state,BlockGetter world,BlockPos pos,Direction side){
+  return world.getBlockEntity(pos) instanceof NativeBufferEntity tile?tile.fullness().localPower():0;
+ }
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.ENTITYBLOCK_ANIMATED;}
  @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){if(level.isClientSide)return null;return battery?createTickerHelper(type,NativeBufferBindings.BATTERY_ENTITY,NativeBatteryEntity::tick):createTickerHelper(type,NativeBufferBindings.TANK_ENTITY,(world,pos,s,tile)->tile.serverTick());}
  @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return NativeBufferBindings.open(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;}
