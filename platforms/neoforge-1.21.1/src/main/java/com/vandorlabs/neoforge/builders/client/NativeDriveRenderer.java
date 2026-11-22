@@ -259,7 +259,9 @@ final class NativeDriveRenderer {
         var point = NativeBuilderBindings.world(tile, shape.width * .5, shape.height * .55, shape.depth - .05);
         var camera = Minecraft.getInstance().getCameraEntity();
         if (camera != null && camera.distanceToSqr(point) <= 64 * 64) {
-            NativePropulsionParticles.drive(world, point, tile.facing().getOpposite(), tile.maxwell() ? 1 : settings.particles());
+            float spread = tile.maxwell() ? .95F * shape.width / MaxwellEngine.BASE_WIDTH : .95F;
+            NativePropulsionParticles.drive(world, point, tile.facing().getOpposite(),
+                    tile.maxwell() ? 1 : settings.particles(), spread);
         }
     }
 

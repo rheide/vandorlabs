@@ -2,6 +2,7 @@
 """Validate the restricted three-builder native projection against released source bytes."""
 import hashlib,json,shutil,tempfile
 import generate_builder_resources as generator
+from PIL import Image
 from pathlib import Path
 from generate_builder_resources import ROOT,OUT,IDS,SOURCE,DRIVES
 
@@ -42,6 +43,10 @@ def main():
     assert set(drive_specs['longburn_drive']['meshes'])=={'maxwell_body','drive_lights','active/drive_lights'}
     assert {'vandorlabs:blocks/longburn_drive/maxwell_'+part for part in ('casing','gauge','gauge_bar')} <= manifest['textures'].keys()
     assert 'vandorlabs:blocks/resource_ports/fluid_in_off' in manifest['shared']
+    maxwell_sprites=assets/'textures/blocks/longburn_drive'
+    for name,resolution in (('casing',64),('gauge',64),('gauge_bar',16)):
+        with Image.open(maxwell_sprites/f'maxwell_{name}.png') as image:
+            assert image.size==(resolution,resolution)
     expected_loot={design+'_core.json' for design in IDS}|{row['block']+'.json' for row in drive_specs.values()}
     assert {p.name for p in (OUT/'data/vandorlabs/loot_table/blocks').glob('*.json')}==expected_loot
     assert not list(OUT.rglob('recipe')) and not list(OUT.rglob('recipes'))
