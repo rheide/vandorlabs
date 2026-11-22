@@ -26,7 +26,8 @@ public final class VehicleCruise {
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ;
-    private MessageCruiseTerrain pending;
+    private MessageCruiseTerrain pending, published;
+    private final java.util.Set<EntityPlayerMP> viewers = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     private int nextPixel, publishedX, publishedZ, publishedStep;
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
@@ -56,8 +57,7 @@ public final class VehicleCruise {
             craft.world.getChunkFromBlockCoords(new BlockPos(routeX, 0, routeZ));
             craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
             relocate(routeX, arrivalY, routeZ);
-            pending = null;
-            publishedStep = 0;
+            clearTerrain();
             return true;
         }
         if (!cruising || craft.ticksExisted % 3 == 0) {
@@ -111,11 +111,17 @@ public final class VehicleCruise {
     }
 
     private void updateTerrain(double x, double z, double height) {
-        if (craft.getPassengers().isEmpty()) return;
+        java.util.List<Entity> riders=craft.getPassengers();
+        viewers.retainAll(riders);
+        if (riders.isEmpty()) return;
         final int size = MessageCruiseTerrain.SIZE;
         int step = Math.max(8,Integer.highestOneBit((int)height / 8) / 2);
         int centerX = MathHelper.floor(x / step) * step;
         int centerZ = MathHelper.floor(z / step) * step;
+        if (published!=null && Math.abs(x-publishedX)<size*publishedStep/4 && Math.abs(z-publishedZ)<size*publishedStep/4) {
+            for (Entity rider:riders) if (rider instanceof EntityPlayerMP && viewers.add((EntityPlayerMP)rider))
+                PacketHandler.INSTANCE.sendTo(published,(EntityPlayerMP)rider);
+        }
         if (pending != null && (Math.abs(x-pending.centerX) >= size*pending.step/4
                 || Math.abs(z-pending.centerZ) >= size*pending.step/4)) {
             pending = null;
@@ -123,7 +129,7 @@ public final class VehicleCruise {
         }
         if (pending == null) {
             if (step == publishedStep && Math.abs(x-publishedX) < size*step/5 &&
-                    Math.abs(z-publishedZ) < size*step/5 && craft.ticksExisted%200 != 0) return;
+                    Math.abs(z-publishedZ) < size*step/5) return;
             pending = new MessageCruiseTerrain(craft.getEntityId(), centerX, centerZ, step);
             nextPixel = 0;
             pending.sampleStride = publishedStep == 0 ? 8 : 1;
@@ -143,8 +149,11 @@ public final class VehicleCruise {
             nextPixel++;
         } while (nextPixel < end && System.nanoTime()-started < 750000L);
         if (nextPixel == columns*columns) {
-            for (Entity rider : craft.getPassengers()) if (rider instanceof EntityPlayerMP)
-                PacketHandler.INSTANCE.sendTo(pending,(EntityPlayerMP)rider);
+            published=pending;
+            for (Entity rider:riders) if (rider instanceof EntityPlayerMP) {
+                viewers.add((EntityPlayerMP)rider);
+                PacketHandler.INSTANCE.sendTo(published,(EntityPlayerMP)rider);
+            }
             publishedX = pending.centerX;
             publishedZ = pending.centerZ;
             publishedStep = pending.step;
@@ -159,8 +168,14 @@ public final class VehicleCruise {
 
     void endForLanding() {
         craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
+        clearTerrain();
+    }
+
+    private void clearTerrain() {
         pending=null;
+        published=null;
         publishedStep=0;
+        viewers.clear();
     }
 
     void write(NBTTagCompound tag) {
