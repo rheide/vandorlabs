@@ -718,7 +718,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(descendingFromFlight()||altitude>ceiling+.02){advanceFlightDescent(ceiling);return;}
         landedFromFlight=false;onGround=false;
         double response=FlightEnvelope.response(flightReadout.effectiveMass,flightReadout.thrust);
-        double speed=FlightEnvelope.cruiseSpeed(altitude);
+        double speed=flightReadout.cruiseSpeed(altitude);
         driveSpeed=approach(driveSpeed,speed,FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)*(1+speed/10));
         float yaw=rotationYaw+(controlled?strafe*(float)(.9+.55*response):0);
         float pitch=MathHelper.clamp(flightPitch-(controlled?forward*(float)(.6+.38*response):0),-FlightEnvelope.MAX_PITCH,FlightEnvelope.MAX_PITCH);

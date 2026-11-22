@@ -26,6 +26,16 @@ public final class VehicleFlightReadout {
     public double takeoffMass() { return FlightEnvelope.takeoffMass(thrust); }
     public double maximumAltitude() { return FlightEnvelope.maximumAltitude(effectiveMass, thrust); }
     public boolean canFly() { return FlightEnvelope.canFly(effectiveMass, thrust); }
+    public double cruiseSpeed(double altitude) { return FlightEnvelope.cruiseSpeed(altitude, effectiveMass, thrust); }
+
+    public double projectedAltitude(double dimensionCeiling) {
+        return Math.max(0, Math.min(dimensionCeiling, FlightEnvelope.maximumAltitude(effectiveMass, ratedThrust)));
+    }
+
+    public double projectedSpeed(double dimensionCeiling) {
+        double ceiling = projectedAltitude(dimensionCeiling);
+        return ceiling == 0 ? 0 : FlightEnvelope.cruiseSpeed(ceiling, effectiveMass, ratedThrust);
+    }
 
     private static int liftUnits(VehicleStructure structure) {
         int units = 0;

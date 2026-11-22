@@ -7,6 +7,8 @@ public final class FlightEnvelope {
     public static final int REENTRY_ALTITUDE = 200;
     public static final double TAKEOFF_SPEED = .32;
     public static final double LOW_SPEED = 1.5;
+    public static final double MAX_CRUISE_SPEED = 75;
+    private static final double EARLY_CRUISE_SHARE = .25;
     public static final float MAX_PITCH = 45;
     private static final double MASS_PER_THRUST = 512;
     private static final double THRUST_ALTITUDE_LIMIT = 100000;
@@ -46,6 +48,19 @@ public final class FlightEnvelope {
     public static double cruiseSpeed(double altitude) {
         double height = Math.max(0, Math.min(1, (altitude - WORLD_CEILING) / (MAX_ALTITUDE - WORLD_CEILING)));
         return LOW_SPEED * (1 + 49 * height * height);
+    }
+
+    public static double cruiseSpeed(double altitude, double mass, double thrust) {
+        double ceiling = maximumAltitude(mass, thrust);
+        if (ceiling == 0) return 0;
+        double climb = Math.max(0, Math.min(altitude, ceiling) - WORLD_CEILING);
+        double cruiseHeight = MAX_ALTITUDE - WORLD_CEILING;
+        double fraction = climb / cruiseHeight;
+        double early = climb / (WORLD_CEILING + climb);
+        double blendAtLimit = EARLY_CRUISE_SHARE * cruiseHeight / MAX_ALTITUDE + 1 - EARLY_CRUISE_SHARE;
+        double blend = EARLY_CRUISE_SHARE * early + (1 - EARLY_CRUISE_SHARE) * fraction * fraction;
+        double power = Math.min(1, takeoffMass(thrust) / (2 * mass));
+        return LOW_SPEED + (MAX_CRUISE_SPEED - LOW_SPEED) * power * blend / blendAtLimit;
     }
 
     public static double acceleration(double mass, double thrust) {

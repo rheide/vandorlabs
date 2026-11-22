@@ -468,11 +468,15 @@ public final class VehicleClient {
             fontRenderer.drawString("Current takeoff limit: "+weightLimit(readout.thrust),x,y+44,0xc4d0d8);
             double dimensionCeiling=mc.world.provider.getDimension()==0?com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE
                     :mc.world.getActualHeight()-(data.structure==null?1:data.structure.bounds.maxY+1);
-            String altitude=readout.canFly()?String.format(java.util.Locale.ROOT,"Y %,.0f",Math.max(0,Math.min(readout.maximumAltitude(),dimensionCeiling))):"Unavailable";
-            fontRenderer.drawString("Maximum flight altitude: "+altitude,x,y+58,0xc4d0d8);
-            if(!readout.canFly() && readout.thrust>0)haiku(x,y+76,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
-            else if(readout.canFly() && readout.maximumAltitude()<com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)haiku(x,y+76,0x9fc8ff,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
-            fontRenderer.drawSplitString("Select Flight on the Vehicle Status screen.",x,y+114,width,0xaabbcc);
+            double projectedAltitude=readout.projectedAltitude(dimensionCeiling);
+            String altitude=projectedAltitude>0?String.format(java.util.Locale.ROOT,"Y %,.0f",projectedAltitude):"Unavailable";
+            double projectedSpeed=readout.projectedSpeed(dimensionCeiling);
+            String speed=projectedSpeed>0?String.format(java.util.Locale.ROOT,"%,.0f m/s",projectedSpeed*20):"Unavailable";
+            fontRenderer.drawString("Projected max altitude: "+altitude,x,y+58,0xc4d0d8);
+            fontRenderer.drawString("Projected max speed: "+speed,x,y+72,0xc4d0d8);
+            if(!readout.canFly() && readout.thrust>0)haiku(x,y+89,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
+            else if(readout.canFly() && readout.maximumAltitude()<com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)haiku(x,y+89,0x9fc8ff,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
+            fontRenderer.drawSplitString("Select Flight on the Status screen.",x,y+120,width,0xaabbcc);
         }
         private static String weightLimit(double thrust) {
             return String.format(java.util.Locale.ROOT,"%,d units",(long)Math.floor(com.vandorlabs.physics.FlightEnvelope.takeoffMass(thrust)));

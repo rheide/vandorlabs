@@ -23,6 +23,13 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.cruiseSpeed(256)==1.5&&FlightEnvelope.cruiseSpeed(300)<1.51,"continuous handoff at build height");
         require(FlightEnvelope.cruiseSpeed(10000)==75&&FlightEnvelope.cruiseSpeed(20000)==75,"speed cap");
 
+        require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"light drive handoff is continuous");
+        require(FlightEnvelope.cruiseSpeed(257,200,1)<1.6,"first cruise block has no speed jump");
+        require(FlightEnvelope.cruiseSpeed(320,200,1)*20>=100,"one Maxwell with modest cargo can reach 100 m/s soon above the build ceiling");
+        require(FlightEnvelope.cruiseSpeed(800,400,1)<FlightEnvelope.cruiseSpeed(800,200,1),"payload reduces cruise speed");
+        require(FlightEnvelope.cruiseSpeed(10000,120,1)==75,"light craft retain the absolute speed cap");
+        require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
+
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
         require(!hull.intersects(pane)&&hull.sweepsInto(pane,1.5,0,0),"thin terrain crossed between positional samples");
