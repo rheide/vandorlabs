@@ -48,7 +48,7 @@ final class NativeVehicleScan {
                 throw new IllegalArgumentException("Unsupported or retained vehicle data at " + pos.toShortString());
             }
             var raw = tile == null ? null : tile.saveWithFullMetadata(world.registryAccess());
-            if (raw != null && NativeVehicleMekanismTank.supports(state)) {
+            if (raw != null && (NativeVehicleMekanismTank.supports(state) || NativeVehicleMekanismCube.supports(state))) {
                 var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
                 NativeVehicleMekanismAccess.require(owner.ownerId(), world, pos, state, tile);
             }

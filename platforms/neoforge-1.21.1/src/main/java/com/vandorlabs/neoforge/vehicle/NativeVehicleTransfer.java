@@ -588,7 +588,7 @@ public final class NativeVehicleTransfer {
         if (player.blockActionRestricted(world, cell.pos, player.gameMode.getGameModeForPlayer())) {
             throw new IllegalArgumentException("The player cannot remove vehicle cell " + cell.pos.toShortString());
         }
-        if (NativeVehicleMekanismTank.supports(cell.state)) {
+        if (NativeVehicleMekanismTank.supports(cell.state) || NativeVehicleMekanismCube.supports(cell.state)) {
             NativeVehicleMekanismAccess.require(player.getUUID(), world, cell.pos, cell.state, world.getBlockEntity(cell.pos));
         }
         var event = new BlockEvent.BreakEvent(world, cell.pos, cell.state, player);

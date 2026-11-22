@@ -63,6 +63,7 @@ public final class NativeVehicleStructure {
                 pilots++;
             }
             var raw = cell.tile();
+            if (NativeVehicleMekanismCube.supports(cell.state)) NativeVehicleMekanismCube.contents(raw);
             if (raw != null) {
                 if (raw.sizeInBytes() > LIMITS.tileBytes()) throw new IllegalArgumentException("Vehicle tile data exceeds its byte bound");
                 requireCoordinates(cell.pos, raw);
@@ -175,7 +176,7 @@ public final class NativeVehicleStructure {
         var block = state.getBlock();
         var identity = BuiltInRegistries.BLOCK.getKey(block);
         boolean plainVanilla = identity.getNamespace().equals("minecraft") && (
-            block.getClass() == Block.class || block instanceof RotatedPillarBlock || block instanceof SlabBlock
+            block.getClass() == Block.class || state.is(Blocks.REDSTONE_BLOCK) || block instanceof RotatedPillarBlock || block instanceof SlabBlock
             || block instanceof StairBlock || block instanceof HalfTransparentBlock || block instanceof StainedGlassBlock
             || block instanceof SignBlock || block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock
             || block instanceof ChestBlock || block instanceof BarrelBlock);
@@ -190,7 +191,7 @@ public final class NativeVehicleStructure {
             || NativeVehicleArms.block(state) || NativeVehicleStatus.supports(state)
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
             || programmable(state);
-        if ((!plainVanilla && !nativeBlock && !NativeVehicleMekanismTank.supports(state)) || state.isAir() || !state.getFluidState().isEmpty()
+        if ((!plainVanilla && !nativeBlock && !NativeVehicleMekanismTank.supports(state) && !NativeVehicleMekanismCube.supports(state)) || state.isAir() || !state.getFluidState().isEmpty()
             || block instanceof ChestBlock && state.getValue(BlockStateProperties.CHEST_TYPE) != ChestType.SINGLE) {
             throw new IllegalArgumentException("Vehicle cannot move " + identity);
         }
@@ -212,7 +213,7 @@ public final class NativeVehicleStructure {
     }
 
     static boolean supportsTile(BlockEntity tile) {
-        if (tile instanceof NativeVehicleControllerEntity || NativeVehicleMekanismTank.supports(tile)) return true;
+        if (tile instanceof NativeVehicleControllerEntity || NativeVehicleMekanismTank.supports(tile) || NativeVehicleMekanismCube.supports(tile)) return true;
         if (tile instanceof NativeGearEntity gear) {
             return NativeVehicleArms.block(gear.getBlockState()) && !gear.inert() && gear.owner() != null
                 && gear.payload() == null && !gear.hasStoredSections();
