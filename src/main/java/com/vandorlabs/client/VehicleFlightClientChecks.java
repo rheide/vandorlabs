@@ -61,7 +61,7 @@ final class VehicleFlightClientChecks {
         player.setSneaking(false);
         player.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
         for(int x=-16;x<=16;x+=16)for(int z=-112;z<=16;z+=16)world.getChunkFromBlockCoords(ORIGIN.add(x,0,z));
-        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-88),ORIGIN.add(39,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
+        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-88),ORIGIN.add(23,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(int x=1;x<=3;x++)for(int z=0;z<=4;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,z),Blocks.STONE.getDefaultState(),null));
         cells.removeIf(cell->cell.pos.equals(SEAT));
@@ -88,7 +88,7 @@ final class VehicleFlightClientChecks {
         }
         EntityGroundVehicle craft=new EntityGroundVehicle(world);
         craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,4));
-        craft.setPosition(ORIGIN.getX(),ORIGIN.getY()+.6,ORIGIN.getZ());
+        craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());
         TileEntityConstructor carried=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
         need(carried.formed()&&carried.maxwellFuel()==400&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
         need(world.spawnEntity(craft),"spawn craft");
@@ -130,6 +130,13 @@ final class VehicleFlightClientChecks {
                 VehicleFlightReadout actual=mc.getIntegratedServer().callFromMainThread(()->server(mc).flightReadout()).get();
                 need(false,"networked drive, fuel and weight permit takeoff, client "+measurements(readout)+" server "+measurements(actual));
             }
+            boolean ready=mc.getIntegratedServer().callFromMainThread(()->{
+                EntityGroundVehicle actual=server(mc);
+                EntityPlayerMP pilot=player(mc);
+                return actual.onGround&&actual.getControllingPassenger()==pilot&&actual.acknowledgedInput()>=0
+                        &&actual.flightReadout().canFly()&&pilot.getHeldItemMainhand().isEmpty();
+            }).get();
+            if(!ready){need(frame<120,"server contact, seated input and inventory are synchronized before Flight click");return false;}
             runwayY=craft.posY;
             aim(mc,craft,3);next();return false;
         }
@@ -149,6 +156,11 @@ final class VehicleFlightClientChecks {
         if(stage==2&&frame>=22){
             String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed;
             if(!craft.flying()&&(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4)&&frame<100)return false;
+            if(!craft.takeoffRoll())motion+=mc.getIntegratedServer().callFromMainThread(()->{
+                EntityGroundVehicle actual=server(mc);EntityPlayerMP pilot=player(mc);
+                return " server roll="+actual.takeoffRoll()+" ground="+actual.onGround+" acknowledged="+actual.acknowledgedInput()
+                        +" Y="+actual.posY+" seated="+(actual.getControllingPassenger()==pilot)+" held="+pilot.getHeldItemMainhand();
+            }).get();
             need(craft.takeoffRoll()&&!craft.flying()&&Math.abs(craft.posY-runwayY)<.08&&craft.driveSpeed>=FlightEnvelope.TAKEOFF_SPEED-1e-4,
                     "ground roll builds speed without liftoff before pitch input; "+motion);
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
