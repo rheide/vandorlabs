@@ -47,7 +47,8 @@ public final class NativeVehicleTransferChecks {
     private static final AABB VOLUME = new AABB(ROOT).minmax(new AABB(PARK)).inflate(8);
     private static ServerLevel world;
     private static FakePlayer player;
-    private static NativeGroundVehicle craft;
+    private static NativeGroundVehicle craft, stale;
+    private static CompoundTag originalActor;
     private static int ticks, stage;
     private static boolean blockedBreak, blockedPlace, faulted;
 
@@ -143,6 +144,7 @@ public final class NativeVehicleTransferChecks {
                 require(world.getBlockState(ROOT.below(2)).is(Blocks.SMOOTH_STONE), "top-slab deck leaves the terrain in place");
                 craft = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
                 requireCarried(craft);
+                originalActor = craft.saveWithoutId(new CompoundTag());
                 craft.setYRot(90);
                 craft.setPos(PARK.getX() + .5, PARK.getY(), PARK.getZ() + .5);
                 movePlayer(PARK);
@@ -171,6 +173,13 @@ public final class NativeVehicleTransferChecks {
                 stage = 3;
                 return;
             }
+            if (stage == 4) {
+                if (!stale.isRemoved()) return;
+                require(actors() == 0, "the durable retirement removes a stale actor from its previous chunk");
+                requireInventory(parked(BARREL));
+                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/staleChunkActor");
+                return;
+            }
             if (NativeCellTransactions.busy(world, PARK, OWNER)) return;
             require(actors() == 0 && craft.isRemoved() && !NativeTransferHolds.active(world), "parking retires its carried owner");
             require(world.getBlockState(PARK).is(NativeVehicleBindings.CONTROLLER), "restores controller at rotated anchor");
@@ -182,7 +191,13 @@ public final class NativeVehicleTransferChecks {
             require(world.getBlockState(parked(BARREL)).getValue(BlockStateProperties.FACING) == Direction.WEST,
                 "native barrel facing rotates");
             requireInventory(parked(BARREL));
-            pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents");
+            require(!new ChunkPos(ROOT).equals(new ChunkPos(PARK)), "parking crossed to a different entity storage chunk");
+            stale = NativeVehicleBindings.VEHICLE.create(world);
+            require(stale != null, "native actor factory is available for the stale-record regression");
+            stale.load(originalActor.copy());
+            require(world.addFreshEntity(stale) && NativeVehicleTransfer.escrowed(stale),
+                "an older snapshot of the retired UUID cannot become usable while its record is checked");
+            stage = 4;
         } catch (Throwable failure) { fail(failure); }
     }
 

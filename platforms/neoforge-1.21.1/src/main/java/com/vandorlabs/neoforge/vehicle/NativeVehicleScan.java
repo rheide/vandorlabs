@@ -65,7 +65,7 @@ final class NativeVehicleScan {
         }
         var physical = new NativeTransferSnapshot(cells, NativeVehicleStructure.LIMITS);
         var local = NativeVehicleStructure.translate(physical, BlockPos.ZERO.subtract(controller), Rotation.NONE);
-        NativeVehicleStructure.validate(local, pilot, facing);
+        NativeVehicleStructure.validate(local, pilot, facing, world.registryAccess());
         return new Result(physical, local, pilot, facing);
     }
 

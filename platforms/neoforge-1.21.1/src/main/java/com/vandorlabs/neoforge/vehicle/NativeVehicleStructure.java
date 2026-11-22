@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge.vehicle;
 
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.builders.*;
 import com.vandorlabs.neoforge.landing.NativeSideWheel;
 import com.vandorlabs.neoforge.ports.NativeResourcePortEntity;
 import com.vandorlabs.neoforge.reservoir.NativeBufferEntity;
@@ -14,6 +15,7 @@ import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -30,7 +32,7 @@ public final class NativeVehicleStructure {
     public static final NativeTransferSnapshot.Limits LIMITS =
         new NativeTransferSnapshot.Limits(2048, 128 * 1024, 1536 * 1024, 16 * 1024 * 1024);
 
-    public static void validate(NativeTransferSnapshot snapshot, BlockPos pilot, Direction facing) {
+    public static void validate(NativeTransferSnapshot snapshot, BlockPos pilot, Direction facing, HolderLookup.Provider registries) {
         if (snapshot == null || pilot == null || facing == null || !facing.getAxis().isHorizontal()
             || snapshot.cells().size() > LIMITS.cells() || snapshot.decodedBytes > LIMITS.bytes()) {
             throw new IllegalArgumentException("Invalid vehicle hull");
@@ -81,6 +83,7 @@ public final class NativeVehicleStructure {
             }
         }
         if (connected.size() != cells.size()) throw new IllegalArgumentException("Vehicle hull contains disconnected cells");
+        NativeBuilderTransfer.validateVehicle(snapshot.cells(), registries);
     }
 
     static boolean pilot(BlockState state) {
@@ -147,6 +150,8 @@ public final class NativeVehicleStructure {
             || block instanceof SignBlock || block instanceof CeilingHangingSignBlock || block instanceof WallHangingSignBlock
             || block instanceof ChestBlock || block instanceof BarrelBlock);
         boolean nativeBlock = state.is(NativeVehicleBindings.CONTROLLER) || block instanceof NativeSideWheel
+            || block instanceof NativeBuilderCoreBlock core && core.design.drive() == NativeDriveDesign.LONGBURN
+            || block instanceof NativeBuilderPartBlock
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
@@ -156,12 +161,16 @@ public final class NativeVehicleStructure {
             throw new IllegalArgumentException("Vehicle cannot move " + identity);
         }
         var heading = state;
-        for (int turn = 0; turn < 4; turn++) heading = heading.rotate(Rotation.CLOCKWISE_90);
+        for (int turn = 0; turn < 4; turn++) heading = rotateState(heading, Rotation.CLOCKWISE_90);
         if (heading != state) throw new IllegalArgumentException("Vehicle rotation cannot preserve " + identity);
     }
 
     static boolean supportsTile(BlockEntity tile) {
         if (tile instanceof NativeVehicleControllerEntity) return true;
+        if (tile instanceof NativeBuilderEntity builder) {
+            return builder.maxwell() && builder.formed() && !builder.inert() && !builder.pendingFormation();
+        }
+        if (tile instanceof NativeBuilderPartEntity part) return !part.inert();
         if (tile instanceof NativeChairEntity seat) return seat.kind() == NativeSeatKind.PILOT && !seat.inert();
         if (tile instanceof NativeResourcePortEntity port) return !port.inert();
         if (tile instanceof NativeBufferEntity buffer) return !buffer.inert();
@@ -191,12 +200,18 @@ public final class NativeVehicleStructure {
         var cells = new ArrayList<NativeRawCell>(source.cells().size());
         for (var cell : source.cells()) {
             var target = anchor.offset(cell.pos.rotate(rotation));
-            var state = cell.state.rotate(rotation);
+            var state = rotateState(cell.state, rotation);
             var tile = cell.tile();
             if (tile != null) {
                 tile.putInt("x", target.getX());
                 tile.putInt("y", target.getY());
                 tile.putInt("z", target.getZ());
+                if (rotation != Rotation.NONE && cell.state.getBlock() instanceof NativeBuilderPartBlock) {
+                    if (!tile.contains("ConstructorOwner", Tag.TAG_LONG) || tile.contains("ConstructorMatter")) {
+                        throw new IllegalArgumentException("Vehicle Maxwell frame needs native part ownership");
+                    }
+                    tile.putLong("ConstructorOwner", BlockPos.of(tile.getLong("ConstructorOwner")).rotate(rotation).asLong());
+                }
                 if (rotation != Rotation.NONE && tile.contains("PortFaces", Tag.TAG_INT_ARRAY)) {
                     var old = tile.getIntArray("PortFaces");
                     if (old.length != 6) throw new IllegalArgumentException("Invalid vehicle port face bank");
@@ -208,6 +223,13 @@ public final class NativeVehicleStructure {
             cells.add(new NativeRawCell(target, state, tile, LIMITS.tileBytes()));
         }
         return new NativeTransferSnapshot(cells, LIMITS);
+    }
+
+    private static BlockState rotateState(BlockState state, Rotation rotation) {
+        if (state.getBlock() instanceof NativeBuilderCoreBlock) {
+            return state.setValue(NativeBuilderCoreBlock.FACING, rotation.rotate(state.getValue(NativeBuilderCoreBlock.FACING)));
+        }
+        return state.rotate(rotation);
     }
 
     private static void requireCoordinates(BlockPos p, CompoundTag raw) {

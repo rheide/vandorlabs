@@ -1,9 +1,15 @@
 package com.vandorlabs.neoforge.vehicle;
 
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
+import com.vandorlabs.neoforge.builders.NativeBuilderProtection;
+import com.vandorlabs.neoforge.builders.NativeBuilderTransfer;
 import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;
 import com.vandorlabs.neoforge.transfer.*;
 import java.util.*;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -176,6 +182,8 @@ public final class NativeVehicleTransfer {
         NativeEntityCheckpoint checkpoint;
         boolean checkpointRollback;
         NativeGroundVehicle staged;
+        Future<Void> retirement;
+        boolean retirementRollback;
 
         Receipt(boolean parking, UUID identity, ChunkPos entityChunk, CompoundTag original,
                 NativeTransferSnapshot occupied, Set<BlockPos> held) {
@@ -201,6 +209,29 @@ public final class NativeVehicleTransfer {
                 }, 1, (chunk, saved) -> requireActorRecord(header, this, rollback, saved));
             }
             return checkpoint;
+        }
+
+        boolean retire(ServerLevel world, NativeCellTransactions.Header header, boolean rollback) {
+            if (!parking) return true;
+            if (retirement == null || retirementRollback != rollback) {
+                try {
+                    retirement = NativeVehicleRetirements.checkpoint(world, identity, header.owner(), header.operation(), rollback);
+                    retirementRollback = rollback;
+                } catch (RejectedExecutionException busy) {
+                    return false;
+                }
+            }
+            if (!retirement.isDone()) return false;
+            try {
+                retirement.get();
+                return true;
+            } catch (ExecutionException unavailable) {
+                retirement = null;
+                throw new CompletionException(unavailable.getCause());
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(interrupted);
+            }
         }
     }
 
@@ -248,7 +279,7 @@ public final class NativeVehicleTransfer {
         }
         var hull = NativeVehicleStructure.translate(occupied, BlockPos.ZERO.subtract(header.root()), Rotation.NONE);
         var local = NativeVehicleStructure.translate(hull, BlockPos.ZERO, rotation(Math.floorMod(-turn, 4)));
-        NativeVehicleStructure.validate(local, pilot, direction);
+        NativeVehicleStructure.validate(local, pilot, direction, registries);
         var controller = local.cells().stream().filter(cell -> cell.pos.equals(BlockPos.ZERO)).findFirst().orElseThrow().tile();
         var body = original.getCompound("Vehicle");
         if (!controller.hasUUID("VehicleOwner") || !controller.getUUID("VehicleOwner").equals(header.owner())
@@ -325,7 +356,11 @@ public final class NativeVehicleTransfer {
                 // Detach contents before onRemove can spill a chest, barrel or storage inventory.
                 if (before.hasTile()) world.removeBlockEntity(after.pos);
                 try (var scope = lease.allowOnce(after.pos)) {
-                    if (!world.setBlock(after.pos, after.state, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_MOVE_BY_PISTON)) {
+                    int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_MOVE_BY_PISTON;
+                    boolean written = NativeBuilderTransfer.builder(before.state) || NativeBuilderTransfer.builder(after.state)
+                        ? NativeBuilderProtection.set(world, after.pos, after.state, flags)
+                        : world.setBlock(after.pos, after.state, flags);
+                    if (!written) {
                         throw new IllegalStateException("Vehicle block publication refused at " + after.pos.toShortString());
                     }
                 }
@@ -379,7 +414,7 @@ public final class NativeVehicleTransfer {
         }
 
         @Override public boolean checkpointAdditional(ServerLevel world, NativeCellTransactions.Header header, boolean rollback, Receipt receipt) {
-            return receipt.checkpoint(world, header, rollback).poll();
+            return receipt.checkpoint(world, header, rollback).poll() && receipt.retire(world, header, rollback);
         }
 
         @Override public void released(ServerLevel world, NativeCellTransactions.Header header, boolean rollback, String error, Receipt receipt) {
@@ -394,6 +429,11 @@ public final class NativeVehicleTransfer {
                 var state = world.getBlockState(position);
                 world.sendBlockUpdated(position, state, state, Block.UPDATE_CLIENTS);
             }
+            if (receipt.expectsActor(rollback) && world.getEntity(receipt.identity) instanceof NativeGroundVehicle craft
+                && craft.getPersistentData().getCompound(ESCROW).equals(marker(header))) {
+                // APPLIED assembly has a fresh identity. ROLLED_BACK parking already cleared retirement.
+                NativeVehicleRetirements.active(craft);
+            }
             var player = world.getServer().getPlayerList().getPlayer(header.actor());
             if (player != null) player.displayClientMessage(Component.literal(rollback
                 ? error.isEmpty() ? "Vehicle transfer rolled back" : error
@@ -404,7 +444,15 @@ public final class NativeVehicleTransfer {
     private static Entity actor(ServerLevel world, NativeCellTransactions.Header header, Receipt receipt, boolean rollback) {
         var actual = receipt.checkpoint(world, header, rollback).actor(receipt.identity);
         var visible = world.getEntity(receipt.identity);
-        if (visible != null && visible != actual) throw new IllegalStateException("Vehicle actor moved outside its escrow chunk");
+        if (visible != null && visible != actual) {
+            if (world.getServer().getTickCount() != 0 || !receipt.parking
+                || !(visible instanceof NativeGroundVehicle stale) || !header.owner().equals(stale.owner())) {
+                throw new IllegalStateException("Vehicle actor moved outside its escrow chunk");
+            }
+            // Native storage may still have the same UUID in the preceding entity chunk.
+            // Only the journal's captured pose supplies the restored actor during cold parking recovery.
+            visible.discard();
+        }
         return actual == null || actual.isRemoved() ? null : actual;
     }
 
@@ -488,7 +536,7 @@ public final class NativeVehicleTransfer {
         var pending = PENDING_PARKS.get(world);
         if (pending != null && pending.contains(craft.getUUID())) return true;
         var data = craft.getPersistentData();
-        if (!data.contains(ESCROW)) return false;
+        if (!data.contains(ESCROW)) return retirementBlocks(world, craft);
         var saved = data.getCompound(ESCROW);
         if (!saved.getAllKeys().equals(MARKER_FIELDS) || !saved.hasUUID("Operation") || !saved.hasUUID("Owner")
             || !saved.hasUUID("Actor") || !saved.contains("Root", Tag.TAG_LONG)) return true;
@@ -497,10 +545,17 @@ public final class NativeVehicleTransfer {
         var state = NativeCellTransactions.escrowState(world, FAMILY, saved.getUUID("Operation"), root,
             craft.owner(), saved.getUUID("Actor"), receipt -> receipt.identity.equals(craft.getUUID()));
         if (state != NativeCellTransactions.EscrowState.ABSENT) return true;
+        if (retirementBlocks(world, craft)) return true;
         var chunk = world.getChunkSource().getChunkNow(root.getX() >> 4, root.getZ() >> 4);
         if (chunk == null || !chunk.getBlockState(root).isAir()) return true;
         data.remove(ESCROW);
         return false;
+    }
+
+    private static boolean retirementBlocks(ServerLevel world, NativeGroundVehicle craft) {
+        var state = NativeVehicleRetirements.admission(world, craft);
+        if (state == NativeVehicleRetirements.State.RETIRED) craft.discard();
+        return state != NativeVehicleRetirements.State.ACTIVE;
     }
 
     private static void requirePermission(ServerLevel world, NativeCellTransactions.Header header, ServerPlayer actor, BlockPos pos) {
@@ -532,6 +587,12 @@ public final class NativeVehicleTransfer {
         var probe = PROBE.get();
         return probe != null && probe.event == event && event.getLevel() instanceof ServerLevel world
             && NativeCellTransactions.reservedBy(world, probe.header, event.getPos());
+    }
+
+    /** Suppress only native dismantling during this exact read-only Maxwell probe. */
+    public static boolean isBuilderBreakProbe(BlockEvent.BreakEvent event) {
+        var probe = PROBE.get();
+        return probe != null && probe.event == event && NativeBuilderTransfer.builder(event.getState());
     }
 
     private static void placeProbe(ServerLevel world, ServerPlayer player, NativeRawCell cell) {
