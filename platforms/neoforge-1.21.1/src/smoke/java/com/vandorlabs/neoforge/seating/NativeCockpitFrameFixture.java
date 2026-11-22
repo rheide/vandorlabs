@@ -22,9 +22,9 @@ public final class NativeCockpitFrameFixture {
     static final BlockPos ROOT=new BlockPos(0,96,0);
     static final Vec3 START=new Vec3(.5,96,2.75);
     static final BlockPos MINE=ROOT.east();
-    static final int TOUCH_CHANNEL=8641,CENTER_CHANNEL=8642;
+    static final int TOUCH_CHANNEL=8641,CENTER_CHANNEL=8642,DISPLAY_CHANNEL=8643,EXTRA_CHANNEL=8644;
     private static ServerPlayer player;
-    private static boolean sawSignal,sawCenter;
+    private static boolean sawSignal,sawCenter,sawIndependent;
     static boolean enabled(){return Boolean.getBoolean("vandorlabs.cockpitFrameCheck");}
     static void check(boolean pass,String message){if(!pass)throw new AssertionError("Stationary Cockpit: "+message);}
 
@@ -53,6 +53,11 @@ public final class NativeCockpitFrameFixture {
                 check(cells.add(NativeCockpitGeometry.offset(part,facing)),"eight unique reservations in each facing");
             check(cells.contains(BlockPos.ZERO)&&NativeCockpitGeometry.shape(0,facing).bounds().minY==0,
                 "fixed anchor and authored floor collision "+facing);
+            for(int slot=0;slot<NativeCockpitTouch.MAX_SURFACES;slot++){
+                var face=NativeCockpitTouch.face(facing,slot,0);
+                check(face!=null&&face.height()>=10&&face.right().dot(face.normal())<1e-5
+                    &&face.down().dot(face.normal())<1e-5,"authored Cockpit ray plane "+facing+" slot "+slot);
+            }
         }
         level.removeBlock(obstructed,false);
         actor.getInventory().setItem(1,new ItemStack(Items.DIAMOND_PICKAXE));
@@ -62,7 +67,25 @@ public final class NativeCockpitFrameFixture {
     }
 
     @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){
-        if(!enabled()||player==null||(sawSignal&&sawCenter))return;
+        if(!enabled()||player==null||(sawSignal&&sawCenter&&sawIndependent))return;
+        var level=player.serverLevel();
+        if(!sawIndependent&&level.getBlockEntity(ROOT) instanceof NativeChairEntity owner
+            &&owner.cockpitTouch().settings(2).activation()==2&&owner.cockpitTouch().controls(6).rows().size()==1){
+            var controls=owner.cockpitTouch();
+            var display=controls.settings(2);
+            var row=controls.controls(6).rows().getFirst();
+            check(display.artwork()==NativeCockpitSurfaceEdit.BLACK&&display.channels().contains(DISPLAY_CHANNEL)&&controls.active(2)
+                &&controls.settings(6).artwork()==NativeCockpitSurfaceEdit.REDSTONE&&row.label().equals("Sensors")
+                &&row.channels().contains(EXTRA_CHANNEL)&&controls.controls(0).rows().size()==3&&controls.controls(1).rows().size()==6,
+                "real UI keeps seven-surface artwork, activation and rows independent");
+            var saved=owner.saveWithoutMetadata(level.registryAccess());
+            var copy=new NativeChairEntity(ROOT,owner.getBlockState());
+            copy.loadWithComponents(saved,level.registryAccess());
+            check(!copy.inert()&&copy.cockpitTouch().settings(2).equals(display)
+                &&copy.cockpitTouch().controls(6).rows().getFirst().equals(row),"independent surface configuration reloads");
+            sawIndependent=true;
+            System.out.println("[vandorlabs][cockpit-frame] independent artwork/rows/receiver/save PASS");
+        }
         sawCenter|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,CENTER_CHANNEL)==15;
         sawSignal|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,TOUCH_CHANNEL)==10;
     }
@@ -80,7 +103,7 @@ public final class NativeCockpitFrameFixture {
             if(stack.is(item))drops+=stack.getCount();
         }
         check(drops==1,"one Cockpit item after teardown from a side");
-        check(sawSignal&&sawCenter&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
+        check(sawSignal&&sawCenter&&sawIndependent&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
             "seated touch operated actual shared wireless Redstone and teardown withdrew its source");
         System.out.println("[vandorlabs][cockpit-frame] completed PASS");
         System.out.println("[vandorlabs][cockpit-frame] logout PASS");

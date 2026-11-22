@@ -30,6 +30,31 @@ public final class NativeCockpitFrameClient {
     private static String screenshot;
     private static java.util.concurrent.CompletableFuture<Void> reload;
 
+    private static void control(com.vandorlabs.neoforge.client.NativeScreenScreen editor,int id,int mouse){
+        var control=editor.button(id);
+        check(control!=null&&control.active&&editor.mouseClicked(control.getX()+control.getWidth()/2D,
+            control.getY()+control.getHeight()/2D,mouse),"actual Cockpit editor control "+id);
+    }
+    private static void selectSurface(com.vandorlabs.neoforge.client.NativeScreenScreen editor,String label){
+        for(int slot=0;slot<NativeCockpitTouch.MAX_SURFACES;slot++){
+            if(editor.button(594).getMessage().getString().equals(label))return;
+            control(editor,594,0);
+        }
+        throw new AssertionError("Missing Cockpit surface "+label);
+    }
+    private static void choose(com.vandorlabs.neoforge.client.NativeScreenScreen editor,String search,int choice){
+        var picker=editor.activePicker();
+        picker.searchField().setValue(search);
+        int row=picker.rows().indexOf(choice);
+        while(row>=picker.scroll()+picker.visible()){
+            int before=picker.scroll();
+            check(editor.mouseScrolled(editor.panel().listX+4,picker.top()+5,0,-1)&&picker.scroll()>before,
+                "wheel reaches cockpit artwork choice");
+        }
+        check(row>=picker.scroll()&&editor.mouseClicked(editor.panel().listX+4,picker.top()+5+(row-picker.scroll())*22,0)
+            &&editor.activePicker().selected()==choice,"select real Cockpit artwork row "+search);
+    }
+
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
         if(!enabled())return;
         var game=Minecraft.getInstance();
@@ -85,18 +110,32 @@ public final class NativeCockpitFrameClient {
                 if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
                 check(editor.getMenu().cockpit()&&editor.getTitle().getString().equals("Cockpit Displays"),
                     "normal Configurizer opens the shared touch-row editor");
+                selectSurface(editor,"Right arm keyboard");
                 for(int row=0;row<3;row++)editor.action(590,1);
                 check(!editor.button(590).active,"authored three-row touch capacity");
                 editor.rowLabel(2).setValue("Trim");
                 editor.rowChannels(2).setValue(Integer.toString(TOUCH_CHANNEL));
                 editor.action(702,1);
-                editor.action(593,1);
+                selectSurface(editor,"Center monitor");
                 for(int row=0;row<6;row++)editor.action(590,1);
                 check(!editor.button(590).active,"six center rows");
                 for(int scroll=0;scroll<5;scroll++)editor.mouseScrolled(0,0,0,-1);
                 int last=editor.rowLabels().size()-1;
                 editor.rowLabel(last).setValue("Last");
                 editor.rowChannels(last).setValue(Integer.toString(CENTER_CHANNEL));
+                selectSurface(editor,"Left monitor");
+                control(editor,595,0);
+                choose(editor,"Black",NativeCockpitSurfaceEdit.BLACK);
+                control(editor,597,0);
+                editor.channelField().setValue(Integer.toString(DISPLAY_CHANNEL));
+                control(editor,1602,1);
+                selectSurface(editor,"Right touch panel");
+                control(editor,595,0);
+                choose(editor,"Redstone controls",NativeCockpitSurfaceEdit.REDSTONE);
+                control(editor,596,0);
+                editor.action(590,1);
+                editor.rowLabel(0).setValue("Sensors");
+                editor.rowChannels(0).setValue(Integer.toString(EXTRA_CHANNEL));
                 editor.action(20,1);
                 select(game,3);
                 wait=ticks;stage++;
