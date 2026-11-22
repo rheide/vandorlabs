@@ -624,7 +624,7 @@ public class ReproLab {
             if (!worldSpawned && tick > 60 && mc.getIntegratedServer() == null) {
                 worldSpawned = true;
                 WorldSettings settings = new WorldSettings(12345L,
-                        GameType.CREATIVE, false, false, Boolean.getBoolean("vandorlabs.navigationWorldChecksOnly")?WorldType.DEFAULT:WorldType.FLAT);
+                        GameType.CREATIVE, false, false, (Boolean.getBoolean("vandorlabs.navigationWorldChecksOnly")||Boolean.getBoolean("vandorlabs.cruiseChecksOnly"))?WorldType.DEFAULT:WorldType.FLAT);
                 // Every run gets a fresh save. Reusing one after registry ids
                 // are added/retired lets Forge remap stale chunk data into
                 // current fixtures and made otherwise deterministic renders

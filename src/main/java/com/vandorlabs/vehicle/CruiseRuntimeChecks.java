@@ -66,7 +66,8 @@ public final class CruiseRuntimeChecks {
         }else if(stage==1&&ticks>10&&mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.ready()){
-            mc.player.rotationPitch=mc.player.prevRotationPitch=75;
+            mc.gameSettings.thirdPersonView=1;
+            mc.player.rotationPitch=mc.player.prevRotationPitch=35;
             mc.gameSettings.hideGUI=true;stage=3;ticks=0;
         }else if(stage==3&&ticks>15){
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());

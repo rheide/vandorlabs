@@ -17,12 +17,17 @@ import org.lwjgl.opengl.GL11;
 /** Low-detail geographic background. One texture for the local rider, reused between updates. */
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class CruiseSky {
+    private static final double[] UV = {0, .12, .88, 1};
     private static EntityGroundVehicle owner;
     private static MessageCruiseTerrain terrain;
     private static DynamicTexture texture;
     private static ResourceLocation location;
 
-    public static boolean ready(){return terrain!=null && owner.cruise.active();}
+    public static boolean ready(){
+        return terrain!=null && owner.cruise.active() &&
+                Math.abs(terrain.centerX-owner.cruise.x())<terrain.step*MessageCruiseTerrain.SIZE/4 &&
+                Math.abs(terrain.centerZ-owner.cruise.z())<terrain.step*MessageCruiseTerrain.SIZE/4;
+    }
 
     public static void receive(MessageCruiseTerrain image) {
         Minecraft mc=Minecraft.getMinecraft();
@@ -63,20 +68,31 @@ public final class CruiseSky {
         GL11.glDepthRange(1,1);
         try {
             GlStateManager.disableLighting();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             GlStateManager.color(1,1,1,1);
             mc.getTextureManager().bindTexture(location);
             BufferBuilder b=Tessellator.getInstance().getBuffer();
-            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
-            b.pos(x,y,z).tex(0,0).endVertex();
-            b.pos(x,y,z+width).tex(0,1).endVertex();
-            b.pos(x+width,y,z+width).tex(1,1).endVertex();
-            b.pos(x+width,y,z).tex(1,0).endVertex();
+            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
+            // Fade the distant edge of the generated terrain into the sky.
+            for(int i=0;i<3;i++)for(int j=0;j<3;j++){
+                vertex(b,x,y,z,width,i,j);
+                vertex(b,x,y,z,width,i,j+1);
+                vertex(b,x,y,z,width,i+1,j+1);
+                vertex(b,x,y,z,width,i+1,j);
+            }
             Tessellator.getInstance().draw();
         } finally {
+            GlStateManager.disableBlend();
             GL11.glDepthRange(0,1);
             GlStateManager.depthMask(true);
             GlStateManager.popMatrix();
         }
+    }
+    private static void vertex(BufferBuilder b,double x,double y,double z,double width,int col,int row){
+        double u=UV[col],v=UV[row];
+        int alpha=col==0||col==3||row==0||row==3?0:255;
+        b.pos(x+u*width,y,z+v*width).tex(u,v).color(255,255,255,alpha).endVertex();
     }
     private CruiseSky() {}
 }
