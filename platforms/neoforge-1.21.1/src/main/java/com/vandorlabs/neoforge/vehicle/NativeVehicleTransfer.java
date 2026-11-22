@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.vehicle;
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
 import com.vandorlabs.neoforge.builders.NativeBuilderProtection;
 import com.vandorlabs.neoforge.builders.NativeBuilderTransfer;
+import com.vandorlabs.neoforge.navigation.observer.NativeObserverProtection;
 import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;
 import com.vandorlabs.neoforge.transfer.*;
 import java.util.*;
@@ -359,7 +360,9 @@ public final class NativeVehicleTransfer {
                     int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_MOVE_BY_PISTON;
                     boolean written = NativeBuilderTransfer.builder(before.state) || NativeBuilderTransfer.builder(after.state)
                         ? NativeBuilderProtection.set(world, after.pos, after.state, flags)
-                        : world.setBlock(after.pos, after.state, flags);
+                        : NativeVehicleObservers.block(before.state) || NativeVehicleObservers.block(after.state)
+                            ? NativeObserverProtection.set(world, after.pos, after.state, flags)
+                            : world.setBlock(after.pos, after.state, flags);
                     if (!written) {
                         throw new IllegalStateException("Vehicle block publication refused at " + after.pos.toShortString());
                     }
@@ -593,6 +596,12 @@ public final class NativeVehicleTransfer {
     public static boolean isBuilderBreakProbe(BlockEvent.BreakEvent event) {
         var probe = PROBE.get();
         return probe != null && probe.event == event && NativeBuilderTransfer.builder(event.getState());
+    }
+
+    /** Suppress only native dismantling during this exact read-only observer probe. */
+    public static boolean isObserverBreakProbe(BlockEvent.BreakEvent event) {
+        var probe = PROBE.get();
+        return probe != null && probe.event == event && NativeVehicleObservers.block(event.getState());
     }
 
     private static void placeProbe(ServerLevel world, ServerPlayer player, NativeRawCell cell) {

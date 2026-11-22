@@ -4,6 +4,8 @@ import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.builders.*;
 import com.vandorlabs.neoforge.landing.NativeSideWheel;
+import com.vandorlabs.neoforge.navigation.observer.*;
+import com.vandorlabs.neoforge.transfer.NativeConstructorFrame;
 import com.vandorlabs.neoforge.ports.NativeResourcePortEntity;
 import com.vandorlabs.neoforge.reservoir.NativeBufferEntity;
 import com.vandorlabs.neoforge.seating.NativeChairEntity;
@@ -84,6 +86,7 @@ public final class NativeVehicleStructure {
         }
         if (connected.size() != cells.size()) throw new IllegalArgumentException("Vehicle hull contains disconnected cells");
         NativeBuilderTransfer.validateVehicle(snapshot.cells(), registries);
+        NativeVehicleObservers.build(snapshot.cells(), cells);
     }
 
     static boolean pilot(BlockState state) {
@@ -151,7 +154,7 @@ public final class NativeVehicleStructure {
             || block instanceof ChestBlock || block instanceof BarrelBlock);
         boolean nativeBlock = state.is(NativeVehicleBindings.CONTROLLER) || block instanceof NativeSideWheel
             || block instanceof NativeBuilderCoreBlock core && core.design.drive() == NativeDriveDesign.LONGBURN
-            || block instanceof NativeBuilderPartBlock
+            || block instanceof NativeBuilderPartBlock || NativeVehicleObservers.block(state)
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
             || block instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionBlock
@@ -177,6 +180,10 @@ public final class NativeVehicleStructure {
             return builder.maxwell() && builder.formed() && !builder.inert() && !builder.pendingFormation();
         }
         if (tile instanceof NativeBuilderPartEntity part) return !part.inert();
+        if (tile instanceof NativeObserverEntity observer) {
+            return observer.formed() && !observer.inert() && !observer.pendingFormation();
+        }
+        if (tile instanceof NativeObserverPartEntity part) return !part.inert();
         if (tile instanceof NativeChairEntity seat) return seat.kind() == NativeSeatKind.PILOT && !seat.inert();
         if (tile instanceof NativeResourcePortEntity port) return !port.inert();
         if (tile instanceof NativeBufferEntity buffer) return !buffer.inert();
@@ -212,11 +219,13 @@ public final class NativeVehicleStructure {
                 tile.putInt("x", target.getX());
                 tile.putInt("y", target.getY());
                 tile.putInt("z", target.getZ());
-                if (rotation != Rotation.NONE && cell.state.getBlock() instanceof NativeBuilderPartBlock) {
+                if (rotation != Rotation.NONE && (cell.state.getBlock() instanceof NativeBuilderPartBlock
+                    || cell.state.getBlock() instanceof NativeObserverPartBlock)) {
                     if (!tile.contains("ConstructorOwner", Tag.TAG_LONG) || tile.contains("ConstructorMatter")) {
-                        throw new IllegalArgumentException("Vehicle Maxwell frame needs native part ownership");
+                        throw new IllegalArgumentException("Vehicle machine frame needs native part ownership");
                     }
                     tile.putLong("ConstructorOwner", BlockPos.of(tile.getLong("ConstructorOwner")).rotate(rotation).asLong());
+                    NativeConstructorFrame.rotate(tile, rotation::rotate);
                 }
                 if (rotation != Rotation.NONE && tile.contains("PortFaces", Tag.TAG_INT_ARRAY)) {
                     var old = tile.getIntArray("PortFaces");
@@ -234,6 +243,9 @@ public final class NativeVehicleStructure {
     private static BlockState rotateState(BlockState state, Rotation rotation) {
         if (state.getBlock() instanceof NativeBuilderCoreBlock) {
             return state.setValue(NativeBuilderCoreBlock.FACING, rotation.rotate(state.getValue(NativeBuilderCoreBlock.FACING)));
+        }
+        if (state.getBlock() instanceof NativeObserverCoreBlock) {
+            return state.setValue(NativeObserverCoreBlock.FACING, rotation.rotate(state.getValue(NativeObserverCoreBlock.FACING)));
         }
         return state.rotate(rotation);
     }
