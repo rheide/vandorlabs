@@ -183,7 +183,15 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         onGround=true;
         fallDistance=0;
         velocityChanged=true;
-        for(Entity rider:getPassengers()) updatePassenger(rider);
+        world.updateEntityWithOptionalForce(this,false);
+        for(Entity rider:getPassengers()) {
+            updatePassenger(rider);
+            world.updateEntityWithOptionalForce(rider,false);
+            if (rider instanceof EntityPlayerMP) {
+                EntityPlayerMP player=(EntityPlayerMP)rider;
+                player.connection.setPlayerLocation(player.posX,player.posY,player.posZ,player.rotationYaw,player.rotationPitch);
+            }
+        }
         VehicleNetwork.state(this);
     }
     public boolean flightDismount;

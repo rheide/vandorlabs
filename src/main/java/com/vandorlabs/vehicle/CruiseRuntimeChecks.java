@@ -158,6 +158,13 @@ public final class CruiseRuntimeChecks {
                         && Math.abs(craft.posX-destination)<2 && craft.posY<255,"last pilot leaves craft landed at route");
             });stage=7;
         }else if(stage==7 && !mc.player.isRiding() && Math.abs(mc.player.posX-startX)<2) {
+            if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) {
+                work=mc.getIntegratedServer().addScheduledTask(()->journeyMapTeleport(mc));
+                stage=8;
+                return false;
+            }
+            stage=8;
+        }else if(stage==8 && !mc.player.isRiding() && Math.abs(mc.player.posX-startX)<2) {
             System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount external-teleport");
             return true;
         }
@@ -167,6 +174,28 @@ public final class CruiseRuntimeChecks {
         }
         return false;
     }
+    private static void journeyMapTeleport(Minecraft mc) {
+        place(mc);
+        NBTTagCompound state=new NBTTagCompound();
+        state.setByte("MaxwellFlightPhase",(byte)3);
+        craft.readFlightMode(state);
+        require(craft.cruise.move(2048,512,0),"enter high cruise before waypoint teleport");
+        double site=craft.cruise.x();
+        EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+        try {
+            Class<?> location=Class.forName("journeymap.common.feature.Location");
+            Object target=location.getConstructor(double.class,double.class,double.class,int.class)
+                    .newInstance(startX,85.0,0.0,0);
+            Class<?> feature=Class.forName("journeymap.common.feature.JourneyMapTeleport");
+            boolean accepted=(Boolean)feature.getMethod("attemptTeleport",net.minecraft.entity.Entity.class,location)
+                    .invoke(feature.getMethod("instance").invoke(null),pilot,target);
+            require(accepted && !pilot.isRiding() && Math.abs(pilot.posX-startX)<2,"JourneyMap releases and relocates pilot");
+            require(!craft.cruise.active() && !craft.flying() && craft.onGround && craft.posY<255
+                    && Math.abs(craft.posX-site)<1 && craft.chunkCoordX==((int)Math.floor(site)>>4),
+                    "JourneyMap lands and reindexes the aircraft at its geographic position");
+        } catch (ReflectiveOperationException failure) { throw new IllegalStateException(failure); }
+    }
+
     private static void verifyJourneyMap(Minecraft mc) throws Exception {
         Class<?> manager=Class.forName("journeymap.client.ui.UIManager");
         Object minimap=manager.getMethod("getMiniMap").invoke(manager.getField("INSTANCE").get(null));
