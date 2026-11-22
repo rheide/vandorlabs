@@ -10,15 +10,16 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public final class NativeVehicleMenu extends AbstractContainerMenu {
-    public static final int CONVERT=0, SCAN=1;
-    private final SimpleContainerData metrics=new SimpleContainerData(20);
+    public static final int CONVERT=0, SCAN=1, SECURITY_ON=2, SECURITY_OFF=3;
+    private final SimpleContainerData metrics=new SimpleContainerData(22);
     public final NativeVehicleControllerEntity controller;
     public final NativeGroundVehicle craft;
 
-    NativeVehicleMenu(int window,NativeVehicleControllerEntity controller) {
+    NativeVehicleMenu(int window,NativeVehicleControllerEntity controller,Player viewer) {
         super(NativeVehicleBindings.MENU,window);
         addDataSlots(metrics);
         this.controller=controller; this.craft=null;
+        metrics.set(20,controller.securityEnabled()?1:0);metrics.set(21,controller.mayChangeSecurity(viewer)?1:0);
     }
 
     NativeVehicleMenu(int window,NativeGroundVehicle craft) {
@@ -70,6 +71,14 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
         return new NativeVehiclePropulsion.Readout(number(1),number(2),get(3),get(4),get(5),number(6),number(7),number(8),get(9)!=0);
     }
 
+    public boolean securityEnabled(){return metrics.get(20)!=0;}
+    public boolean mayChangeSecurity(){return metrics.get(21)!=0;}
+    @Override public void broadcastChanges(){
+        if(controller!=null && controller.getLevel() instanceof net.minecraft.server.level.ServerLevel)
+            metrics.set(20,controller.securityEnabled()?1:0);
+        super.broadcastChanges();
+    }
+
     private void scan(ServerPlayer player) {
         try {
             var source=NativeVehicleScan.scan(player.serverLevel(),controller.getBlockPos());
@@ -87,6 +96,10 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
     @Override public boolean clickMenuButton(Player actor,int action) {
         if (!(actor instanceof ServerPlayer player) || player.containerMenu!=this || !stillValid(player)) return false;
         if (action==SCAN && controller!=null) { scan(player); return true; }
+        if(action==SECURITY_ON||action==SECURITY_OFF){
+            if(controller==null || !controller.setSecurity(player,action==SECURITY_ON))return false;
+            broadcastChanges();return true;
+        }
         if (action!=CONVERT) return false;
         if (controller!=null && !controller.mayOperate(player)) {
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Insert the accepted Access Card in the Controller's reader."));

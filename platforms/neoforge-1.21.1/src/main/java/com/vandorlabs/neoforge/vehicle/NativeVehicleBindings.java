@@ -64,7 +64,7 @@ public final class NativeVehicleBindings {
         if (!level.hasChunkAt(pos) || !(level.getBlockEntity(pos) instanceof NativeVehicleControllerEntity tile)
                 || !NativeConfigurationAccess.canEditDialog(player,tile)) return false;
         if (player instanceof ServerPlayer server) {
-            server.openMenu(new SimpleMenuProvider((window,inventory,actor) -> new NativeVehicleMenu(window,tile),
+            server.openMenu(new SimpleMenuProvider((window,inventory,actor) -> new NativeVehicleMenu(window,tile,actor),
                     CONTROLLER.getName()),buffer -> {buffer.writeBoolean(false);buffer.writeBlockPos(pos);});
         }
         return true;

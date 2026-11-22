@@ -8,6 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -21,6 +22,15 @@ public final class NativeVehicleControllerEntity extends BlockEntity {
 
     void placedBy(UUID id) {
         if (owner==null) { owner=id; setChanged(); }
+    }
+
+    public boolean securityEnabled(){return security;}
+    public boolean mayChangeSecurity(Player player) {
+        return owner!=null && owner.equals(player.getUUID());
+    }
+    boolean setSecurity(ServerPlayer player,boolean enabled) {
+        if(!mayChangeSecurity(player)||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,this))return false;
+        security=enabled;setChanged();return true;
     }
 
     public UUID ownerId() { return owner; }

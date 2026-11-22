@@ -24,6 +24,12 @@ public final class NativeVehiclePlayerChecks {
     private static int stage,ticks,frames;
     private static Vec3 start,parking;
 
+    private static String lastMessage="";
+    @SubscribeEvent public static void chat(net.neoforged.neoforge.client.event.ClientChatReceivedEvent.System event){
+        if(!NativeVehiclePlayerFixture.enabled())return;
+        lastMessage=event.getMessage().getString();
+        System.out.println("[vandorlabs][vehicle-player] stage="+stage+" message="+lastMessage);
+    }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         if(!NativeVehiclePlayerFixture.enabled()) return;
         var mc=Minecraft.getInstance();
@@ -34,7 +40,7 @@ public final class NativeVehiclePlayerChecks {
         var screen=mc.screen instanceof NativeVehicleControllerScreen dialog?dialog:null;
         NativeVehiclePlayerFixture.require(++ticks<1500,"client stage "+stage+" ticks="+ticks+" pos="+p.position()+
                 " mode="+mc.gameMode.getPlayerMode()+" slot="+p.getInventory().selected+" hand="+p.getMainHandItem()+
-                " screen="+mc.screen+" vehicle="+p.getVehicle()+" craft="+craft);
+                " screen="+mc.screen+" vehicle="+p.getVehicle()+" craft="+craft+" controller="+mc.level.getBlockState(root)+" nearby="+mc.level.getEntitiesOfClass(NativeGroundVehicle.class,new AABB(root).inflate(6)).size()+" message="+lastMessage);
         frames++;
         switch(stage){
             case 0 -> {
@@ -44,7 +50,20 @@ public final class NativeVehiclePlayerChecks {
                 useBlock(mc,root); next();
             }
             case 1 -> {
-                if(screen==null)return;
+                if(screen==null||!screen.getMenu().mayChangeSecurity())return;
+                press(screen,option(screen,"Security"));
+                press(screen,option(screen,"Security"));
+                stage=21;frames=0;
+            }
+            case 21 -> {
+                if(screen==null||!screen.getMenu().securityEnabled())return;
+                var option=option(screen,"Security:");
+                NativeVehiclePlayerFixture.require(screen.mouseClicked(option.getX()+5,option.getY()+5,1),"right-click security off");
+                stage=22;frames=0;
+            }
+            case 22 -> {
+                if(screen==null||screen.getMenu().securityEnabled())return;
+                press(screen,option(screen,"Vehicle"));
                 press(screen,screen.scanButton());
                 press(screen,screen.flightTab());stage=20;frames=0;
             }
@@ -143,6 +162,11 @@ public final class NativeVehiclePlayerChecks {
         try(var image=net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())){
             image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve(file));
         }catch(java.io.IOException ex){throw new IllegalStateException("Vehicle fixture capture",ex);}
+    }
+    private static net.minecraft.client.gui.components.Button option(NativeVehicleControllerScreen gui,String label){
+        return gui.children().stream().filter(component->component instanceof net.minecraft.client.gui.components.Button button
+            &&button.active&&button.getMessage().getString().startsWith(label))
+            .map(component->(net.minecraft.client.gui.components.Button)component).findFirst().orElseThrow();
     }
     private static void press(NativeVehicleControllerScreen screen,net.minecraft.client.gui.components.Button button){
         NativeVehiclePlayerFixture.require(screen.mouseClicked(button.getX()+button.getWidth()*.5,button.getY()+10,0),"click real Controller action");

@@ -22,7 +22,8 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 public final class NativeVehicleControllerScreen extends AbstractContainerScreen<NativeVehicleMenu> {
     private final DecimalFormat format=new DecimalFormat("#,##0.0",DecimalFormatSymbols.getInstance(Locale.ROOT));
     private Button action,scan,flightTab;
-    private boolean flight;
+    private boolean flight,securityPage;
+    private Button securityControl;
 
     public NativeVehicleControllerScreen(NativeVehicleMenu menu,Inventory inventory,Component title) {
         super(menu,inventory,title);
@@ -40,13 +41,35 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     @Override protected void init() {super.init(); controls();}
     private void controls() {
         clearWidgets();
-        button(12,28,105,"Vehicle",b->{flight=false;controls();}).active=flight;
-        flightTab=button(121,28,125,"Flight",b->{flight=true;controls();});
+        int tab=menu.controller==null?115:75;
+        tab(12,tab,"Vehicle",b->{flight=securityPage=false;controls();}).active=flight||securityPage;
+        flightTab=tab(16+tab,tab,"Flight",b->{flight=true;securityPage=false;controls();});
+        securityControl=null;
+        if(menu.controller!=null){
+            tab(20+2*tab,tab,"Security",b->{flight=false;securityPage=true;controls();}).active=!securityPage;
+            if(securityPage)securityControl=button(12,83,234,"Security",b->send(menu.securityEnabled()?NativeVehicleMenu.SECURITY_OFF:NativeVehicleMenu.SECURITY_ON));
+        }
         flightTab.active=!flight;
         scan=null;
         if(menu.controller!=null) scan=button(12,155,85,"Scan craft",b->send(NativeVehicleMenu.SCAN));
         action=button(menu.controller==null?12:100,155,menu.controller==null?234:146,
                 menu.controller!=null?"Assemble in Taxi Mode":"Park as blocks",b->send(NativeVehicleMenu.CONVERT));
+    }
+    private Button tab(int x,int width,String label,Button.OnPress press){
+        return addRenderableWidget(new com.vandorlabs.neoforge.client.NativeDialogTabButton(leftPos+x,topPos+28,width,20,Component.literal(label),press));
+    }
+    @Override protected void containerTick(){
+        super.containerTick();
+        if(securityControl!=null){
+            securityControl.active=menu.mayChangeSecurity();
+            securityControl.setMessage(Component.literal("Security: "+(menu.securityEnabled()?"ON":"OFF")));
+        }
+    }
+    @Override public boolean mouseClicked(double x,double y,int mouse){
+        if(mouse==1&&securityControl!=null&&securityControl.active&&securityControl.isMouseOver(x,y)){
+            securityControl.onPress();return true;
+        }
+        return super.mouseClicked(x,y,mouse);
     }
     private Button button(int x,int y,int w,String label,Button.OnPress press) {
         return addRenderableWidget(NativeDialogButton.builder(Component.literal(label),press).bounds(leftPos+x,topPos+y,w,20).build());
@@ -60,6 +83,10 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     }
     @Override protected void renderLabels(GuiGraphics g,int mouseX,int mouseY) {
         g.drawString(font,title,titleLabelX,titleLabelY,0xffe7eff4,false);
+        if(securityPage){text(g,57,"Require an accepted Access Card to assemble.");
+            text(g,111,"Attach a configured Card Slot to the Controller.");
+            return;
+        }
         int count=menu.blocks();
         var data=menu.flightReadout();
         if(!flight) {
