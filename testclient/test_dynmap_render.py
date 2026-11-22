@@ -293,7 +293,7 @@ def place_utility_doors(command,labels,jar):
     actual = {entry['id'][len('utility_door_'):] for _,entry in utilities}
     assert required <= actual and len(actual)==len(utilities), 'Incomplete or duplicate Utility Door map corpus: '+str(required-actual)
     for i,(choice,entry) in enumerate(utilities):
-        x,y,z=30+3*i,12,-8
+        x,y,z=30+3*(i%9),12,-8-3*(i//9)
         command(f'setblock {x} {y} {z} vandorlabs:programmable_door facing=south,half=lower,hinge=left,open=false replace {{SpaceDesign:2,SpaceFramed:1b,DoorFaceTexture:{choice}}}')
         command(f'setblock {x} {y+1} {z} vandorlabs:programmable_door facing=south,half=upper,hinge=left,open=false replace')
         labels.append(dict(x=x,y=y,z=z,block='programmable_door',utility=entry['id'],choice=choice))
