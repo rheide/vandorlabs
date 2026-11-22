@@ -182,6 +182,9 @@ def main():
     if os.environ.get('VANDOR_LABS_TEST_MEKANISM'):
         optional_mekanism = Path(os.environ['VANDOR_LABS_TEST_MEKANISM'])
         shutil.copyfile(optional_mekanism, game/'mods'/optional_mekanism.name)
+    if args.focus == 'maxwell-cruise' and os.environ.get('VANDOR_LABS_TEST_JOURNEYMAP'):
+        journey_map = Path(os.environ['VANDOR_LABS_TEST_JOURNEYMAP'])
+        shutil.copyfile(journey_map, game/'mods'/journey_map.name)
     if os.environ.get('VANDOR_LABS_TEST_OPTIFINE'):
         optional_optifine = Path(os.environ['VANDOR_LABS_TEST_OPTIFINE'])
         shutil.copyfile(optional_optifine, game/'mods'/optional_optifine.name)

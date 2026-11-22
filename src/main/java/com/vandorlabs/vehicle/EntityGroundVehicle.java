@@ -173,6 +173,19 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         landedFromFlight=tag.getBoolean("MaxwellFlightLanded");
         cruisingRecovery=tag.getBoolean("MaxwellCruiseRecovery");
     }
+    Entity teleportingPassenger;
+    void landAfterTeleport(double x,double y,double z) {
+        cruise.endForLanding();
+        finishFlight(false);
+        snapPosition(x,y,z,rotationYaw);
+        hoverTarget=y;
+        view.origin=new BlockPos(this);
+        onGround=true;
+        fallDistance=0;
+        velocityChanged=true;
+        for(Entity rider:getPassengers()) updatePassenger(rider);
+        VehicleNetwork.state(this);
+    }
     public boolean flightDismount;
     public void exitFlight(EntityPlayerMP player){
         if(!isPassenger(player)||flying())return;
@@ -557,7 +570,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         super.removePassenger(passenger);
         if(!world.isRemote){assignSeat(passenger,null);recordCurrentCouplingDriver();}
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
-        if(world.isRemote || collision==null || VehicleTransfer.isMutating(world))return;
+        if(world.isRemote || collision==null || VehicleTransfer.isMutating(world) || passenger==teleportingPassenger)return;
         if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
         else if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
         Vec3d exit=null;

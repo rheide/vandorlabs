@@ -873,6 +873,8 @@ jar {
     from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
     manifest {
         attributes([
+            "FMLCorePlugin": "com.vandorlabs.core.FlightLoadingPlugin",
+            "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "Vandor Labs",
             "Specification-Vendor": "Vandor Labs",
             "Specification-Version": "1", // We are version 1 of ourselves

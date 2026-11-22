@@ -128,6 +128,7 @@ public final class CruiseRuntimeChecks {
             stage=6;ticks=0;
         }else if(stage==6&&ticks>10){
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
+            if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) verifyJourneyMap(mc);
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=35;
             mc.gameSettings.hideGUI=true;stage=3;ticks=0;
@@ -148,7 +149,16 @@ public final class CruiseRuntimeChecks {
                 require(!craft.world.isBlockLoaded(new BlockPos(startX+2048,64,craft.posZ)),"middle of route stayed unloaded");
             });stage=4;
         }else if(stage==4&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&Math.abs(mc.player.posX-destination)<4&&mc.player.posY<300){
-            System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount");
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                int result=mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
+                        "tp "+pilot.getName()+" "+(int)startX+" 85 0");
+                require(result==1 && !pilot.isRiding() && Math.abs(pilot.posX-startX)<2,"vanilla tp releases pilot");
+                require(!craft.flying() && !craft.hover && !craft.cruise.active() && craft.onGround
+                        && Math.abs(craft.posX-destination)<2 && craft.posY<255,"last pilot leaves craft landed at route");
+            });stage=7;
+        }else if(stage==7 && !mc.player.isRiding() && Math.abs(mc.player.posX-startX)<2) {
+            System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount external-teleport");
             return true;
         }
         if(stage==5 && work==null){
@@ -156,6 +166,13 @@ public final class CruiseRuntimeChecks {
             return true;
         }
         return false;
+    }
+    private static void verifyJourneyMap(Minecraft mc) throws Exception {
+        Class<?> manager=Class.forName("journeymap.client.ui.UIManager");
+        Object minimap=manager.getMethod("getMiniMap").invoke(manager.getField("INSTANCE").get(null));
+        String location=(String)minimap.getClass().getMethod("getLocation").invoke(minimap);
+        int route=net.minecraft.util.math.MathHelper.floor(com.vandorlabs.client.CruiseMapView.x(mc.player.posX));
+        require(location.contains(String.valueOf(route)),"JourneyMap minimap location "+location+" expected X "+route);
     }
     private CruiseRuntimeChecks(){}
 }

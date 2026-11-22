@@ -99,6 +99,7 @@ public final class VehicleService {
     @SubscribeEvent public static void taxiExit(net.minecraftforge.event.entity.EntityMountEvent event) {
         if(event.isMounting() || !(event.getEntityMounting() instanceof EntityPlayerMP) || !(event.getEntityBeingMounted() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityBeingMounted();EntityPlayerMP player=(EntityPlayerMP)event.getEntityMounting();
+        if(craft.teleportingPassenger==player)return;
         if(craft.flying()&&!craft.flightLanded()&&!craft.transferInProgress&&!craft.isDead&&!player.isDead&&player.connection.netManager.isChannelOpen()){
             event.setCanceled(true);return;
         }

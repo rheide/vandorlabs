@@ -550,6 +550,9 @@ fi
 if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
     cp "$VANDOR_LABS_TEST_JEI" "$TEST_RUNTIME_GAME/mods/"
 fi
+if [ "$TARGET" = maxwell-cruise ] && [ -n "${VANDOR_LABS_TEST_JOURNEYMAP:-}" ]; then
+    cp "$VANDOR_LABS_TEST_JOURNEYMAP" "$TEST_RUNTIME_GAME/mods/"
+fi
 if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
     cp "$VANDOR_LABS_TEST_OPTIFINE" "$TEST_RUNTIME_GAME/mods/"
 fi

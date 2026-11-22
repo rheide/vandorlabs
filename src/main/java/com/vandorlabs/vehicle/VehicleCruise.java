@@ -117,6 +117,11 @@ public final class VehicleCruise {
         int step = Math.max(8,Integer.highestOneBit((int)height / 8) / 2);
         int centerX = MathHelper.floor(x / step) * step;
         int centerZ = MathHelper.floor(z / step) * step;
+        if (pending != null && (Math.abs(x-pending.centerX) >= size*pending.step/4
+                || Math.abs(z-pending.centerZ) >= size*pending.step/4)) {
+            pending = null;
+            publishedStep = 0;
+        }
         if (pending == null) {
             if (step == publishedStep && Math.abs(x-publishedX) < size*step/5 &&
                     Math.abs(z-publishedZ) < size*step/5 && craft.ticksExisted%200 != 0) return;
@@ -151,6 +156,12 @@ public final class VehicleCruise {
                 preview = false;
             } else pending = null;
         }
+    }
+
+    void endForLanding() {
+        craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
+        pending=null;
+        publishedStep=0;
     }
 
     void write(NBTTagCompound tag) {
