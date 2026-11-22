@@ -107,10 +107,31 @@ final class VehicleStatusClientRuntimeChecks {
     }
     private static void shot(Minecraft mc,File output,String name,int background)throws Exception{
         java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());javax.imageio.ImageIO.write(image,"png",new File(output,"shot_vehicle_status_"+name+".png"));
+        String shaderpack=System.getenv("VANDOR_LABS_TEST_SHADERPACK");
+        if(shaderpack!=null&&!shaderpack.isEmpty()){
+            shaderIndicator(image,name);
+            return;
+        }
         int pixels=0,indicator=0,button=name.endsWith("_on")?0x37D8AD:name.endsWith("_off")?0x495C69:-1;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++){int c=image.getRGB(x,y);if(near(c,background))pixels++;if(button>=0&&near(c,button))indicator++;}require(pixels>=25,"rendered "+name+" mode background pixels="+pixels);if(button>=0)require(indicator>=10,"rendered "+name+" autopilot indicator pixels="+indicator);
     }
+    private static final Map<String,Integer> shaderOff=new HashMap<>();
+    private static void shaderIndicator(java.awt.image.BufferedImage image,String name){
+        int x0=image.getWidth()/2,y0=image.getHeight()/2,hits=0;
+        // The camera points at the Autopilot strip for both images. Count its saturated
+        // indicator relative to the same screen region before the toggle and shader grade.
+        for(int y=y0-24;y<y0+24;y++)for(int x=x0-45;x<x0+45;x++){
+            int color=image.getRGB(x,y),r=color>>16&255,g=color>>8&255,b=color&255;
+            if(g>=90&&g-r>=35&&b-r>=15)hits++;
+        }
+        if(name.endsWith("_off"))shaderOff.put(name.substring(0,name.length()-4),hits);
+        if(name.endsWith("_on")){
+            int before=shaderOff.getOrDefault(name.substring(0,name.length()-3),-1);
+            require(before>=0&&hits>=before+10,"shader Autopilot indicator lights up in "+name+" before="+before+" after="+hits);
+            System.out.println("[vandorlabs][reprolab] shader status "+name+" colored pixels "+before+" -> "+hits);
+        }
+    }
     private static boolean near(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))<=4&&Math.abs((a>>8&255)-(b>>8&255))<=4&&Math.abs((a&255)-(b&255))<=4;}
-    private static boolean disabledClick, parkedDisabledClick;
+    private static boolean disabledClick, parkedDisabledClick, hoverShotReady;
     private static void next(){stage++;frame=0;}
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(stage==18)return VehicleFlightClientChecks.tick(mc,output);
@@ -140,7 +161,11 @@ final class VehicleStatusClientRuntimeChecks {
         }
         if(stage==6){state(mc,true,true);shot(mc,output,"taxi_on",0x153A29);click(mc,true);next();return false;}
         if(stage==7){state(mc,false,true);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle craft=server(mc);craft.hoverTarget=craft.posY;((TileEntityWaypoint)world(mc).getTileEntity(BASE.add(1,-1,0))).stopMode=2;}).get();click(mc,true,3);next();return false;}
-        if(stage==8){require(client(mc).hover,"Hover mode reached client renderer");shot(mc,output,"hover_off",0x152D48);click(mc,true);next();return false;}
+        if(stage==8){
+            require(client(mc).hover,"Hover mode reached client renderer");
+            if(!hoverShotReady){aim(mc,SCREEN,true);hoverShotReady=true;frame=0;return false;}
+            shot(mc,output,"hover_off",0x152D48);click(mc,true);next();return false;
+        }
         if(stage==9){state(mc,true,true);shot(mc,output,"hover_on",0x152D48);aim(mc,INPUT,true);next();return false;}
         if(stage==10){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(INPUT),"half input remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_input",0x152D48);aim(mc,CONSOLE,true);next();return false;}
         if(stage==11){VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);require(target!=null&&target.hit.cell.pos.equals(CONSOLE),"half console remains in actual camera view"+targetDiagnostic(mc,target));shot(mc,output,"half_console",0x152D48);click(mc,true,0);next();return false;}
