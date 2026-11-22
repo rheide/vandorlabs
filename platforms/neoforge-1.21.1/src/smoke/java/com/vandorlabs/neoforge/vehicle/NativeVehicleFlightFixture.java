@@ -43,10 +43,7 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 
 @EventBusSubscriber(modid = "vandorlabs")
 public final class NativeVehicleFlightFixture {
-    public static final BlockPos ROOT = new BlockPos(272, 70, 264);
-    public static final BlockPos PILOT = ROOT.east();
-    public static final BlockPos PANEL = ROOT.east().south(3).above();
-    private static final BlockPos CORE = ROOT.east(3);
+    private static BlockPos root = new BlockPos(272, 70, 264);
     private static ServerPlayer actor;
     private static Fluid fuel;
     private static NativeGroundVehicle craft;
@@ -62,6 +59,7 @@ public final class NativeVehicleFlightFixture {
     public static boolean enabled() { return Boolean.getBoolean("vandorlabs.vehicleFlightChecks"); }
     public static String restartPhase() { return System.getProperty("vandorlabs.vehicleFlightRestart", ""); }
     public static String impact() { return System.getProperty("vandorlabs.vehicleFlightImpact", ""); }
+    public static boolean normalTerrain() { return Boolean.getBoolean("vandorlabs.vehicleFlightNormalTerrain"); }
 
     @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
     public static final class Fuel {
@@ -82,52 +80,63 @@ public final class NativeVehicleFlightFixture {
             return;
         }
         var world = player.serverLevel();
+        if (normalTerrain()) {
+            int height = root.getY();
+            for (int x = -5; x <= 12; x++) for (int z = -14; z <= 48; z++) {
+                height = Math.max(height, world.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING,
+                        root.getX() + x, root.getZ() + z) + 2);
+            }
+            root = root.atY(height);
+        }
+        var pilot = root.east();
+        var panelPos = pilot.south(3).above();
+        var core = root.east(3);
         var top = Blocks.STONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
         for (int x = -5; x <= 12; x++) for (int z = -14; z <= 48; z++) {
-            world.setBlockAndUpdate(ROOT.offset(x, -2, z), Blocks.STONE.defaultBlockState());
+            world.setBlockAndUpdate(root.offset(x, -2, z), Blocks.STONE.defaultBlockState());
             for (int y = -1; y <= 6; y++) {
-                var at = ROOT.offset(x, y, z);
+                var at = root.offset(x, y, z);
                 if (!world.isEmptyBlock(at)) world.setBlockAndUpdate(at, Blocks.AIR.defaultBlockState());
             }
         }
         for (int x = 0; x <= 5; x++) for (int z = 0; z <= 3; z++) {
-            world.setBlockAndUpdate(ROOT.offset(x, -1, z), top);
+            world.setBlockAndUpdate(root.offset(x, -1, z), top);
         }
         if (impact().equals("hover")) {
             String[] lift = {"antigravity_plate", "repulsor_array", "vertical_hover_thruster", "ion_drive"};
             for (int index = 0; index < lift.length; index++) {
-                var at = ROOT.west().south(index);
+                var at = root.west().south(index);
                 world.setBlockAndUpdate(at.below(), top);
                 var device = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("vandorlabs", lift[index]));
                 world.setBlockAndUpdate(at, device.defaultBlockState());
             }
         }
-        world.setBlockAndUpdate(ROOT, NativeVehicleBindings.CONTROLLER.defaultBlockState());
-        ((NativeVehicleControllerEntity)world.getBlockEntity(ROOT)).placedBy(player.getUUID());
+        world.setBlockAndUpdate(root, NativeVehicleBindings.CONTROLLER.defaultBlockState());
+        ((NativeVehicleControllerEntity)world.getBlockEntity(root)).placedBy(player.getUUID());
         var seat = NativeSeatBindings.BLOCKS.get(NativeSeatKind.PILOT).defaultBlockState()
                 .setValue(NativeSeatBlock.FACING, Direction.SOUTH);
-        world.setBlockAndUpdate(PILOT, seat);
-        world.setBlockAndUpdate(PILOT.above(), seat.setValue(NativeSeatBlock.UPPER, true));
+        world.setBlockAndUpdate(pilot, seat);
+        world.setBlockAndUpdate(pilot.above(), seat.setValue(NativeSeatBlock.UPPER, true));
         var panel = NativeScreenRegistrations.BLOCKS.get(ScreenFamily.SCREEN).get();
-        world.setBlockAndUpdate(PANEL.below(), Blocks.STONE.defaultBlockState());
-        world.setBlockAndUpdate(PANEL, panel.state(new ScreenFamily.State(Direction.NORTH.get3DDataValue(), false, false, false)));
-        var monitor = (NativeScreenEntity)world.getBlockEntity(PANEL);
+        world.setBlockAndUpdate(panelPos.below(), Blocks.STONE.defaultBlockState());
+        world.setBlockAndUpdate(panelPos, panel.state(new ScreenFamily.State(Direction.NORTH.get3DDataValue(), false, false, false)));
+        var monitor = (NativeScreenEntity)world.getBlockEntity(panelPos);
         var config = monitor.saveWithFullMetadata(world.registryAccess());
         config.putInt("PrimarySurfaceTexture", NativeVehicleStatus.SURFACE);
         monitor.loadWithComponents(config, world.registryAccess());
         monitor.setChanged();
         var maxwell = NativeBuilderBindings.CORES.get(MaxwellEngine.DESIGN);
-        world.setBlockAndUpdate(CORE, maxwell.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING, Direction.NORTH));
+        world.setBlockAndUpdate(core, maxwell.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING, Direction.NORTH));
         var layout = NativeBuilderFormation.layout(maxwell.design, 3, Direction.NORTH.get3DDataValue(), 0, 0);
         for (int x = 0; x < layout.width; x++) for (int y = 0; y < layout.height; y++) for (int z = 0; z < layout.depth; z++) {
-            var at = CORE.offset(layout.x(x, z), y, layout.z(x, z));
-            if (!at.equals(CORE) && layout.frame(x, y, z)) {
+            var at = core.offset(layout.x(x, z), y, layout.z(x, z));
+            if (!at.equals(core) && layout.frame(x, y, z)) {
                 world.setBlock(at, NativeBuilderFormation.matter().defaultBlockState(), Block.UPDATE_ALL);
             }
         }
         player.setGameMode(GameType.SURVIVAL);
         player.getInventory().clearContent();
-        player.teleportTo(ROOT.getX()+2.5, ROOT.getY()-1, ROOT.getZ()-1.5);
+        player.teleportTo(root.getX() + 2.5, root.getY() - 1, root.getZ() - 1.5);
         stage = Stage.FORM;
     }
 
@@ -141,11 +150,13 @@ public final class NativeVehicleFlightFixture {
     @SubscribeEvent public static void tick(ServerTickEvent.Post event) {
         if (actor == null || landed) return;
         var world = actor.serverLevel();
-        require(++ticks < 1500, "server stage " + stage + " pos=" + actor.position() + " craft=" + craft
-                + " carried=" + actor.getVehicle() + " hand=" + actor.getMainHandItem() + " slot=" + actor.getInventory().selected);
+        if (++ticks >= 1500) throw new IllegalStateException("Native Flight: server stage " + stage
+                + " pos=" + actor.position() + " craft=" + craft
+                + " carried=" + actor.getVehicle() + " hand=" + actor.getMainHandItem() + " slot=" + actor.getInventory().selected
+                + (craft == null ? "" : " hit=" + craft.hit(actor) + " grounded=" + craft.onGround() + " mode=" + craft.mode()));
         switch (stage) {
             case FORM -> {
-                var engine = (NativeBuilderEntity)world.getBlockEntity(CORE);
+                var engine = (NativeBuilderEntity)world.getBlockEntity(root.east(3));
                 if (!engine.formed()) {
                     if (engine.available() && engine.synthesisReady()) {
                         require(NativeBuilderTransactions.request(engine, actor, true), "real Maxwell formation submission");
@@ -156,16 +167,16 @@ public final class NativeVehicleFlightFixture {
                 var side = engine.facing();
                 var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, engine.maxwellPort(side), side);
                 require(inlet != null && inlet.fill(new FluidStack(fuel, 1), FluidAction.EXECUTE) == 1, "real Maxwell fuel inlet");
-                actor.teleportTo(PILOT.getX()+.5, ROOT.getY()-1, ROOT.getZ()-1.5);
-                var hull = NativeVehicleScan.scan(world, ROOT);
+                actor.teleportTo(root.getX() + 1.5, root.getY() - 1, root.getZ() - 1.5);
+                var hull = NativeVehicleScan.scan(world, root);
                 var admissionProbe = new NativeGroundVehicle(NativeVehicleBindings.VEHICLE, world);
                 admissionProbe.install(hull.local(), hull.pilot(), hull.facing());
                 require(admissionProbe.statusPanels().size() == 1, "Flight monitor present in verified assembly preview");
-                NativeVehicleTransfer.assemble(actor, ROOT);
+                NativeVehicleTransfer.assemble(actor, root);
                 stage = Stage.ASSEMBLE;
             }
             case ASSEMBLE -> {
-                var found = world.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(ROOT).inflate(12));
+                var found = world.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(root).inflate(12));
                 if (found.size() != 1 || !found.getFirst().admitted() || NativeVehicleTransfer.escrowed(found.getFirst())) return;
                 craft = found.getFirst();
                 var telemetry = craft.flightReadout();
@@ -183,7 +194,7 @@ public final class NativeVehicleFlightFixture {
                     var box = craft.getBoundingBox();
                     int wall = Mth.floor(box.maxZ) + 2;
                     for (int x = Mth.floor(box.minX) - 1; x <= Mth.ceil(box.maxX) + 1; x++) {
-                        for (int y = ROOT.getY(); y <= Mth.ceil(box.maxY) + 4; y++) {
+                        for (int y = root.getY(); y <= Mth.ceil(box.maxY) + 4; y++) {
                             world.setBlockAndUpdate(new BlockPos(x, y, wall), Blocks.STONE.defaultBlockState());
                         }
                     }
