@@ -3,6 +3,8 @@ package com.vandorlabs.neoforge.builders;
 import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import java.util.*;
+import net.minecraft.core.HolderLookup;
+import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +19,14 @@ public final class NativeBuilderTransfer {
     public static Set<BlockPos> validate(List<NativeRawCell> cells){return validate(cells,false);}
 
     public static Set<BlockPos> validate(List<NativeRawCell> cells,boolean allowDrives){
+        return validate(cells,allowDrives,null);
+    }
+
+    public static Set<BlockPos> validateVehicle(List<NativeRawCell> cells,HolderLookup.Provider registries){
+        return validate(cells,true,Objects.requireNonNull(registries));
+    }
+
+    private static Set<BlockPos> validate(List<NativeRawCell> cells,boolean allowDrives,HolderLookup.Provider vehicleRegistries){
         var roots=new ArrayList<NativeRawCell>();
         var parts=new HashMap<BlockPos,NativeRawCell>();
         for(var cell:cells){
@@ -30,7 +40,11 @@ public final class NativeBuilderTransfer {
             if(!root.state.getValue(NativeBuilderCoreBlock.FORMED)||!allowDrives&&design.drive()!=null)
                 throw new IllegalArgumentException("Capture a complete formed production builder");
             var raw=root.tile();
-            requireIdleData(raw,design.drive());
+            if(vehicleRegistries!=null&&design.drive()!=null){
+                if(design.drive()!=NativeDriveDesign.LONGBURN)
+                    throw new IllegalArgumentException("Only the Maxwell Drive can move with a vehicle");
+                requireVehicleMaxwell(raw,vehicleRegistries);
+            }else requireIdleData(raw,design.drive());
             var owner=raw.getUUID("BuilderKey");
             if(!keys.add(owner))throw new IllegalArgumentException("Duplicate builder owner");
             var layout=NativeBuilderFormation.savedLayout(design,root.state.getValue(NativeBuilderCoreBlock.FACING),raw);
@@ -46,6 +60,18 @@ public final class NativeBuilderTransfer {
         }
         if(!parts.isEmpty())throw new IllegalArgumentException("Capture each builder part with its own frame core");
         return matter;
+    }
+
+    private static void requireVehicleMaxwell(CompoundTag raw,HolderLookup.Provider registries){
+        if(raw==null||!raw.contains("Drive",Tag.TAG_COMPOUND)||!raw.contains("Channels",Tag.TAG_INT_ARRAY))
+            throw new IllegalArgumentException("Missing carried Maxwell controls");
+        NativeMaxwellTank.read(raw,registries);
+        ChannelList.of(raw.getIntArray("Channels"));
+        var controls=raw.copy();
+        controls.remove(NativeMaxwellTank.FUEL_TAG);
+        controls.remove(NativeMaxwellTank.ACTIVE_TAG);
+        controls.remove(NativeMaxwellTank.BURN_TAG);
+        requireIdleData(controls,NativeDriveDesign.LONGBURN);
     }
 
     public static void requireIdleData(CompoundTag raw){requireIdleData(raw,null);}
