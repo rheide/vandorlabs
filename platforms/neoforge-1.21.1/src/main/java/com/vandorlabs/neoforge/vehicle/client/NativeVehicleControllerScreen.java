@@ -14,6 +14,9 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeVehicleControllerScreen extends AbstractContainerScreen<NativeVehicleMenu> {
+    private net.minecraft.client.gui.components.Button action;
+    public net.minecraft.client.gui.components.Button actionButton(){return action;}
+
     public NativeVehicleControllerScreen(NativeVehicleMenu menu,Inventory inventory,Component title) {
         super(menu,inventory,title);
         imageWidth=218; imageHeight=88;
@@ -27,7 +30,7 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     @Override protected void init() {
         super.init();
         var caption=Component.literal(menu.controller!=null?"Assemble in Taxi Mode":"Park as blocks");
-        addRenderableWidget(NativeDialogButton.builder(caption, button -> {
+        action=addRenderableWidget(NativeDialogButton.builder(caption, button -> {
             if(minecraft.gameMode!=null) minecraft.gameMode.handleInventoryButtonClick(menu.containerId,0);
         }).bounds(leftPos+12,topPos+52,imageWidth-24,20).build());
     }
@@ -40,7 +43,7 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     @Override protected void renderLabels(GuiGraphics graphics,int mouseX,int mouseY) {
         graphics.drawString(font,title,titleLabelX,titleLabelY,0xffe7eff4,false);
         if(menu.controller!=null) graphics.drawString(font,"Mode: Park",12,31,0xffafcad6,false);
-        else if(menu.craft!=null && menu.craft.snapshot()!=null)
-            graphics.drawString(font,"Carried blocks: "+menu.craft.snapshot().cells().size(),12,31,0xffafcad6,false);
+        else if(menu.craft!=null && menu.craft.visual()!=null)
+            graphics.drawString(font,"Carried blocks: "+menu.craft.visual().cells().size(),12,31,0xffafcad6,false);
     }
 }
