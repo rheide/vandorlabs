@@ -22,9 +22,9 @@ public final class NativeCockpitFrameFixture {
     static final BlockPos ROOT=new BlockPos(0,96,0);
     static final Vec3 START=new Vec3(.5,96,2.75);
     static final BlockPos MINE=ROOT.east();
-    static final int TOUCH_CHANNEL=8641,CENTER_CHANNEL=8642,DISPLAY_CHANNEL=8643,EXTRA_CHANNEL=8644;
+    static final int TOUCH_CHANNEL=8641,CENTER_CHANNEL=8642,DISPLAY_CHANNEL=8643,EXTRA_CHANNEL=8644,THROTTLE_CHANNEL=8645;
     private static ServerPlayer player;
-    private static boolean sawSignal,sawCenter,sawIndependent;
+    private static boolean sawSignal,sawCenter,sawIndependent,sawThrottle;
     static boolean enabled(){return Boolean.getBoolean("vandorlabs.cockpitFrameCheck");}
     static void check(boolean pass,String message){if(!pass)throw new AssertionError("Stationary Cockpit: "+message);}
 
@@ -67,7 +67,7 @@ public final class NativeCockpitFrameFixture {
     }
 
     @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){
-        if(!enabled()||player==null||(sawSignal&&sawCenter&&sawIndependent))return;
+        if(!enabled()||player==null||(sawSignal&&sawCenter&&sawIndependent&&sawThrottle))return;
         var level=player.serverLevel();
         if(!sawIndependent&&level.getBlockEntity(ROOT) instanceof NativeChairEntity owner
             &&owner.cockpitTouch().settings(2).activation()==2&&owner.cockpitTouch().controls(6).rows().size()==1){
@@ -86,6 +86,16 @@ public final class NativeCockpitFrameFixture {
             sawIndependent=true;
             System.out.println("[vandorlabs][cockpit-frame] independent artwork/rows/receiver/save PASS");
         }
+        if(!sawThrottle&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,THROTTLE_CHANNEL)>0
+            &&level.getBlockEntity(ROOT) instanceof NativeChairEntity seat&&seat.throttleCount()==1){
+            var copy=new NativeChairEntity(ROOT,seat.getBlockState());
+            copy.loadWithComponents(seat.saveWithoutMetadata(level.registryAccess()),level.registryAccess());
+            check(!copy.inert()&&copy.throttleCount()==1&&copy.armrestChannels(NativeCockpitThrottle.LEFT).contains(THROTTLE_CHANNEL)
+                &&copy.armrestLevel(NativeCockpitThrottle.LEFT)==seat.armrestLevel(NativeCockpitThrottle.LEFT),
+                "physical detent and count/channel settings survive save");
+            sawThrottle=true;
+            System.out.println("[vandorlabs][cockpit-frame] physical single/dual throttle PASS");
+        }
         sawCenter|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,CENTER_CHANNEL)==15;
         sawSignal|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,TOUCH_CHANNEL)==10;
     }
@@ -103,7 +113,7 @@ public final class NativeCockpitFrameFixture {
             if(stack.is(item))drops+=stack.getCount();
         }
         check(drops==1,"one Cockpit item after teardown from a side");
-        check(sawSignal&&sawCenter&&sawIndependent&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
+        check(sawSignal&&sawCenter&&sawIndependent&&sawThrottle&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
             "seated touch operated actual shared wireless Redstone and teardown withdrew its source");
         System.out.println("[vandorlabs][cockpit-frame] completed PASS");
         System.out.println("[vandorlabs][cockpit-frame] logout PASS");

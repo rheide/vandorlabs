@@ -55,6 +55,23 @@ public final class NativeCockpitFrameClient {
             &&editor.activePicker().selected()==choice,"select real Cockpit artwork row "+search);
     }
 
+    private static void aimThrottle(Minecraft game,NativeChairEntity owner){
+        var facing=owner.getBlockState().getValue(NativeSeatBlock.FACING);
+        float angle=(float)Math.toRadians(NativeCockpitThrottle.angle(0,owner.throttleStep(0),owner.throttleCount()));
+        var local=NativeCockpitThrottle.pivot(0,owner.throttleCount()).add(new Vec3(0,.25,0).xRot(-angle));
+        aim(game,Vec3.atLowerCornerOf(ROOT).add(NativeAdvancedChairGeometry.turn(local,facing)));
+    }
+    private static void clickThrottle(Minecraft game,NativeChairEntity owner){
+        var actor=game.player;
+        var start=actor.getEyePosition();
+        var end=start.add(actor.getViewVector(1).scale(actor.blockInteractionRange()));
+        var hit=game.level.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+        var grip=NativeCockpitThrottle.pick(owner,owner.getBlockState().getValue(NativeSeatBlock.FACING),hit.getBlockPos(),start,end);
+        check(grip!=null&&grip.index()==NativeCockpitThrottle.LEFT
+            &&hit.getLocation().distanceToSqr(grip.ray().getLocation())<1e-8,"seated ray hits the rendered throttle detent");
+        game.gameMode.useItemOn(actor,InteractionHand.MAIN_HAND,hit);
+    }
+
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
         if(!enabled())return;
         var game=Minecraft.getInstance();
@@ -272,6 +289,54 @@ public final class NativeCockpitFrameClient {
             }
             case 59 -> {
                 if(screenshot!=null)return;
+                aimThrottle(game,owner);
+                wait=ticks;stage++;
+            }
+            case 60 -> {
+                if(ticks<wait+8)return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 61 -> {
+                if(owner.armrestLevel(NativeCockpitThrottle.LEFT)!=5)return;
+                check(owner.armrestLevel(NativeCockpitThrottle.RIGHT)==0,"physical Cockpit detents are independent");
+                select(game,2);
+                aimThrottle(game,owner);
+                wait=ticks;stage++;
+            }
+            case 62 -> {
+                if(ticks<wait+8||!player.getMainHandItem().is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 63 -> {
+                if(!(game.screen instanceof com.vandorlabs.neoforge.seating.client.NativeSeatScreen editor))return;
+                check(editor.getMenu().initialArmrest==NativeCockpitThrottle.LEFT&&editor.getTitle().getString().equals("Cockpit Throttles"),
+                    "Configurator aims at same posed throttle and opens its own control");
+                editor.armrestChannelsField().setValue(Integer.toString(THROTTLE_CHANNEL));
+                var apply=editor.armrestApply();
+                check(apply.active&&editor.mouseClicked(apply.getX()+4,apply.getY()+4,0),"configured throttle channel");
+                var count=editor.option(13);
+                check(editor.mouseClicked(count.getX()+4,count.getY()+4,1),"single throttle changes through physical editor reverse cycle");
+                editor.onClose();
+                select(game,3);
+                stage++;
+            }
+            case 64 -> {
+                if(owner.throttleCount()!=1||!player.getMainHandItem().isEmpty()
+                    ||!owner.armrestChannels(NativeCockpitThrottle.LEFT).contains(THROTTLE_CHANNEL))return;
+                check(NativeCockpitThrottle.pivot(0,1).x>NativeCockpitThrottle.pivot(0,2).x,
+                    "single throttle uses its own authored central pivot");
+                aimThrottle(game,owner);
+                wait=ticks;stage++;
+            }
+            case 65 -> {
+                if(ticks<wait+8)return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 66 -> {
+                if(owner.armrestLevel(NativeCockpitThrottle.LEFT)==0)return;
                 game.options.keyShift.setDown(true);
                 wait=ticks;stage=6;
             }
