@@ -32,6 +32,7 @@ final class CruisePhysicalChecks {
     private static final boolean ENABLED=Boolean.getBoolean("vandorlabs.cruisePhysicalChecks");
     private static final int FAR=8192, SWEEP=768, STEP=12;
     private static final String RESTART=System.getenv("VANDOR_LABS_CRUISE_PHASE");
+    private static final String EXIT=System.getenv("VANDOR_LABS_PHYSICAL_EXIT");
     private static final String ANCHOR_FIXTURE="PhysicalCruiseFixture";
     private static final Audit AUDIT=new Audit();
     private static EntityGroundVehicle craft;
@@ -97,7 +98,10 @@ final class CruisePhysicalChecks {
                 work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::finish);
                 advance(3);
             }
-        }else if(stage==3){
+        }else if(stage==3&&EXIT!=null){
+            work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::exit);
+            advance(4);
+        }else if(stage==3||stage==4&&clientExitSettled(mc)){
             System.out.println("[vandorlabs] cruise-physical PASS");
             return true;
         }
@@ -203,6 +207,31 @@ final class CruisePhysicalChecks {
             " managedX="+pilot.managedPosX+" craftX="+craft.posX+" craftTicks="+(craft.ticksExisted-startingTicks)+
             " savedPlayerX="+pilot.writeToNBT(new NBTTagCompound()).getTagList("Pos",6).getDoubleAt(0)+
             (AUDIT.firstLoad==null?"":" firstLoad="+AUDIT.firstLoad));
+    }
+
+    private static void exit(){
+        require(craft.cruise.projected()&&pilot.getRidingEntity()==craft,"exit begins in active physical cruise");
+        double destination=craft.cruise.x();
+        if("descend".equals(EXIT)) {
+            require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"descend through the build ceiling");
+            require(pilot.getRidingEntity()==craft,"descent preserves the mounted pilot");
+        }else if("teleport".equals(EXIT)) {
+            int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
+                "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);
+            require(result==1&&!pilot.isRiding()&&craft.onGround&&craft.posY<256,
+                "actual last-pilot /tp lands the aircraft below the geographic position");
+        }else throw new IllegalStateException("Unknown physical cruise exit: "+EXIT);
+        require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01
+            &&craft.chunkCoordX==(int)Math.floor(destination/16),"aircraft reindexes at the real arrival site");
+        require(generated(destination,startZ)&&!generated(startX+FAR/2,startZ),
+            "only the arrival area is loaded, with the route witness still absent");
+        System.out.println("[vandorlabs][physical-cruise] exit="+EXIT+" arrivalX="+destination+" midpointUnloaded=true");
+    }
+
+    private static boolean clientExitSettled(Minecraft mc){
+        if("teleport".equals(EXIT))return !mc.player.isRiding()&&Math.abs(mc.player.posX-startX)<2&&mc.player.posY<120;
+        return mc.player.getRidingEntity() instanceof EntityGroundVehicle&&mc.player.posY<300
+                &&Math.abs(mc.player.posX-(remoteX+SWEEP))<4;
     }
 
     private static boolean generated(double x,double z){

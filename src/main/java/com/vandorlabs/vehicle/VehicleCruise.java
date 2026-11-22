@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.border.WorldBorder;
 
-/** A rider keeps the departure column alive while route positions are purely geographic. */
+/** Geographic flight with a separate canonical terrain and save anchor. */
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class VehicleCruise {
     private static final DataParameter<BlockPos> ROUTE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
@@ -131,7 +131,7 @@ public final class VehicleCruise {
         if(!projected()||craft.world.isRemote)return;
         // Move an ordinary dismount back to an already watched column before vanilla can index it.
         double x=anchorX+rider.posX-craft.posX,z=anchorZ+rider.posZ-craft.posZ;
-        if(rider instanceof EntityPlayerMP) {
+        if(rider instanceof EntityPlayerMP&&((EntityPlayerMP)rider).connection!=null) {
             EntityPlayerMP player=(EntityPlayerMP)rider;
             player.connection.setPlayerLocation(x,rider.posY,z,rider.rotationYaw,rider.rotationPitch);
         } else rider.setPosition(x,rider.posY,z);

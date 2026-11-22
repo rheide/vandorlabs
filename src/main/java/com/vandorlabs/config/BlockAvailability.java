@@ -35,7 +35,7 @@ public final class BlockAvailability {
         boolean legacyResident=config.hasKey("vehicles","reanchorResidentCruise")
                 && config.get("vehicles","reanchorResidentCruise",false).getBoolean();
         String selected=config.getString("cruiseCoordinates","vehicles",legacyResident?"resident":"anchored",
-                "High Flight coordinates: anchored (default), resident (hop only to loaded terrain), or physical (geographic F3 X/Z). Other mods can load terrain at physical coordinates. F3 Y includes the sky offset and observers away from the anchor may not see the craft. Restart required.",
+                "High Flight coordinates: anchored (default), resident (hop only to loaded terrain), or physical (geographic F3 X/Z with one supported pilot). Other mods can load terrain at physical coordinates. F3 Y includes the sky offset and observers away from the anchor may not see the craft. Restart required.",
                 new String[]{"anchored","resident","physical"});
         cruiseCoordinates=CruiseCoordinates.valueOf(selected.toUpperCase(java.util.Locale.ROOT));
         ENABLED.clear();

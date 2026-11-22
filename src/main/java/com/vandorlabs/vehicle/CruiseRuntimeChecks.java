@@ -225,7 +225,7 @@ public final class CruiseRuntimeChecks {
         } catch (ReflectiveOperationException failure) { throw new IllegalStateException(failure); }
     }
 
-    private static void verifyJourneyMap(Minecraft mc) throws Exception {
+    static void verifyJourneyMap(Minecraft mc) throws Exception {
         Class<?> manager=Class.forName("journeymap.client.ui.UIManager");
         Object minimap=manager.getMethod("getMiniMap").invoke(manager.getField("INSTANCE").get(null));
         String location=(String)minimap.getClass().getMethod("getLocation").invoke(minimap);

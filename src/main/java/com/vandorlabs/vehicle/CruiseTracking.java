@@ -23,9 +23,9 @@ public final class CruiseTracking {
     static void ready(EntityPlayerMP player) { READY.add(player); }
 
     static boolean ready(EntityGroundVehicle craft) {
-        if(!CruiseTrackingTransformer.serverReady() || craft.getPassengers().isEmpty())return false;
-        for(Entity rider:craft.getPassengers())if(!(rider instanceof EntityPlayerMP)||!READY.contains(rider))return false;
-        return true;
+        if(!CruiseTrackingTransformer.serverReady()||craft.getPassengers().size()!=1)return false;
+        Entity pilot=craft.getControllingPassenger();
+        return pilot instanceof EntityPlayerMP&&READY.contains(pilot);
     }
 
     private static EntityGroundVehicle mount(Entity actor) {

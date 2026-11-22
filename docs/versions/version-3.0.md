@@ -37,7 +37,7 @@ In the server’s `config/vandorlabs-blocks.cfg`, choose `cruiseCoordinates` und
 | `resident` | Every 40 ticks, after at least 64 blocks of travel, the aircraft can move to the current route position. | A hop requires the entire hull and all rider view areas to be loaded and populated already. The aircraft skips wilderness hops. Minecraft can reload existing terrain near an occupied stop. |
 | `physical` | The aircraft and riders move continuously at the real geographic X/Z. F3 shows those coordinates. | Forge keeps terrain tracking at the departure area. Another mod that reads terrain at the rider’s actual coordinates can load route chunks. Players outside the departure tracking area may not see the aircraft overhead. |
 
-Use the altimeter for flight altitude. F3 Y includes the cruise sky offset. Physical cruise requires compatible tracking hooks on the server and riding clients. The aircraft falls back to anchored travel when those hooks are unavailable.
+Use the altimeter for flight altitude. F3 Y includes the cruise sky offset. Physical cruise supports one controlling pilot. Additional passengers can board before cruise for anchored group travel, or after descent. The aircraft also falls back to anchored travel when the server or pilot’s client lacks compatible tracking hooks.
 
 With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Creating a waypoint at your current position uses the geographic coordinates and flight altitude. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
 

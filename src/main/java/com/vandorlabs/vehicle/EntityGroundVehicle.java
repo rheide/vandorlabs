@@ -561,7 +561,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public Entity getControllingPassenger(){if(structure==null)return null;for(Entity passenger:getPassengers())if(structure.pilotSeats().contains(seatForPassenger(passenger)))return passenger;return null;}
     // Vanilla otherwise sends client vehicle positions, overriding the server controller.
     @Override public boolean canPassengerSteer(){return false;}
-    @Override protected boolean canFitPassenger(Entity passenger){return structure!=null && getPassengers().size()<structure.passengerSeats().size();}
+    @Override protected boolean canFitPassenger(Entity passenger){return structure!=null&&!cruise.projected()&&getPassengers().size()<structure.passengerSeats().size();}
     @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand) {
         if(hand!=EnumHand.MAIN_HAND)return false;
         VehicleInteraction.Target target=VehicleInteraction.pointed(player);

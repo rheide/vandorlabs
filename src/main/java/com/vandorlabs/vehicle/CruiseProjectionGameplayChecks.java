@@ -62,6 +62,12 @@ final class CruiseProjectionGameplayChecks {
                     || Math.floor(clientCraft.posZ)!=clientCraft.cruise.z()) return false;
             require(Math.abs(mc.player.posX-clientCraft.posX)<2 && Math.abs(mc.player.posZ-clientCraft.posZ)<2,
                     "rider and craft share the projected world");
+            if(System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) {
+                require(com.vandorlabs.client.CruiseMapView.x(mc.player.posX)==mc.player.posX
+                        &&com.vandorlabs.client.CruiseMapView.z(mc.player.posZ)==mc.player.posZ,
+                        "JourneyMap retains the physical X/Z without an extra projection");
+                CruiseRuntimeChecks.verifyJourneyMap(mc);
+            }
             mc.gameSettings.thirdPersonView=0;
             wasDebug=mc.gameSettings.showDebugInfo;
             hudWasHidden=mc.gameSettings.hideGUI;
