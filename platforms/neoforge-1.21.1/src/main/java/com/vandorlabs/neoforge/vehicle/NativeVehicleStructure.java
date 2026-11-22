@@ -14,6 +14,8 @@ import com.vandorlabs.neoforge.ports.NativeResourcePortEntity;
 import com.vandorlabs.neoforge.reservoir.NativeBufferEntity;
 import com.vandorlabs.neoforge.seating.NativeChairEntity;
 import com.vandorlabs.neoforge.seating.NativeSeatBlock;
+import com.vandorlabs.neoforge.coupler.NativeCouplerBlock;
+import com.vandorlabs.neoforge.coupler.NativeCouplerEntity;
 import com.vandorlabs.neoforge.seating.NativeSeatKind;
 import com.vandorlabs.neoforge.storage.NativeStorageEntity;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
@@ -135,10 +137,21 @@ public final class NativeVehicleStructure {
      * They never join a vehicle to the roadway or to a neighboring vehicle.
      */
     static boolean touches(BlockState a, BlockState b, Direction fromA) {
-        return connectingFace(a, fromA) && connectingFace(b, fromA.getOpposite());
+        if (a.getBlock() instanceof NativeCouplerBlock && b.getBlock() instanceof NativeCouplerBlock)
+            return NativeCouplerBlock.pair(a, b, fromA);
+        return mountingFace(a, fromA) && mountingFace(b, fromA.getOpposite());
+    }
+
+    private static boolean mountingFace(BlockState state, Direction face) {
+        return state.getBlock() instanceof NativeCouplerBlock
+            ? face == NativeCouplerBlock.facing(state).getOpposite() : connectingFace(state, face);
     }
 
     static boolean connectingFace(BlockState state, Direction face) {
+        if (state.getBlock() instanceof NativeCouplerBlock) {
+            var head = NativeCouplerBlock.facing(state);
+            return face == head.getOpposite() || face == head && state.getValue(NativeCouplerBlock.LOCKED);
+        }
         if (state.getBlock() instanceof NativeSideWheel) {
             return state.getValue(NativeSideWheel.PART) == 0
                 && face == state.getValue(NativeSideWheel.FACING).getOpposite();
@@ -167,6 +180,7 @@ public final class NativeVehicleStructure {
         boolean nativeBlock = state.is(NativeVehicleBindings.CONTROLLER) || block instanceof NativeSideWheel
             || block instanceof NativeBuilderCoreBlock core && core.design.drive() == NativeDriveDesign.LONGBURN
             || block instanceof NativeBuilderPartBlock || NativeVehicleObservers.block(state)
+            || block instanceof NativeCouplerBlock
             || block instanceof NativeCredentialReaderBlock reader && !reader.chip()
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
@@ -214,6 +228,7 @@ public final class NativeVehicleStructure {
                 && reader.mountRotation() == reader.getBlockState().getValue(NativeMountedSwitchBlock.ROTATION);
         }
         if (tile instanceof NativeChairEntity seat) return seat.kind() == NativeSeatKind.PILOT && !seat.inert();
+        if (tile instanceof NativeCouplerEntity coupler) return !coupler.inert();
         if (tile instanceof NativeResourcePortEntity port) return !port.inert();
         if (tile instanceof NativeBufferEntity buffer) return !buffer.inert();
         if (tile instanceof NativeStorageEntity storage) return !storage.inert();

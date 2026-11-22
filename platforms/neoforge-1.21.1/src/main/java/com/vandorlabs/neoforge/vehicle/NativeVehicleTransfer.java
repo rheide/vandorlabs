@@ -429,6 +429,8 @@ public final class NativeVehicleTransfer {
             for (var position : receipt.held) {
                 if (world.getChunkSource().getChunkNow(position.getX() >> 4, position.getZ() >> 4) == null) continue;
                 world.invalidateCapabilities(position);
+                if (world.getBlockEntity(position) instanceof com.vandorlabs.neoforge.coupler.NativeCouplerEntity coupler)
+                    com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(coupler);
                 var state = world.getBlockState(position);
                 world.sendBlockUpdated(position, state, state, Block.UPDATE_CLIENTS);
             }
