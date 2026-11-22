@@ -538,9 +538,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
             Vec3d at=seatPosition(world.isRemote?visualPose(1):flightPose(),passenger,world.isRemote&&articulation.active()?1:0);
+            at=CruiseCoordinateProbe.passenger(passenger,at);
             passenger.setPosition(at.x,at.y,at.z);
             if(world.isRemote) {
                 Vec3d before=seatPosition(visualPose(0),passenger,-1);
+                before=CruiseCoordinateProbe.passenger(passenger,before);
                 passenger.prevPosX=passenger.lastTickPosX=before.x;
                 passenger.prevPosY=passenger.lastTickPosY=before.y;
                 passenger.prevPosZ=passenger.lastTickPosZ=before.z;

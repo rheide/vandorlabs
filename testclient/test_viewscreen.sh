@@ -285,6 +285,10 @@ case "${1:-}" in
         elif [ "$TARGET" = screen-modes ]; then
             PREFIX=shot_screen_status_to_redstone_
             export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
+        elif [ "$TARGET" = cruise-coordinates ]; then
+            PREFIX=cruise-coordinates
+            export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cruiseCoordinateProbe=${VANDOR_LABS_COORDINATE_PROBE_MODE:-anchor}"
         elif [ "$TARGET" = maxwell-cruise ]; then
             PREFIX=maxwell-cruise
             export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
@@ -1084,6 +1088,11 @@ PYIMAGE
         grep -q "screen-mode-world PASS" "$RUN_OUT/client.log"
         grep -q "screen-mode-client PASS" "$RUN_OUT/client.log"
         echo "Screen mode live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = cruise-coordinates ]; then
+        grep -q "cruise-coordinate-probe ${VANDOR_LABS_COORDINATE_PROBE_MODE:-anchor} PASS" "$RUN_OUT/client.log"
+        echo "Forge High Flight coordinate probe passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = maxwell-cruise ]; then
