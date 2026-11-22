@@ -3,6 +3,7 @@ package com.vandorlabs.vehicle;
 import com.vandorlabs.blocks.BlockVandorSwitch;
 import com.vandorlabs.tiles.TileEntityRedstoneChannel;
 import java.io.File;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -33,7 +34,7 @@ final class CruiseProjectionGameplayChecks {
     private static final BlockPos SWITCH = new BlockPos(0,2,2);
     private static final int CHANNEL = 24791;
     private static int stage, ticks;
-    private static boolean wasDebug;
+    private static boolean wasDebug, hudWasHidden;
     private static Future<Boolean> serverCheck;
 
     private CruiseProjectionGameplayChecks() {}
@@ -62,7 +63,9 @@ final class CruiseProjectionGameplayChecks {
                     "rider and craft share the projected world");
             mc.gameSettings.thirdPersonView=0;
             wasDebug=mc.gameSettings.showDebugInfo;
+            hudWasHidden=mc.gameSettings.hideGUI;
             mc.gameSettings.showDebugInfo=true;
+            mc.gameSettings.hideGUI=false;
             aim(mc,clientCraft);
             stage=1;
             return false;
@@ -71,8 +74,10 @@ final class CruiseProjectionGameplayChecks {
             String xyz = new VanillaDebug(mc).coordinates();
             require(xyz != null, "stock F3 XYZ row is present");
             String[] values=xyz.substring(5).split("/");
-            require(values.length==3 && Math.abs(Double.parseDouble(values[0].trim())-mc.player.posX)<.002
-                    && Math.abs(Double.parseDouble(values[2].trim())-mc.player.posZ)<.002, "F3 follows live client X/Z " + xyz);
+            NumberFormat coordinates=NumberFormat.getNumberInstance();
+            require(values.length==3 && Math.abs(coordinates.parse(values[0].trim()).doubleValue()-mc.player.posX)<.002
+                    && Math.abs(coordinates.parse(values[2].trim()).doubleValue()-mc.player.posZ)<.002,
+                    "F3 follows live client X/Z " + xyz);
             System.out.println("[vandorlabs][coordinate-probe] " + xyz + " flightAltitude=" + clientCraft.flightAltitude());
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"cruise-geographic-f3.png"));
@@ -104,6 +109,7 @@ final class CruiseProjectionGameplayChecks {
         require(serverCheck.get(),"real interaction toggles the authoritative carried rocker");
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                 "png",new File(output,"cruise-geographic-carried-control.png"));
+        mc.gameSettings.hideGUI=hudWasHidden;
         System.out.println("[vandorlabs][coordinate-probe] geographic HUD + real carried switch PASS");
         return true;
     }
@@ -135,7 +141,7 @@ final class CruiseProjectionGameplayChecks {
     private static final class VanillaDebug extends GuiOverlayDebug {
         VanillaDebug(Minecraft mc) {super(mc);}
         String coordinates() {
-            for (String line : getDebugInfoLeft()) if (line.startsWith("XYZ: ")) return line;
+            for (String line : call()) if (line.startsWith("XYZ: ")) return line;
             return null;
         }
     }
