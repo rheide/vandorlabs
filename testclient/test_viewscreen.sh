@@ -389,6 +389,9 @@ case "${1:-}" in
         elif [ "$TARGET" = canopy-stretch ]; then
             PREFIX=canopy-stretch
             export VANDOR_LABS_CANOPY_STRETCH_ONLY=true VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-displays ]; then
+            PREFIX=shot_canopy-display-
+            export VANDOR_LABS_CANOPY_DISPLAY_CHECKS_ONLY=true
         elif [ "$TARGET" = large-canopies ]; then
             PREFIX=large_
             export VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
@@ -1311,6 +1314,10 @@ PYIMAGE
     if [ "$TARGET" = canopy-stretch ]; then
         grep -q 'canopy-stretch PASS' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/canopy-stretch-canopy.png" && test -s "$RUN_OUT/canopy-stretch-long.png"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-displays ]; then
+        grep -q 'canopy-displays PASS' "$RUN_OUT/client.log"
         exit 0
     fi
     if [ "$TARGET" = large-canopies ]; then

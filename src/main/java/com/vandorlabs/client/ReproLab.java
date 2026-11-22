@@ -768,6 +768,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("machinery live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.canopyDisplayChecksOnly")) {
+            try{if(CanopyDisplayRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Canopy displays",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.largeCanopyChecksOnly")) {
             try {if(LargeCanopyVisualChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("large canopy live checks",failure);}
             return;
