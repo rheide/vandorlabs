@@ -1,0 +1,201 @@
+package com.vandorlabs.neoforge.vehicle;
+
+import com.vandorlabs.physics.OrientedBounds;
+import com.vandorlabs.physics.RigidTransform;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+
+/** Local immutable collision shapes. World contacts only query already loaded terrain. */
+final class NativeVehicleHull {
+    private static final double EPSILON = 1e-6;
+    private static final int MAX_SHAPES = 8192;
+
+    private record Group(AABB bounds, List<AABB> shapes) {}
+    private record Contact(OrientedBounds hull, OrientedBounds terrain) {}
+    private record Target(BlockPos pos, List<AABB> shapes) {}
+
+    private final List<Group> groups;
+    private final List<Target> targets;
+    private final AABB bounds;
+    private final double radius;
+
+    NativeVehicleHull(Map<BlockPos, BlockState> cells) {
+        var view = new SnapshotBlocks(Map.copyOf(cells));
+        var clusters = new LinkedHashMap<BlockPos, List<AABB>>();
+        var selection = new ArrayList<Target>();
+        AABB envelope = null;
+        int count = 0;
+        for (var cell : cells.entrySet()) {
+            BlockPos at = cell.getKey();
+            BlockState state = cell.getValue();
+            if (state.isAir()) continue;
+            // An entity is centered in the controller cell horizontally. The cell's base remains local Y=0.
+            AABB volume = new AABB(at).move(-.5, 0, -.5);
+            envelope = envelope == null ? volume : envelope.minmax(volume);
+            var outline = state.getShape(view, at, CollisionContext.empty()).toAabbs();
+            if (!outline.isEmpty()) {
+                selection.add(new Target(at, outline.stream().map(box -> box.move(at).move(-.5, 0, -.5)).toList()));
+            }
+            for (var part : state.getCollisionShape(view, at, CollisionContext.empty()).toAabbs()) {
+                if (++count > MAX_SHAPES) throw new IllegalArgumentException("Vehicle collision shape limit");
+                AABB box = part.move(at).move(-.5, 0, -.5);
+                var cluster = new BlockPos(at.getX() >> 2, at.getY() >> 2, at.getZ() >> 2);
+                clusters.computeIfAbsent(cluster, key -> new ArrayList<>()).add(box);
+            }
+        }
+        if (envelope == null || count == 0) throw new IllegalArgumentException("Vehicle has no collision shape");
+        var assembled = new ArrayList<Group>(clusters.size());
+        for (var members : clusters.values()) {
+            AABB extent = members.getFirst();
+            for (var box : members) extent = extent.minmax(box);
+            envelope = envelope.minmax(extent);
+            assembled.add(new Group(extent, List.copyOf(members)));
+        }
+        groups = List.copyOf(assembled);
+        targets = List.copyOf(selection);
+        bounds = envelope;
+        double rx = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX));
+        double rz = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ));
+        double ry = Math.max(Math.abs(bounds.minY), Math.abs(bounds.maxY));
+        radius = Math.sqrt(rx * rx + rz * rz + ry * ry);
+    }
+
+    AABB bounds(Vec3 at, float yaw, float pitch, Direction facing) {
+        return broad(shape(bounds, transform(at, yaw, pitch, facing)));
+    }
+
+    private static RigidTransform transform(Vec3 at, float yaw, float pitch, Direction facing) {
+        return RigidTransform.translation(at.x, at.y, at.z)
+                .then(RigidTransform.joint(0, 0, 0, facing.getStepX(), facing.getStepZ(), yaw, pitch));
+    }
+
+    static Vec3 rotate(Vec3 point, float yaw, float pitch, Direction facing) {
+        double[] result = transform(Vec3.ZERO, yaw, pitch, facing).point(point.x, point.y, point.z);
+        return new Vec3(result[0], result[1], result[2]);
+    }
+
+    static Vec3 inverse(Vec3 point, Vec3 at, float yaw, float pitch, Direction facing) {
+        double[] result = transform(at, yaw, pitch, facing).inverse(point.x, point.y, point.z);
+        return new Vec3(result[0], result[1], result[2]);
+    }
+
+    private static OrientedBounds shape(AABB box, RigidTransform transform) {
+        return new OrientedBounds(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, transform);
+    }
+
+    private static AABB broad(OrientedBounds box) {
+        return new AABB(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+    }
+
+    static boolean loadedColumns(Level world, AABB bounds) {
+        for (int x = Mth.floor(bounds.minX) >> 4; x <= Mth.floor(bounds.maxX) >> 4; x++) {
+            for (int z = Mth.floor(bounds.minZ) >> 4; z <= Mth.floor(bounds.maxZ) >> 4; z++) {
+                if (world.getChunkSource().getChunkNow(x, z) == null) return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Contact> contacts(NativeGroundVehicle craft, Vec3 at, float yaw, float pitch, Vec3 travel) {
+        var pose = transform(at, yaw, pitch, craft.facing());
+        var envelope = broad(shape(bounds, pose)).expandTowards(travel).inflate(EPSILON);
+        if (!craft.level().getWorldBorder().isWithinBounds(envelope) || !loadedColumns(craft.level(), envelope)
+                || envelope.minY < craft.level().getMinBuildHeight() - EPSILON
+                || envelope.maxY > craft.level().getMaxBuildHeight() + EPSILON) return null;
+        var contacts = new ArrayList<Contact>();
+        for (var group : groups) {
+            var sweep = broad(shape(group.bounds, pose)).expandTowards(travel).inflate(EPSILON);
+            var obstacles = new ArrayList<AABB>();
+            for (var candidate : craft.level().getBlockCollisions(craft, sweep)) obstacles.addAll(candidate.toAabbs());
+            if (obstacles.isEmpty()) continue;
+            for (var local : group.shapes) {
+                var body = shape(local, pose);
+                var volume = broad(body).expandTowards(travel);
+                for (var terrain : obstacles) {
+                    if (volume.intersects(terrain)) contacts.add(new Contact(body, shape(terrain, RigidTransform.IDENTITY)));
+                }
+            }
+        }
+        return contacts;
+    }
+
+    float turn(NativeGroundVehicle craft, float yaw, float amount) {
+        if (amount == 0) return yaw;
+        int steps = Math.max(1, (int)Math.ceil(radius * Math.abs(Math.toRadians(amount)) / .15));
+        float accepted = yaw;
+        for (int step = 1; step <= steps; step++) {
+            float angle = yaw + amount * step / steps;
+            var contacts = contacts(craft, craft.position(), angle, craft.hullPitch(), Vec3.ZERO);
+            if (contacts == null || blocked(contacts, Vec3.ZERO, 0)) break;
+            accepted = angle;
+        }
+        return accepted;
+    }
+
+    double clip(NativeGroundVehicle craft, Vec3 at, float yaw, double amount, Direction.Axis axis) {
+        if (amount == 0) return 0;
+        var travel = switch (axis) {
+            case X -> new Vec3(amount, 0, 0);
+            case Y -> new Vec3(0, amount, 0);
+            case Z -> new Vec3(0, 0, amount);
+        };
+        var contacts = contacts(craft, at, yaw, craft.hullPitch(), travel);
+        if (contacts == null) return 0;
+        if (!blocked(contacts, travel, 1)) return amount;
+        double left = 0, right = 1;
+        for (int step = 0; step < 13; step++) {
+            double middle = (left + right) / 2;
+            if (blocked(contacts, travel, middle)) right = middle;
+            else left = middle;
+        }
+        return Math.abs(amount * left) < EPSILON ? 0 : amount * left;
+    }
+
+    BlockPos hit(Vec3 start, Vec3 end, BlockPos riddenSeat) {
+        BlockPos result = null;
+        double distance = start.distanceToSqr(end);
+        var upper = riddenSeat == null ? null : riddenSeat.above();
+        for (var target : targets) {
+            if (target.pos.equals(riddenSeat) || target.pos.equals(upper)) continue;
+            for (var shape : target.shapes) {
+                var hit = shape.clip(start, end);
+                if (hit.isEmpty()) continue;
+                double next = start.distanceToSqr(hit.get());
+                if (next < distance) {
+                    distance = next;
+                    result = target.pos;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static boolean blocked(List<Contact> contacts, Vec3 travel, double fraction) {
+        for (var pair : contacts) {
+            if (pair.hull.sweepsInto(pair.terrain, travel.x * fraction, travel.y * fraction, travel.z * fraction)) return true;
+        }
+        return false;
+    }
+
+    private record SnapshotBlocks(Map<BlockPos, BlockState> states) implements BlockGetter {
+        @Override public BlockEntity getBlockEntity(BlockPos pos) { return null; }
+        @Override public BlockState getBlockState(BlockPos pos) { return states.getOrDefault(pos, Blocks.AIR.defaultBlockState()); }
+        @Override public FluidState getFluidState(BlockPos pos) { return getBlockState(pos).getFluidState(); }
+        @Override public int getHeight() { return 128; }
+        @Override public int getMinBuildHeight() { return -64; }
+    }
+}
