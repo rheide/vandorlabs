@@ -47,7 +47,7 @@ public final class NativeScreenMenu extends AbstractContainerMenu {
   return cockpit()?!cockpit.inert()&&((com.vandorlabs.neoforge.seating.NativeSeatBlock)block).complete(level,hostPos()):!tile.inert();
  }
  @Override public ItemStack quickMoveStack(Player player,int index){return ItemStack.EMPTY;}
- public static NativeScreenMenu editing(ServerPlayer player,BlockPos pos,int window){return player.getServer().isSameThread()&&NativeConfigurationAccess.canConfigure(player)&&player.containerMenu instanceof NativeScreenMenu menu&&menu.containerId==window&&menu.hostPos().equals(pos)&&!menu.editing()&&menu.stillValid(player)?menu:null;}
+ public static NativeScreenMenu editing(ServerPlayer player,BlockPos pos,int window){return player.getServer().isSameThread()&&player.containerMenu instanceof NativeScreenMenu menu&&(menu.cockpit()||NativeConfigurationAccess.canConfigure(player))&&menu.containerId==window&&menu.hostPos().equals(pos)&&!menu.editing()&&menu.stillValid(player)?menu:null;}
  public static NativeScreenMenu viewing(ServerPlayer player,BlockPos pos,int window){return player.getServer().isSameThread()&&player.containerMenu instanceof NativeScreenMenu menu&&menu.containerId==window&&menu.hostPos().equals(pos)&&!menu.editing()&&menu.stillValid(player)?menu:null;}
  public static boolean applyTransmission(ServerPlayer player,BlockPos pos,int window,NativeScreenTransmissionEdit edit){NativeScreenMenu menu=viewing(player,pos,window);return menu!=null&&!menu.cockpit()&&menu.tile.applyTransmission(edit);}
  public static boolean applyFrames(ServerPlayer player,BlockPos pos,int window,NativeScreenFrameEdit edit){NativeScreenMenu menu=editing(player,pos,window);return menu!=null&&!menu.rowsOnly()&&menu.tile.applyFrames(edit);}

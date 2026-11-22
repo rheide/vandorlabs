@@ -289,8 +289,28 @@ public final class NativeCockpitFrameClient {
             }
             case 59 -> {
                 if(screenshot!=null)return;
+                var face=NativeCockpitTouch.face(Direction.NORTH,2,0);
+                aim(game,Vec3.atLowerCornerOf(ROOT).add(face.topLeft()).add(face.right().scale(.5)).add(face.down().scale(.5)));
+                wait=ticks;stage=67;
+            }
+            case 67 -> {
+                if(ticks<wait+8)return;
+                var eye=player.getEyePosition();
+                var end=eye.add(player.getViewVector(1).scale(player.blockInteractionRange()));
+                var hit=game.level.clip(new ClipContext(eye,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,player));
+                var screen=owner.cockpitTouch().pick(hit.getBlockPos(),eye,end);
+                check(screen!=null&&screen.slot()==2&&player.getMainHandItem().isEmpty(),
+                    "unheld Survival click reaches the authored left monitor");
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,hit);
+                stage++;
+            }
+            case 68 -> {
+                if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
+                check(editor.getMenu().initialSlot()==2&&editor.getTitle().getString().equals("Cockpit Displays"),
+                    "normal monitor click opens the same editor focused on the aimed surface");
+                editor.onClose();
                 aimThrottle(game,owner);
-                wait=ticks;stage++;
+                wait=ticks;stage=60;
             }
             case 60 -> {
                 if(ticks<wait+8)return;

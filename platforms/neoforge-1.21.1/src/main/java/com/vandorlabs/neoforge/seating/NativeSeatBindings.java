@@ -50,7 +50,9 @@ public final class NativeSeatBindings {
                 var grip=NativeCockpitThrottle.pick(owner,owner.getBlockState().getValue(NativeSeatBlock.FACING),pos,start,end);
                 if(grip!=null)return openThrottle(actor,owner,pos,grip);
             }
-            var panel=owner.cockpitTouch().pick(pos,start,end);
+            boolean advancedGrip=owner.kind()==NativeSeatKind.ADVANCED&&NativeAdvancedChairGeometry.grip(
+                owner,owner.getBlockState().getValue(NativeSeatBlock.FACING),pos,start,end)!=null;
+            var panel=advancedGrip?null:owner.cockpitTouch().pick(pos,start,end);
             if(panel!=null)return openSurface(actor,owner,pos,panel);
             if(owner.kind()==NativeSeatKind.COCKPIT)return openSurface(actor,owner,pos,null);
         }
@@ -80,7 +82,7 @@ public final class NativeSeatBindings {
     static boolean openSurface(Player actor,NativeChairEntity owner,BlockPos pos,NativeCockpitTouch.Pick panel){
         var world=owner.getLevel();
         if(!NativeConfigurationAccess.canEditDialog(actor,owner)
-            ||!NativeConfigurationAccess.canConfigure(actor)||!((NativeSeatBlock)owner.getBlockState().getBlock()).complete(world,owner.getBlockPos())
+            ||!((NativeSeatBlock)owner.getBlockState().getBlock()).complete(world,owner.getBlockPos())
             ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,net.minecraft.core.Direction.UP,actor.getMainHandItem()))return false;
         int slot=panel==null?0:panel.slot();
         if(actor instanceof ServerPlayer player){

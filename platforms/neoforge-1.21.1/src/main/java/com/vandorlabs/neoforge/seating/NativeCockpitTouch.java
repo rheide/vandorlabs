@@ -211,7 +211,13 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
         return true;
     }
     public boolean editing(){return service.editing();}
+    boolean statusRow(int slot,int row){
+        return visibleRow(slot,row)&&data[slot].rows().get(row).status();
+    }
     boolean usesRow(int slot,int row){
+        return visibleRow(slot,row)&&!data[slot].rows().get(row).status();
+    }
+    private boolean visibleRow(int slot,int row){
         return redstone(slot)&&active(slot)&&settings[slot].playback()!=0&&row>=0&&row<data[slot].rows().size();
     }
     void use(int slot,int row,int segment){

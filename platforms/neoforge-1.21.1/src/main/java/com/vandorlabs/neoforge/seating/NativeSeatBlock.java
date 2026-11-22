@@ -114,6 +114,7 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
             var end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
             var panel=touch.pick(pos,start,end);
             if(panel!=null){
+                if(touch.statusRow(panel.slot(),panel.row()))return InteractionResult.sidedSuccess(world.isClientSide);
                 if(!touch.usesRow(panel.slot(),panel.row()))
                     return NativeSeatBindings.openSurface(actor,owner,pos,panel)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.FAIL;
                 if(!world.isClientSide){
