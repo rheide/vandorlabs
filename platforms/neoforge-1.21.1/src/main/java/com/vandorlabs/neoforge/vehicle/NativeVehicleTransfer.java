@@ -55,7 +55,8 @@ public final class NativeVehicleTransfer {
     }
 
     public static boolean holdsScreenChannels(ServerLevel world, BlockPos pos) {
-        return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos);
+        return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos)
+            || NativeCellTransactions.preparingByFamily(world, FAMILY_ID, pos);
     }
 
     public static void assemble(ServerPlayer player, BlockPos controller) {
