@@ -17,6 +17,22 @@ import net.minecraft.util.math.BlockPos;
 public final class FixedCanopyLegacyOracle {
     private static final BlockPos ROOT=new BlockPos(8,80,8);
     private static TileEntityCanopy install(CanopyPlacementLegacyOracle.World world,BlockCanopy block,BlockPos pos,EnumFacing facing,int mount,BlockPos anchor){world.setBlockState(pos,block.getDefaultState().withProperty(BlockCanopy.FACING,facing),2);TileEntityCanopy tile=(TileEntityCanopy)world.getTileEntity(pos);tile.anchor=anchor;tile.large.mount=mount;return tile;}
+    private static void verifyFramebufferFallback(BlockCanopy block){
+        CanopyPlacementLegacyOracle.World world=new CanopyPlacementLegacyOracle.World();
+        TileEntityCanopy tile=install(world,block,ROOT,EnumFacing.NORTH,0,ROOT);
+        int opaque=com.vandorlabs.tiles.GlassTextures.OPAQUE;
+        for(boolean side:new boolean[]{false,true}){
+            tile.large.material=side?-1:com.vandorlabs.screen.VehicleInstrument.STATUS.choice;
+            tile.large.tint=side?opaque:1;
+            tile.large.sideFinish(side?com.vandorlabs.screen.VehicleInstrument.COMPASS.choice:-1,0,side?1:opaque,0);
+            FixedCanopyModel.Mesh active=new FixedCanopyModel.Mesh(tile,true),fallback=new FixedCanopyModel.Mesh(tile,false);
+            if(active.solid.size()!=fallback.solid.size()||fallback.glass.size()<=active.glass.size()){
+                throw new AssertionError("Framebuffer fallback restores only the selected "+(side?"Side":"Main")+" glass while preserving the other opaque pane");
+            }
+        }
+        System.out.println("Fixed canopy framebuffer fallback PASS independent Main and Side, preserved opaque finish and visible glass");
+    }
+
     public static void main(String[] args)throws Exception {
         List<BlockCanopy> blocks=CanopyPlacementLegacyOracle.initialize();BlockCanopy fixed=null,opening=null;
         for(BlockCanopy block:blocks){if(block.kind.equals("regular_canopy_glass"))fixed=block;if(block.kind.equals("canopy"))opening=block;}
@@ -26,6 +42,10 @@ public final class FixedCanopyLegacyOracle {
         TextureAtlasSprite sprite=new TextureAtlasSprite("canopy-source-reference"){};sprite.setIconWidth(64);sprite.setIconHeight(64);sprite.initSprite(256,256,64,128,false);
         TextureMap atlas=new TextureMap("textures"){@Override public TextureAtlasSprite getAtlasSprite(String id){return sprite;}};
         for(Field field:Minecraft.class.getDeclaredFields())if(!Modifier.isStatic(field.getModifiers())&&field.getType()==TextureMap.class){field.setAccessible(true);field.set(mc,atlas);}
+        if(args.length==1&&args[0].equals("--framebuffer-fallback")){
+            verifyFramebufferFallback(fixed);
+            return;
+        }
         File file=new File(args[0]);file.getAbsoluteFile().getParentFile().mkdirs();Gson gson=new Gson();int profiles=0;long quads=0;
         try(PrintWriter out=new PrintWriter(file,"UTF-8");PrintWriter inputs=args.length>1?new PrintWriter(args[1],"UTF-8"):null) {
             for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int mask=0;mask<16;mask++)for(int roof=0;roof<16;roof++)if((roof&~mask)==0)for(int profile=0;profile<6;profile++) {

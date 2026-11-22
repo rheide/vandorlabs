@@ -31,10 +31,10 @@ final class FixedCanopyChunkChecks {
             FixedCanopyModel.Mesh mesh=(FixedCanopyModel.Mesh)tile.chunkMesh;require(!mesh.solid.isEmpty()&&!mesh.glass.isEmpty(),"both chunk layers missing");joined=mesh;
             mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);world.setBlockToAir(POS.east());}).get();stage=2;return false;
         }
-        if(stage==2){if(tile.mask()!=0||tile.chunkMesh==joined)return false;require(((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile),"stale disconnected mesh");
+        if(stage==2){if(tile.mask()!=0||tile.chunkMesh==joined)return false;require(((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile,net.minecraft.client.renderer.OpenGlHelper.isFramebufferEnabled()),"stale disconnected mesh");
             mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);TileEntityCanopy server=TileEntityCanopy.at(world,POS);require(server!=null,"server canopy missing state="+world.getBlockState(POS)+" raw="+world.getTileEntity(POS));world.setBlockState(POS.north(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);server.large.tint=com.vandorlabs.tiles.GlassTextures.OPAQUE;server.large.shade=12;server.sync();}).get();stage=3;return false;
         }
-        if(stage==3){if(mc.world.getBlockState(POS.north()).getBlock()!=net.minecraft.init.Blocks.STONE)return false;if(tile.large.tint!=com.vandorlabs.tiles.GlassTextures.OPAQUE||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))return false;
+        if(stage==3){if(mc.world.getBlockState(POS.north()).getBlock()!=net.minecraft.init.Blocks.STONE)return false;if(tile.large.tint!=com.vandorlabs.tiles.GlassTextures.OPAQUE||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile,net.minecraft.client.renderer.OpenGlHelper.isFramebufferEnabled()))return false;
             require(((FixedCanopyModel.Mesh)tile.chunkMesh).glass.isEmpty(),"opaque edit retained translucent layer");Object before=tile.chunkMesh;FixedCanopyChunks.reload();FixedCanopyChunks.flush();require(tile.chunkMesh!=null&&tile.chunkMesh!=before,"reload retained old atlas mesh");
             CanopySurfaceRuntimeChecks.fixedSideContacts();
             mc.getIntegratedServer().addScheduledTask(()->{
@@ -45,7 +45,7 @@ final class FixedCanopyChunkChecks {
             }).get();stage=4;return false;
         }
         if(stage==4){
-            if(mc.world.getBlockState(POS.east()).getBlock()!=net.minecraft.init.Blocks.STONE||tile.large.tint!=1||tile.large.shade!=0||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))return false;
+            if(mc.world.getBlockState(POS.east()).getBlock()!=net.minecraft.init.Blocks.STONE||tile.large.tint!=1||tile.large.shade!=0||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile,net.minecraft.client.renderer.OpenGlHelper.isFramebufferEnabled()))return false;
             // Allow complete world renders and asynchronous chunk uploads after
             // the client observes the contact block, finish and close camera.
             if(mc.player.getDistanceSq(POS.getX()-1.6,POS.getY()-.2,POS.getZ()+2.6)>.05)return false;
