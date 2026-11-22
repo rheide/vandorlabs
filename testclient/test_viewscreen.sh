@@ -210,6 +210,9 @@ case "${1:-}" in
         elif [ "$TARGET" = copy-surfaces ]; then
             PREFIX=copy_surface_
             export VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY=true
+        elif [ "$TARGET" = copy-thermal ]; then
+            PREFIX=copy_thermal_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.copyThermalChecksOnly=true"
         elif [ "$TARGET" = arm-docs ]; then
             PREFIX=joined_arm_
             export VANDOR_LABS_JOINED_ARM_DOCS=true
@@ -499,6 +502,11 @@ COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
 if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = arm-duct-flow ] || [ "${TARGET:-}" = observer-arm-power ]; then
     for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
         cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
+    done
+fi
+if [ "${TARGET:-}" = copy-thermal ]; then
+    for thermal_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar; do
+        cp "$COMPAT_MODS/$thermal_mod" "$TEST_RUNTIME_GAME/mods/"
     done
 fi
 if [ -n "${VANDOR_LABS_TEST_PORT_MODS:-}" ]; then
@@ -932,6 +940,11 @@ PYIMAGE
     if [ "$TARGET" = copy-surfaces ]; then
         grep -q "copy-surfaces PASS" "$RUN_OUT/client.log"
         echo "Copy surface checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = copy-thermal ]; then
+        grep -q "copy-thermal PASS" "$RUN_OUT/client.log"
+        echo "Copy Thermal Dynamics checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-improvements ]; then

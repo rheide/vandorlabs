@@ -5,6 +5,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.*;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -30,6 +31,27 @@ public final class TransferNetworkCompat {
                 ||name.startsWith("cofh.thermaldynamics.duct.tiles.TileDuctOmni");
     }
     static boolean galacticraftStorage(TileEntity tile){String name=type(tile);return name.equals(GC+"EnergyStorageModule")||name.equals(GC+"FluidTank");}
+    public static boolean copyableThermal(TileEntity tile){return thermal(tile)&&onboard(tile);}
+    /** The native duct item is followed by each physical attachment and cover drop. Filter entries are ghosts. */
+    public static List<ItemStack> thermalCopyMaterials(TileEntity tile){
+        if(!copyableThermal(tile))throw new IllegalArgumentException("Unsupported Thermal Dynamics copy materials");
+        try{
+            List<ItemStack> result=new ArrayList<>();
+            result.add(requireCopyItem(call(tile,"getDrop")));
+            for(String method:new String[]{"getAttachment","getCover"})for(int side=0;side<6;side++){
+                Object part=call(tile,method,side);
+                if(part==null)continue;
+                List<?> drops=(List<?>)call(part,"getDrops");
+                require(!drops.isEmpty(),"A Thermal Dynamics attachment has no material item");
+                for(Object drop:drops)result.add(requireCopyItem(drop));
+            }
+            return result;
+        }catch(ReflectiveOperationException|LinkageError failure){throw new IllegalArgumentException("Cannot account for installed Thermal Dynamics ducts and attachments",failure);}
+    }
+    private static ItemStack requireCopyItem(Object item){
+        if(!(item instanceof ItemStack)||((ItemStack)item).isEmpty())throw new IllegalArgumentException("A Thermal Dynamics duct or attachment has no material item");
+        return (ItemStack)item;
+    }
     public static boolean armView(TileEntity tile){return component(tile)&&tile.getWorld() instanceof VehicleWorld&&((VehicleWorld)tile.getWorld()).navigationArm!=null;}
     public static boolean typed(VehicleStructure.Cell cell){
         String type=cell.state.getBlock().getClass().getName();

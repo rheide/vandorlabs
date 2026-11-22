@@ -30,6 +30,12 @@ public final class CopyMaterials {
         if(need.exact)return matches(need.item,supplied);
         if(supplied.isEmpty()||need.item.getItem()!=supplied.getItem()||need.item.getMetadata()!=supplied.getMetadata())return false;
         if(!supplied.areCapsCompatible(need.item))return false;
+        NBTTagCompound tier=need.item.getTagCompound();
+        if(tier!=null&&tier.hasKey("tier",3)){
+            NBTTagCompound actual=supplied.getTagCompound();
+            if(actual==null||actual.hasNoTags())return tier.getInteger("tier")==0;
+            return tier.equals(actual);
+        }
         if(!supplied.hasTagCompound())return true;
         if(supplied.getItem() instanceof ItemBlock&&((ItemBlock)supplied.getItem()).getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock&&com.vandorlabs.ports.ResourcePortData.hasResources(supplied.getSubCompound("BlockEntityTag")))return false;
         // Empty configured building blocks remain valid base materials. Never consume a filled carrier as an empty block.
@@ -51,17 +57,29 @@ public final class CopyMaterials {
     }
     private static void collect(VehicleStructure snapshot,VehicleWorld view,List<Need> needs,int depth){
         if(depth>=8)throw new IllegalArgumentException("Captured material nesting exceeds eight structures");
-        for(VehicleStructure.Cell cell:snapshot.cells){if(cell.tileData()!=null&&cell.tileData().hasKey("LootTable",8)&&!cell.tileData().getString("LootTable").isEmpty())throw new IllegalArgumentException("Open loot containers before Survival copying them");TileEntity tile=view.getTileEntity(cell.pos);if(VehicleForeignCompat.toolbox(tile)){ItemStack carrier=VehicleForeignCompat.toolboxMaterial(tile,cell.state);add(needs,carrier,1);continue;}ItemStack base=base(cell,view);boolean carrier=false;
+        for(VehicleStructure.Cell cell:snapshot.cells){if(cell.tileData()!=null&&cell.tileData().hasKey("LootTable",8)&&!cell.tileData().getString("LootTable").isEmpty())throw new IllegalArgumentException("Open loot containers before Survival copying them");TileEntity tile=view.getTileEntity(cell.pos);if(VehicleForeignCompat.toolbox(tile)){ItemStack carrier=VehicleForeignCompat.toolboxMaterial(tile,cell.state);add(needs,carrier,1);continue;}
+            if(TransferNetworkCompat.copyableThermal(tile)){
+                if(!cell.tileData().getCompoundTag("ForgeCaps").hasNoTags())throw new IllegalArgumentException("A Thermal Dynamics duct has an additional capability without a Survival material adapter");
+                for(ItemStack part:TransferNetworkCompat.thermalCopyMaterials(tile))add(needs,part,part.getCount());
+                continue;
+            }
+            ItemStack base=base(cell,view);boolean carrier=false;
+            NBTTagCompound data=cell.tileData();
+            if(CopyStorage.mekanismStore(tile)){
+                if(!data.hasKey("tier",3)||data.getInteger("tier")<0||data.getInteger("tier")>3)
+                    throw new IllegalArgumentException("Survival copy requires a finite Mekanism storage tier");
+                NBTTagCompound tier=new NBTTagCompound();tier.setInteger("tier",data.getInteger("tier"));base.setTagCompound(tier);
+            }
             if(storedResources(tile,cell.tileData())){
-                if(!base.isEmpty()&&(tile instanceof TileEntityBattery||tile instanceof TileEntityHexTank||tile instanceof com.vandorlabs.ports.ResourcePortTile)){NBTTagCompound source=cell.tileData();ItemStack pick;if(tile instanceof com.vandorlabs.ports.ResourcePortTile){pick=new ItemStack(cell.state.getBlock());NBTTagCompound raw=source.copy();for(String key:new String[]{"id","x","y","z"})raw.removeTag(key);pick.setTagInfo("BlockEntityTag",raw);}else pick=cell.state.getBlock().getPickBlock(cell.state,null,view,cell.pos,null);NBTTagCompound data=pick.getSubCompound("BlockEntityTag");if(data==null||!resourceData(source,data))throw new IllegalArgumentException("Stored resources have no lossless material item: "+cell.state.getBlock().getLocalizedName());base=pick;carrier=true;}
+                if(!base.isEmpty()&&(tile instanceof TileEntityBattery||tile instanceof TileEntityHexTank||tile instanceof com.vandorlabs.ports.ResourcePortTile)){NBTTagCompound source=cell.tileData();ItemStack pick;if(tile instanceof com.vandorlabs.ports.ResourcePortTile){pick=new ItemStack(cell.state.getBlock());NBTTagCompound raw=source.copy();for(String key:new String[]{"id","x","y","z"})raw.removeTag(key);pick.setTagInfo("BlockEntityTag",raw);}else pick=cell.state.getBlock().getPickBlock(cell.state,null,view,cell.pos,null);NBTTagCompound paid=pick.getSubCompound("BlockEntityTag");if(paid==null||!resourceData(source,paid))throw new IllegalArgumentException("Stored resources have no lossless material item: "+cell.state.getBlock().getLocalizedName());base=pick;carrier=true;}
                 else throw new IllegalArgumentException("Empty stored energy, fluids or fuel before Survival copying "+cell.state.getBlock().getLocalizedName());
             }
             add(needs,base,base.isEmpty()?0:base.getCount(),carrier);
             if(!carrier)inventory(tile,needs);
-            NBTTagCompound data=cell.tileData();if(data==null)continue;
+            if(data==null)continue;
             if(data.hasKey("ArmPayload",10)){
                 NBTTagCompound payload=data.getCompoundTag("ArmPayload");if(payload.getTagList("OwnershipJournal",10).tagCount()>0)throw new IllegalArgumentException("Finish the arm's recovery before copying it");
-                if(!payload.getBoolean("Materialized")){VehicleStructure held=VehicleStructure.readDisplay(payload.getCompoundTag("Blocks"));VehicleWorld nested=new VehicleWorld(view.parent,held);MovingBlockSupport.validate(held,nested);collect(held,nested,needs,depth+1);}
+                if(!payload.getBoolean("Materialized")){VehicleStructure held=VehicleStructure.readDisplay(payload.getCompoundTag("Blocks"));VehicleWorld nested=new VehicleWorld(view.parent,held);MovingBlockSupport.validateCopy(held,nested);collect(held,nested,needs,depth+1);}
             }
             if(tile instanceof TileEntityRampController)ramp(snapshot,view,cell,needs,depth);
         }
@@ -128,6 +146,6 @@ public final class CopyMaterials {
     private static void ramp(VehicleStructure outer,VehicleWorld view,VehicleStructure.Cell controller,List<Need> needs,int depth){
         NBTTagCompound data=controller.tileData();NBTTagList sources=data.getTagList("Sources",10),tiles=data.getTagList("RampSourceTiles",10);if(sources.tagCount()==0)return;
         IBlockState original=com.vandorlabs.persistence.RetiredCockpitGlass.readState(data.getCompoundTag("Original"));Map<BlockPos,NBTTagCompound> saved=new HashMap<>();for(int i=0;i<tiles.tagCount();i++)saved.put(position(tiles.getCompoundTagAt(i)),tiles.getCompoundTagAt(i).getCompoundTag("Tile"));
-        for(int i=0;i<sources.tagCount();i++){BlockPos at=position(sources.getCompoundTagAt(i));VehicleStructure.Cell live=outer.at(at);if(live!=null&&live.state==original)continue;NBTTagCompound tile=saved.get(at);VehicleStructure nested=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,original,tile==null?null:VehicleTileData.translated(tile,BlockPos.ORIGIN.subtract(at)))));VehicleWorld local=new VehicleWorld(view.parent,nested);MovingBlockSupport.validate(nested,local);collect(nested,local,needs,depth+1);}
+        for(int i=0;i<sources.tagCount();i++){BlockPos at=position(sources.getCompoundTagAt(i));VehicleStructure.Cell live=outer.at(at);if(live!=null&&live.state==original)continue;NBTTagCompound tile=saved.get(at);VehicleStructure nested=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,original,tile==null?null:VehicleTileData.translated(tile,BlockPos.ORIGIN.subtract(at)))));VehicleWorld local=new VehicleWorld(view.parent,nested);MovingBlockSupport.validateCopy(nested,local);collect(nested,local,needs,depth+1);}
     }
 }

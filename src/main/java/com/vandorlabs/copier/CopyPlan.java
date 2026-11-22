@@ -14,14 +14,16 @@ import net.minecraft.world.WorldServer;
 /** Immutable full-volume preflight; source cells and inventory contents are never sampled or approximated. */
 public final class CopyPlan {
     private CopyControllerTile chipOwner;private net.minecraft.item.ItemStack chip;private BlockPos chipMount;
+    private final Map<BlockPos,TileEntity> securedStores;
     public final VehicleStructure original,result;
     public final BlockPos sourceOrigin,targetOrigin,sourceMax,targetMax;
     public final CopySupply supply;
     public final List<CopyMaterials.Need> materials;
-    private CopyPlan(VehicleStructure source,VehicleStructure result,BlockPos sourceOrigin,BlockPos targetOrigin,BlockPos sourceMax,BlockPos targetMax,CopySupply supply,List<CopyMaterials.Need> needs){original=source;this.result=result;this.sourceOrigin=sourceOrigin;this.targetOrigin=targetOrigin;this.sourceMax=sourceMax;this.targetMax=targetMax;this.supply=supply;materials=needs;}
+    private CopyPlan(VehicleStructure source,VehicleStructure result,BlockPos sourceOrigin,BlockPos targetOrigin,BlockPos sourceMax,BlockPos targetMax,CopySupply supply,List<CopyMaterials.Need> needs,Map<BlockPos,TileEntity> securedStores){original=source;this.result=result;this.sourceOrigin=sourceOrigin;this.targetOrigin=targetOrigin;this.sourceMax=sourceMax;this.targetMax=targetMax;this.supply=supply;materials=needs;this.securedStores=securedStores;}
     public static BlockPos[] volume(SquareLayout area,int height){int[] box=com.vandorlabs.surface.core.SurfaceLayout.volume(area.basis,area.minU,area.minV,area.plane,area.width,area.height,height);return new BlockPos[]{new BlockPos(box[0],box[1],box[2]),new BlockPos(box[3],box[4],box[5])};}
     public static CopyPlan prepare(CopyControllerTile owner,EntityPlayerMP actor)throws Exception{
         WorldServer world=(WorldServer)owner.getWorld();authorize(world,actor);if((!owner.useChip&&owner.input==null)||owner.output==null)throw new IllegalArgumentException("Complete the required rectangular surfaces first");
+        boolean creative=actor.capabilities.isCreativeMode;
         BlockPos[] to=volume(owner.output,owner.height),from=owner.useChip?new BlockPos[]{BlockPos.ORIGIN,BlockPos.ORIGIN}:volume(owner.input,owner.height);
         com.vandorlabs.tiles.TileEntityTokenSlot mount=owner.useChip?VehicleMounts.find(world,owner.getPos(),true):null;
         net.minecraft.item.ItemStack chip=mount==null?net.minecraft.item.ItemStack.EMPTY:mount.getStackInSlot(0).copy();
@@ -35,19 +37,26 @@ public final class CopyPlan {
             if(com.vandorlabs.world.ProtectionProbe.refused(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevents reading the input at "+coordinates(at));
             TileEntity tile=world.getTileEntity(at);boundaries.check(at,state,tile);
             if(tile instanceof CopyControllerTile&&(((CopyControllerTile)tile).input!=null||((CopyControllerTile)tile).output!=null||((CopyControllerTile)tile).busy()))throw new IllegalArgumentException("Disconnect other Copy Controllers from their surfaces before copying them");
-            NBTTagCompound data=tile==null?null:VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(from[0]));
+            NBTTagCompound data=tile==null?null:VehicleTileData.translated(TransferNetworkCompat.copyableThermal(tile)?TransferNetworkCompat.write(tile):tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(from[0]));
             cells.add(new VehicleStructure.Cell(at.subtract(from[0]),state,data));
         }
         if(cells.isEmpty())throw new IllegalArgumentException("The input area contains no blocks");
-        VehicleStructure source=VehicleStructure.display(cells);BlockPos placement=centeringOffset(source,owner.output,owner.height);VehicleWorld view=new VehicleWorld(world,source);view.origin=from[0];MovingBlockSupport.validate(source,view);
+        VehicleStructure source=VehicleStructure.display(cells);BlockPos placement=centeringOffset(source,owner.output,owner.height);VehicleWorld view=new VehicleWorld(world,source);view.origin=from[0];MovingBlockSupport.validateCopy(source,view);
+        Map<BlockPos,TileEntity> securedStores=new LinkedHashMap<>();
+        for(VehicleStructure.Cell cell:source.cells){
+            TileEntity tile=owner.useChip?view.getTileEntity(cell.pos):world.getTileEntity(from[0].add(cell.pos));
+            if(CopyStorage.mekanismStore(tile)){CopyStorage.requireAccess(tile,actor);securedStores.put(cell.pos,tile);}
+        }
         for(VehicleStructure.Cell cell:source.cells)if(com.vandorlabs.vehicle.BuildingBlockCompat.furniture(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Furniture tile data can move as vehicles; copying these tiles needs a separate material adapter");
         for(VehicleStructure.Cell cell:source.cells)if(MekanismTankCompat.tank(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Mekanism Dynamic Tanks can be moved as vehicles; copying their shared inventory is not supported");
         for(VehicleStructure.Cell cell:source.cells)if(com.vandorlabs.vehicle.RFToolsCompat.powerCell(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("RFTools Power Cells can be moved; a copy would join the original's shared power network, so copying them is not supported");
-        VehicleStructure result=shifted(CopyChannels.increment(source,owner.channelIncrement),placement);VehicleWorld copied=new VehicleWorld(world,result);copied.origin=to[0];MovingBlockSupport.validate(result,copied);
-        empty(world,to,actor);List<CopyMaterials.Need> needs=CopyMaterials.forSnapshot(source,view,actor.capabilities.isCreativeMode);
-        CopySupply supply=actor.capabilities.isCreativeMode?null:CopySupply.prepare(owner,actor,needs);
+        VehicleStructure build=creative?source:CopyStorage.survival(source);
+        VehicleStructure result=shifted(CopyChannels.increment(build,owner.channelIncrement),placement);VehicleWorld copied=new VehicleWorld(world,result);copied.origin=to[0];MovingBlockSupport.validateCopy(result,copied);
+        empty(world,to,actor);VehicleWorld materialsView=build==source?view:new VehicleWorld(world,build);materialsView.origin=from[0];
+        List<CopyMaterials.Need> needs=CopyMaterials.forSnapshot(build,materialsView,creative);
+        CopySupply supply=creative?null:CopySupply.prepare(owner,actor,needs);
         result.encode(); // Bound the complete nested NBT before allocating a transaction journal.
-        CopyPlan plan=new CopyPlan(source,result,from[0],to[0],from[1],to[1],supply,needs);if(owner.useChip){plan.chipOwner=owner;plan.chip=chip;plan.chipMount=mount.getPos();}return plan;
+        CopyPlan plan=new CopyPlan(source,result,from[0],to[0],from[1],to[1],supply,needs,securedStores);if(owner.useChip){plan.chipOwner=owner;plan.chip=chip;plan.chipMount=mount.getPos();}return plan;
     }
     /** Rebase result cells, keeping the complete output prism and journal origin unchanged. */
     static VehicleStructure centered(VehicleStructure source,SquareLayout area,int height){return shifted(source,centeringOffset(source,area,height));}
@@ -70,7 +79,21 @@ public final class CopyPlan {
         for(VehicleStructure.Cell cell:source.cells)cells.add(new VehicleStructure.Cell(cell.pos.add(offset),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),offset):null));
         return VehicleStructure.display(cells);
     }
-    public void validate(WorldServer world,EntityPlayerMP actor){authorize(world,actor);if(chipOwner==null)loaded(world,new BlockPos[]{sourceOrigin,sourceMax});loaded(world,new BlockPos[]{targetOrigin,targetMax});if(chipOwner!=null){com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,chipOwner.getPos(),true);if(!chipOwner.useChip||mount==null||!mount.getPos().equals(chipMount)||!net.minecraft.item.ItemStack.areItemStacksEqual(chip,mount.getStackInSlot(0)))throw new IllegalArgumentException("Vehicle Chip or source settings changed; copy again");}else if(!original.matchesExact(world,sourceOrigin))throw new IllegalArgumentException("Input blocks or stored contents changed; copy again");empty(world,new BlockPos[]{targetOrigin,targetMax},actor);if(supply!=null)supply.validate(world);}
+    public void validate(WorldServer world,EntityPlayerMP actor){
+        authorize(world,actor);
+        if((supply==null)!=actor.capabilities.isCreativeMode)throw new IllegalArgumentException("Game mode changed; copy again");
+        if(chipOwner==null)loaded(world,new BlockPos[]{sourceOrigin,sourceMax});
+        loaded(world,new BlockPos[]{targetOrigin,targetMax});
+        if(chipOwner!=null){
+            com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,chipOwner.getPos(),true);
+            if(!chipOwner.useChip||mount==null||!mount.getPos().equals(chipMount)||!net.minecraft.item.ItemStack.areItemStacksEqual(chip,mount.getStackInSlot(0)))
+                throw new IllegalArgumentException("Vehicle Chip or source settings changed; copy again");
+        }else if(!original.matchesExact(world,sourceOrigin))throw new IllegalArgumentException("Input blocks or stored contents changed; copy again");
+        for(Map.Entry<BlockPos,TileEntity> entry:securedStores.entrySet())
+            CopyStorage.requireAccess(chipOwner!=null?entry.getValue():world.getTileEntity(sourceOrigin.add(entry.getKey())),actor);
+        empty(world,new BlockPos[]{targetOrigin,targetMax},actor);
+        if(supply!=null)supply.validate(world);
+    }
     private static void authorize(WorldServer world,EntityPlayerMP actor){if(actor==null||actor.world!=world||actor.isDead||actor.isSpectator())throw new IllegalArgumentException("The configuring player must remain alive in this dimension to authorize the copy");}
     private static void loaded(WorldServer world,BlockPos[] box){if(box[0].getY()<0||box[1].getY()>=world.getHeight()||!world.getWorldBorder().contains(box[0])||!world.getWorldBorder().contains(box[1])||!world.isAreaLoaded(box[0].add(-1,-1,-1),box[1].add(1,1,1),false))throw new IllegalArgumentException("Load the complete copy areas and their boundaries inside the world");}
     private static void empty(WorldServer world,BlockPos[] box,EntityPlayerMP actor){for(BlockPos at:BlockPos.getAllInBox(box[0],box[1])){VehicleService.permission(actor,at);if(!world.isAirBlock(at)||world.getTileEntity(at)!=null)throw new IllegalArgumentException("Output area is occupied at "+coordinates(at));}AxisAlignedBB bounds=new AxisAlignedBB(box[0].getX(),box[0].getY(),box[0].getZ(),box[1].getX()+1,box[1].getY()+1,box[1].getZ()+1);for(net.minecraft.entity.Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,bounds))if(!entity.isDead)throw new IllegalArgumentException("Clear players and entities from the output area");}

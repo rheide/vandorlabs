@@ -90,12 +90,16 @@ public final class VehicleRotation {
     public static void validate(VehicleStructure source,VehicleWorld view){
         Validation validation=new Validation(source,view);while(!validation.step(Integer.MAX_VALUE,Long.MAX_VALUE)){}
     }
+    static void validateCopy(VehicleStructure source,VehicleWorld view){
+        Validation validation=new Validation(source,view,true);while(!validation.step(Integer.MAX_VALUE,Long.MAX_VALUE)){}
+    }
     /** Resumable server-thread preflight; repeated block states share the rotation round trip. */
     public static final class Validation {
-        private final VehicleStructure source;private final VehicleWorld view;private int index;
+        private final VehicleStructure source;private final VehicleWorld view;private final boolean copying;private int index;
         private final Set<IBlockState> rotated=Collections.newSetFromMap(new IdentityHashMap<IBlockState,Boolean>());
         private final Set<BlockPos> assemblies=new HashSet<>();
-        public Validation(VehicleStructure source,VehicleWorld view){this.source=source;this.view=view;}
+        public Validation(VehicleStructure source,VehicleWorld view){this(source,view,false);}
+        private Validation(VehicleStructure source,VehicleWorld view,boolean copying){this.source=source;this.view=view;this.copying=copying;}
         public boolean step(int budget,long deadline){
             int count=0;
             while(index<source.cells.size()&&count++<budget){
@@ -106,7 +110,7 @@ public final class VehicleRotation {
                 try{
                     TileEntity tile=view.getTileEntity(cell.pos);
                     if(TransferNetworkCompat.onboard(tile)){
-                        if(source.displayOnly)throw new IllegalArgumentException("Move transfer networks with a complete vehicle");
+                        if(source.displayOnly&&!(copying&&TransferNetworkCompat.copyableThermal(tile)))throw new IllegalArgumentException("Move transfer networks with a complete vehicle");
                         TransferNetworkCompat.validateIdle(cell.tileData());
                     }
                     if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).parkingHeld()

@@ -13,6 +13,7 @@ import java.util.*;
 public final class MovingBlockSupport {
     private MovingBlockSupport(){}
     public static void validate(VehicleStructure source,VehicleWorld view){if(view.structure!=source)throw new IllegalArgumentException("Matching moving source view required");view.requireCouplerScope();VehicleRotation.validate(source,view);}
+    public static void validateCopy(VehicleStructure source,VehicleWorld view){if(view.structure!=source)throw new IllegalArgumentException("Matching copy source view required");view.requireCouplerScope();VehicleRotation.validateCopy(source,view);}
     public static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
         if(tile instanceof com.vandorlabs.coupler.TileCoupler&&(((com.vandorlabs.coupler.TileCoupler)tile).quarantined()||!((com.vandorlabs.coupler.TileCoupler)tile).acceptFrame(cell.state)))return false;
         if(cell.tileData()!=null && tile==null)return false;
