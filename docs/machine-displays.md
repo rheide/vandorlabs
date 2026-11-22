@@ -6,7 +6,6 @@ Use the **Configurizer** on a formed Core-based multiblock or one of its reserve
 | --- | --- | --- |
 | Seyr Meridian Drive | Half Screen, Keyboard | Yes |
 | Pinnacle Vector Fold Array | Half Screen, Keyboard | Yes |
-| Maxwell Drive | Screen, Keyboard | Yes |
 | Paladyne Navigation Computer | Half Screen | No |
 | Seyr Navigation Computer | Half Screen | No |
 | Pinnacle Oculus Drive | Half Screen, Keyboard | Yes |
@@ -26,7 +25,7 @@ Captured machines also remain visible when viewed close up from a side, includin
 
 Machines consume physical redstone or configured Vandor Labs input channels. Apply physical power to any reserved cell or the Core. `0` means disconnected from channels. No Core or reserved cell emits physical or channel power, including with a chip inserted.
 
-Redstone is disabled by default. Except for the three drives’ configurable ON/OFF polarity below, the activation rule matches [navigation-table activation](navigation-displays.md):
+Redstone is disabled by default. Except for the drives’ configurable ON/OFF polarity below, the activation rule matches [navigation-table activation](navigation-displays.md):
 
 | Redstone | Active appearance and selected artwork |
 | --- | --- |
@@ -43,7 +42,7 @@ These settings control appearances; they do not add propulsion, dimension travel
 
 ## Core controls on arms (Forge 1.12.2)
 
-When a machine stays captured at a fractional arm pose, ordinary body clicks cycle its existing activity. The Configurizer opens its normal machine settings dialog through either the Core or a reserved part. Both actions leave the supporting arm’s target unchanged. Display, activation and channel edits remain on the arm-owned machine snapshot, including through saving and restoration to native blocks.
+When a console-equipped machine stays captured at a fractional arm pose, ordinary body clicks cycle its existing activity. The Configurizer opens its normal machine settings dialog through either the Core or a reserved part. Both actions leave the supporting arm’s target unchanged. Display, activation and channel edits remain on the arm-owned machine snapshot, including through saving and restoration to native blocks.
 
 Chip insertion/removal and dismantling require a native block pose. Captured chip clicks consume the interaction without transferring an item or moving the arm.
 
@@ -57,22 +56,20 @@ Existing inserted items retain their full data when old Security settings are re
 
 ## Drive Engine controls
 
-Maxwell Drive, Seyr Meridian Drive and Pinnacle Oculus Drive have an **Engine** tab alongside their surface tabs. Particle intensity and threshold controls apply only to Maxwell. **Seyr Meridian and Pinnacle Oculus have no particles**, including with legacy saved particle settings.
+Seyr Meridian Drive and Pinnacle Oculus Drive have an **Engine** tab alongside their surface tabs.
 
 | Control | Behavior |
 | --- | --- |
 | Redstone: Disabled | Keeps the drive powered at level 15. |
 | Redstone: Enabled | Uses the strongest level, 0–15, from physical power anywhere on the assembly and its configured input channels. Channel 0 means no channel. |
-| Activate on: ON / OFF | ON uses the input level. OFF uses 15 minus that level. A resulting level of zero switches the drive off. Polarity has no effect while Redstone is disabled. |
+| Activate on: ON / OFF | ON uses the input level. OFF uses 15 minus that level. A resulting level of zero switches the drive off. |
 | Brightness: On/Off / Signal | On/Off gives active effects full brightness. Signal scales brightness by the resulting level divided by 15. |
-| Particles: Off / Light / Medium / Heavy | Selects exhaust intensity independently of brightness; Off disables particles. |
-| Particles at level: 0–15 | In Signal mode, exhaust starts at or above this resulting level while the drive is active. On/Off brightness ignores this threshold. |
 
-Defaults are Redstone Disabled, Activate on ON and On/Off brightness. Maxwell additionally defaults to Light particles and threshold 8. Right-click any cycling option to select its previous value.
+Defaults are Redstone Disabled, Activate on ON and On/Off brightness. Right-click any cycling option to select its previous value.
 
-Maxwell has yellow/white exhaust. Seyr Meridian’s active front cyan lights pulse using a pause-aware cosmetic clock. Oculus retains its native colors, energized field and shutter movement. Signal brightness scales these active visual effects. An activity selected by ordinary right-click remains subject to the drive’s power controls.
+Seyr Meridian’s active front cyan lights pulse on a pause-aware clock. Oculus retains its field and shutter movement, and ordinary right-click cycles its activity. Both drive models are decorative.
 
-Placed and carried Maxwell drives emit cosmetic particles at their authored outlet, following the machine’s facing and the vehicle’s pose. These machines provide **no vehicle thrust** and do not qualify a vehicle for Taxi or Hover. Engine settings, channels and retained chip data survive saving and movement.
+The Forge 1.12.2 Maxwell Drive uses its front fuel gauge and fluid inlets, with Engine and Redstone tabs for tank and throttle controls. See [Maxwell Drive](multiblocks/maxwell-drive/README.md#fuel-and-throttle).
 
 Screen choices, redstone activation, channels and the chip's full item data persist through saving and reloading. Manual dismantling retains a chip in its Core; reassembly restores access. Breaking the Core releases the held chip once. Mining a reserved cell dismantles the machine and removes the selected cell; rapid removal safely skips stale renderers.
 

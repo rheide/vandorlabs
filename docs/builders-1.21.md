@@ -106,10 +106,12 @@ the Press.
 
 The Maxwell, Seyr Meridian and Pinnacle Oculus Drive Cores use the same
 Matter frame journals as the builders. Follow the illustrated
-[Maxwell](multiblocks/longburn-drive/README.md),
+[Maxwell](multiblocks/maxwell-drive/README.md#1-build-the-base),
 [Seyr Meridian](multiblocks/meridian-core/README.md) and
 [Pinnacle Oculus](multiblocks/oculus-drive/README.md) guides. Obtain each Core
-from a Tower with a Master Catalog Chip.
+from a Tower with a Master Catalog Chip. The Maxwell guide’s frame steps apply to
+the 3-wide × 4-deep × 3-high NeoForge model. The fuel system and larger
+frames are part of the Forge 1.12.2 drive.
 
 Use the Configurizer on a formed drive to open its display, keyboard, engine
 and receiving-channel settings. A regular right-click on an Oculus away from

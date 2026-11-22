@@ -1,62 +1,57 @@
 # Maxwell Drive
 
-Use the [frame blocks for your Minecraft version](../README.md).
+The Maxwell Drive supplies thrust for Flight on Forge 1.12.2. Build it with one Maxwell Drive Core and [Programmable Blocks](../README.md).
 
-Build a **3 wide × 4 deep × 3 high** assembly with **25 frame blocks** and **one Maxwell Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+| Width × height × depth | Programmable Blocks |
+| --- | ---: |
+| 3 × 3 × 4 | 25 |
+| 4 × 4 × 5 | 41 |
+| 5 × 5 × 7 | 66 |
+| 6 × 6 × 8 | 87 |
+| 9 × 9 × 12 | 173 |
+
+The construction below shows the 3 × 3 × 4 frame. Use the same base, pillars and roof rim for each size. Drive mass and thrust increase with the enclosed volume.
 
 ## 1. Build the base
 
-Lay out a solid 3 × 4 bottom layer. Put the matching Core in the front-left corner, facing you, and fill every other cell with frame blocks.
+Lay out a solid 3-block-wide by 4-block-deep floor. Place the Core in a bottom corner, facing the front of the drive. The nozzle will point toward the opposite end.
 
 ![Maxwell Drive: build the base](step-1.png)
 
 ## 2. Raise the corner pillars
 
-At each of the four corners, build up to a total height of 3 blocks, including the bottom layer. Leave the interior empty.
+Build up from each of the four corners until the pillars are three blocks tall, counting the base. Leave the middle layer empty between the pillars.
 
 ![Maxwell Drive: raise the corner pillars](step-2.png)
 
 ## 3. Connect the top rim
 
-Connect the four pillar tops with a rectangular rim of frame blocks. Keep the middle of the roof open; do not fill the interior.
+Join the pillar tops with a continuous rectangular rim. Leave the middle of the roof open.
 
 ![Maxwell Drive: connect the top rim](step-3.png)
 
 ## 4. Assemble
 
-Right-click the Core. The frame becomes the complete model, and its occupied cells are reserved. If formation fails, use the reported cell to check the frame and its empty interior.
+Right-click the Core to form the drive and reserve the frame volume. If assembly fails, check the reported frame cell and clear the interior.
 
-![Maxwell Drive: assemble](step-4.png)
+![Maxwell Drive: assembled fuel inlets and gauge](step-4.png)
 
-## 5. Insert a Data Chip
+The assembled drive shown here has fuel in its tank.
 
-The native Data Chip Mount is always visible on this model. Right-click it with any Data Chip to insert one physical item; empty-hand right-click removes it. The chip stays inserted and does not gate activation. Redstone settings alone control optional power activation. The machine never emits a redstone signal.
+## Fuel and throttle
 
-![Maxwell Drive: insert a data chip](step-5.png)
+The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time.
 
-## Operation and activation
+Right-click the formed drive or use the Configurizer to open its **Engine** and **Redstone** tabs. The Engine tab shows the tank level and has a **Purge Tank** button that discards its contents.
 
-The active exhaust is yellow/white, with the native casing and nozzle rings retained.
+- **Activation: Automatic** runs the drive automatically during Flight and its takeoff roll.
+- **Activation: Redstone** uses the stronger of the physical input and any assigned receiving channel. **Redstone OFF** inverts the signal.
+- **Digital** applies full thrust when the effective signal is positive. **Analog** scales thrust and consumption from 0 to 15. Full throttle uses 1 mB every 10 seconds and produces a yellow-white afterburner plume.
 
-Open the **Engine** tab with the Configurizer. **Redstone: Disabled** keeps the drive powered at level 15. With **Redstone: Enabled**, the strongest physical input anywhere on the assembly or configured input channel supplies a level from 0 to 15. **Activate on: ON** uses that level; **Activate on: OFF** uses 15 minus that level. A resulting level of zero switches the drive off. Input channel 0 means no channel.
+A redstone command can burn fuel when the drive is parked, for example to test the exhaust before flight. Vehicles can use several drives. Their weight contributes to takeoff and altitude limits.
 
-**Brightness: On/Off** gives active effects full brightness; **Brightness: Signal** scales their brightness by the resulting level divided by 15. **Particles** selects Off, Light, Medium or Heavy. **Particles at level** sets a 0–15 threshold: in Signal mode, exhaust starts at or above this level, while the drive is active. On/Off brightness ignores the threshold. Particle intensity is selected separately from brightness. Defaults are Redstone Disabled, Activate on ON, On/Off brightness, Light particles and threshold 8. Right-click an option to select its previous value.
+## Removal
 
-These effects work on placed machinery and aboard vehicles, following the drive’s facing and the vehicle’s pose. The drive supplies **no vehicle thrust** and does not qualify a craft for Taxi or Hover. Data Chips are optional retained data, accept every company and never authorize or gate operation; there are no integrated Security settings.
+Sneak-right-click to dismantle, keeping the tank in its Core. Breaking the Core restores the remaining frame blocks. Mining a reserved cell dismantles the machine and removes that cell.
 
-Select screen and keyboard artwork independently in their surface tabs. Model artwork preserves the supplied design.
-
-## Facing and removal
-
-The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining frame blocks.
-
-A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
-
-Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional retained Data Chips.
-
-These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
-
-[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)
-
-On NeoForge 1.21.1, see [Standalone drives](../../builders-1.21.md#standalone-drives)
-for the native Tower recipe and placed-machine controls.
+[All multiblock guides](../README.md)
