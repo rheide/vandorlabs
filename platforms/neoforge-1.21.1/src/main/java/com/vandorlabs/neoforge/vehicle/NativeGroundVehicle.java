@@ -55,7 +55,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             "Silent", "NoGravity", "Glowing", "TicksFrozen", "HasVisualFire", "Tags", "Passengers",
             "NeoForgeData", "neoforge:attachments");
     public static final int TAXI = 0, HOVER = 1, FLIGHT = 2;
-    private static final int NO_FLIGHT = 0, RUNWAY = 1, CRUISE = 2, LANDING = 3, RETURN_HOVER = 4;
+    private static final int NO_FLIGHT = 0, RUNWAY = 1, CRUISE = 2, LANDING = 3, RETURN_HOVER = 4, CRUISE_RETURN_HOVER = 5;
     private static final double TAXI_SPEED = .30, POWERED_TAXI_SPEED = .40, HOVER_SPEED = .80, BOOST_SPEED = 1.2;
     private static final EntityDataAccessor<Boolean> READY = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<CompoundTag> ARM_POSES = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.COMPOUND_TAG);
@@ -567,7 +567,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             return;
         }
         if (flightPhase >= CRUISE) {
-            flightPhase = mode == HOVER ? RETURN_HOVER : LANDING;
+            flightPhase = mode == HOVER ? hoverRecoveryPhase() : LANDING;
             return;
         }
         if (mode == TAXI && mode() == HOVER && !hull.groundWithin(this, 3)) {
@@ -627,7 +627,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
 
     private void flight(boolean active, int forward, int strafe, double mass, double thrust) {
         if (flightPhase == CRUISE && (!FlightEnvelope.canFly(mass, thrust) || pilot() == null))
-            flightPhase = propulsion.canHover() ? RETURN_HOVER : LANDING;
+            flightPhase = propulsion.canHover() ? hoverRecoveryPhase() : LANDING;
         double altitude = flightAltitude();
         double ceiling = FlightEnvelope.maximumAltitude(mass, thrust);
         if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, getYRot(), hullPitch()));
@@ -652,7 +652,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, yaw, pitch));
         double rise = Math.min(launching ? .17 : movement.y, Math.max(0, ceiling - altitude));
         if (!flightMove(new Vec3(movement.x, rise, movement.z), yaw, pitch)) {
-            flightPhase = propulsion.canHover() ? RETURN_HOVER : LANDING;
+            flightPhase = propulsion.canHover() ? hoverRecoveryPhase() : LANDING;
             speed = 0;
             setDeltaMovement(Vec3.ZERO);
         }
@@ -689,10 +689,15 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         return true;
     }
 
+    private int hoverRecoveryPhase() {
+        return cruise.active() ? CRUISE_RETURN_HOVER : RETURN_HOVER;
+    }
+
     private void flightDescent(double ceiling) {
         speed = approach(speed, 0, Math.max(.09, speed / 15));
         boolean landing = flightPhase == LANDING;
-        boolean resumeHover = flightPhase == RETURN_HOVER;
+        boolean cruiseRecovery = flightPhase == CRUISE_RETURN_HOVER;
+        boolean resumeHover = cruiseRecovery || flightPhase == RETURN_HOVER;
         if (cruise.active()) {
             double target = landing || resumeHover ? FlightEnvelope.REENTRY_ALTITUDE : ceiling;
             double descent = Math.max(-Math.min(3, .26 + flightAltitude() / 3500), target - flightAltitude());
@@ -704,8 +709,9 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             float level = (float)approach(hullPitch(), 0, 1.5);
             if (flightMove(Vec3.ZERO, getYRot(), level) || flightMove(new Vec3(0, .12, 0), getYRot(), level)) return;
         }
-        if (resumeHover && hullPitch() == 0 && getY() <= FlightEnvelope.WORLD_CEILING) { finishFlight(HOVER); return; }
-        double descent = landing || resumeHover ? -.24 : Math.min(0, Math.max(-.24, ceiling - getY()));
+        double target = cruiseRecovery ? FlightEnvelope.REENTRY_ALTITUDE : resumeHover ? getY() : ceiling;
+        if (resumeHover && hullPitch() == 0 && getY() <= target + .01) { finishFlight(HOVER); return; }
+        double descent = landing || resumeHover && hullPitch() != 0 ? -.24 : Mth.clamp(target - getY(), -.24, 0);
         double accepted = hull.clip(this, position(), getYRot(), descent, Direction.Axis.Y);
         if (accepted != 0) {
             setPos(getX(), getY() + accepted, getZ());
@@ -816,7 +822,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
                 || !Double.isFinite(hoverTarget) || !Float.isFinite(pitch) || Math.abs(pitch) > FlightEnvelope.MAX_PITCH
                 || mode != FLIGHT && (phase != NO_FLIGHT || pitch != 0 || launch != 0 || route != null)
                 || data.contains("PilotAssignment") && !data.hasUUID("PilotAssignment")
-                || mode == FLIGHT && (phase < RUNWAY || phase > RETURN_HOVER || speed < 0 || launch < 0 || launch > 64)
+                || mode == FLIGHT && (phase < RUNWAY || phase > CRUISE_RETURN_HOVER || speed < 0 || launch < 0 || launch > 64)
                 || route != null && phase == RUNWAY
                 || data.contains("FlightPhase") && !data.contains("FlightPhase", Tag.TAG_BYTE)
                 || data.contains("LaunchTicks") && !data.contains("LaunchTicks", Tag.TAG_BYTE)) {
@@ -850,7 +856,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             speed = saved.speed;
             hoverTarget = saved.hoverTarget;
             launchTicks = saved.launchTicks;
-            setMode(saved.mode, saved.flightPhase);
+            setMode(saved.mode, saved.route != null && saved.flightPhase == RETURN_HOVER ? CRUISE_RETURN_HOVER : saved.flightPhase);
             savedPilot = saved.pilotAssignment;
             cruise.restore(saved.route);
             if (savedPilot != null && saved.route != null) awaitingPilotUntil = level().getGameTime() + 100;
