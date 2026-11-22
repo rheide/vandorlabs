@@ -15,7 +15,7 @@ picks, and non-consuming inventory samples. Creative shift-click and a
 main-hand Configurizer open the same dedicated dialog. Installed filesystem
 PNGs preserve stable saved IDs and use fallback artwork when unavailable.
 
-Run `python3 tools/build_all.py --target neoforge-1.21.1` from the repository root. Set `VANDOR_JAVA21_HOME` to a Java 21 JDK when automatic discovery does not find one. The orchestration script runs shared contracts on the selected target’s JDK (both JDKs when building both targets), then builds the selected target and places its standard JAR under the root `build/libs/`. Java 8 and Java 21 builds run in separate Gradle processes. The legacy root Gradle target remains independent.
+Run `python3 tools/build_all.py --target neoforge-1.21.1` from the repository root. Set `VANDOR_JAVA21_HOME` to a Java 21 JDK when automatic discovery does not find one. The orchestration script runs shared contracts on the selected target’s JDK (both JDKs when building both targets), then builds the selected target. The NeoForge JAR is in `platforms/neoforge-1.21.1/build/libs/`. Java 8 and Java 21 builds run in separate Gradle processes. The legacy root Gradle target remains independent.
 
 `./gradlew runClient` and `./gradlew runServer` in this directory are development launch tasks; neither constitutes automated live acceptance. Use the builds on master and the focused family checks described below. The historical branch is an earlier conversion reference.
 
