@@ -629,7 +629,7 @@ public final class NativeBuilderRuntimeChecks {
   need(ItemStack.matches(extracted,expected),"outward port returns one exact product");
   if(extracted.is(com.vandorlabs.neoforge.coupler.NativeCouplerBindings.SQUARE.asItem())
      ||extracted.is(com.vandorlabs.neoforge.coupler.NativeCouplerBindings.SLAB.asItem()))
-   com.vandorlabs.neoforge.coupler.NativeCouplerChecks.exercise(world,actor,ROOT.offset(6,0,-4),extracted,NativeBuilderRuntimeChecks::need);
+   com.vandorlabs.neoforge.coupler.NativeCouplerChecks.exercise(world,actor,ROOT.offset(8,8,-4),extracted,NativeBuilderRuntimeChecks::need);
   if(++recipe<NativeBuilderProducts.GANTRY.size()){beginGantry(owner);return;}
   recipe=0;beginGantry(owner);
   var energy=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,

@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.coupler;
 
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
+import com.vandorlabs.neoforge.vehicle.NativeVehicleCouplerChecks;
 import com.vandorlabs.redstone.ChannelList;
 import java.util.function.BiConsumer;
 import net.minecraft.core.BlockPos;
@@ -64,6 +65,7 @@ public final class NativeCouplerChecks {
             actor.containerMenu = secondMenu;
             check.accept(secondMenu.clickMenuButton(actor, 0) && first.paired() && second.paired(),
                     "opposing engaged heads make a matching pair");
+            NativeVehicleCouplerChecks.checkScan(world, head, true, check);
             if (slab) {
                 var state = first.getBlockState();
                 var bounds = state.getCollisionShape(world, head).bounds();
@@ -75,6 +77,7 @@ public final class NativeCouplerChecks {
 
             actor.containerMenu = firstMenu;
             check.accept(firstMenu.clickMenuButton(actor, 0) && !first.engaged(), "manual Release opens both endpoints");
+            NativeVehicleCouplerChecks.checkScan(world, head, false, check);
             world.setBlock(power, Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
             check.accept(first.engaged() && first.paired(), "real physical redstone edge expires the manual release");
             check.accept(firstMenu.clickMenuButton(actor, 0) && !first.engaged(),
