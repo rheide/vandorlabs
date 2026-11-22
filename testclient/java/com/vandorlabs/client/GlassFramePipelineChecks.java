@@ -23,9 +23,15 @@ import org.lwjgl.opengl.GL11;
 public final class GlassFramePipelineChecks {
     private static int checks;
     private static GlassAuthoredAtlas atlas;
-    private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError(message+"; "+GlassFrameRetained.diagnostics()+"; "+GlassPaneRetained.diagnostics()+"; "+GlassPaneTerrain.diagnostics());}
+    private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError(message+"; "+GlassFrameRetained.diagnostics()+"; "+GlassPaneTerrain.diagnostics());}
     private static void flush(GlassPanePipelineChecks.Fixture scene){for(int i=0;i<3;i++)scene.flush();}
-    @SuppressWarnings("unchecked") private static Map<TileEntityProgrammableGlass,GlassPaneRetained.Group> panes()throws Exception{return (Map<TileEntityProgrammableGlass,GlassPaneRetained.Group>)GlassPanePipelineChecks.field(GlassPaneRetained.class,"OWNERS").get(null);}
+    /** Every stationary pane is chunk geometry in the layer its opacity selects, lit by its own cell. */
+    private static void nativePane(GlassPanePipelineChecks.Fixture scene,TileEntityProgrammableGlass tile,int tint,int material,String label){
+        need(GlassPaneTerrain.rendered(tile),label+" static pane is not native chunk geometry at "+tile.getPos());
+        need(((GlassPaneTerrainMesh)tile.paneTerrainMesh).opaque==(tint==GlassTextures.OPAQUE),label+" opaque/translucent chunk layer mixed");
+        int light=GlassPaneTerrain.light(scene.world,tile.getPos()),block=material>=0&&tint==GlassTextures.OPAQUE&&tile.frameAppearance.light()>0?240:scene.world.light&65535;
+        need((light&65535)==block&&(light>>>16)==(scene.world.light>>>16),label+" pane light "+Integer.toHexString(light));
+    }
     @SuppressWarnings("unchecked") private static Map<TileEntityProgrammableGlass,GlassFrameRetained.Group> frames()throws Exception{return (Map<TileEntityProgrammableGlass,GlassFrameRetained.Group>)GlassPanePipelineChecks.field(GlassFrameRetained.class,"OWNERS").get(null);}
     private static void light(int[] records,VertexFormat format,int sky,int block,String label){
         int stride=format.getIntegerSize(),offset=format.getUvOffsetById(1)/4;
@@ -46,26 +52,19 @@ public final class GlassFramePipelineChecks {
             need(GlassFrameRetained.handles(tile)==border,"frame ownership differs from actual joined mesh at "+tile.getPos());
             if(border){owners++;light(frames().get(tile).records,frames().get(tile).format,scene.world.light>>>16,240,"emissive frame");}
             if(GlassFrameRetained.anchor(tile)){anchors++;anchor=tile;}
-            need(GlassPaneTerrain.rendered(tile)||GlassPaneRetained.handles(tile),"static pane lost both native and retained owner");
-            if(GlassPaneRetained.handles(tile)){
-                GlassPaneRetained.Group group=panes().get(tile);
-                need(group.key.opaque==(tint==GlassTextures.OPAQUE),"opaque/translucent material pass mixed");
-                light(group.records,group.format,scene.world.light>>>16,material>=0&&tint==GlassTextures.OPAQUE?240:scene.world.light&65535,"pane");
-            }
+            nativePane(scene,tile,tint,material,"settled");
         }
         need(owners==8&&anchors==1,"3x3 joined border did not collapse to one frame group");
         need(compiled.getTileEntities().size()==1&&compiled.getTileEntities().contains(anchor),"settled uniform pane/frame section retained per-cell admissions: "+compiled.getTileEntities().size());
-        long frameDraws=GlassFrameRetained.mainDraws,paneDraws=GlassPaneRetained.mainDraws,legacy=GlassFrameRetained.legacyMainDraws;
+        long frameDraws=GlassFrameRetained.mainDraws,legacy=GlassFrameRetained.legacyMainDraws;
         TEProgrammableGlass renderer=new TEProgrammableGlass();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
         for(int pass=0;pass<2;pass++){
             ForgeHooksClient.setRenderPass(pass);
             for(TileEntity tile:compiled.getTileEntities())if(tile.shouldRenderInPass(pass)){
                 BlockPos pos=tile.getPos();renderer.render((TileEntityProgrammableGlass)tile,pos.getX(),pos.getY(),pos.getZ(),0,-1,1);
             }
-            if(pass==0&&tint==GlassTextures.OPAQUE)need(GlassPaneRetained.mainDraws==paneDraws+1,"opaque pane failed pass0 draw");
         }
         need(GlassFrameRetained.mainDraws==frameDraws+1&&GlassFrameRetained.legacyMainDraws==legacy,"frame group leaked to legacy or duplicated draw");
-        need(GlassPaneRetained.mainDraws==paneDraws+(GlassPaneRetained.handles(anchor)?1:0),"pane pass duplicated or omitted");
         if(tint==GlassTextures.OPAQUE)need(!anchor.shouldRenderInPass(1),"opaque frame/pane anchor still admitted in pass1");
         need(GL11.glGetError()==0,"render path left GL error");return anchor;
     }
@@ -73,9 +72,9 @@ public final class GlassFramePipelineChecks {
         for(int frame:atlas.emissiveChoices)for(int kind=0;kind<4;kind++)try(GlassPanePipelineChecks.Fixture scene=new GlassPanePipelineChecks.Fixture()){
             scene.wall(3,3,true,false);int tint=(kind&1)==0?1:GlassTextures.OPAQUE,material=kind<2?-1:atlas.emissiveChoices.get((atlas.emissiveChoices.indexOf(frame)+1)%8);
             configure(scene,frame,tint,material);CompiledChunk compiled=scene.compileAndUpload();flush(scene);flush(scene);verify(scene,compiled,tint,material);
-            long frameUploads=GlassFrameRetained.uploads,paneUploads=GlassPaneRetained.uploads;int marks=scene.renderer.marks;
+            long frameUploads=GlassFrameRetained.uploads;int marks=scene.renderer.marks;
             for(int i=0;i<12;i++)flush(scene);
-            need(GlassFrameRetained.uploads==frameUploads&&GlassPaneRetained.uploads==paneUploads&&scene.renderer.marks==marks,"stationary material combination rebuilds/uploads");
+            need(GlassFrameRetained.uploads==frameUploads&&scene.renderer.marks==marks,"stationary material combination rebuilds/uploads");
         }
     }
     private static void mixedPasses()throws Exception{
@@ -83,17 +82,19 @@ public final class GlassFramePipelineChecks {
             scene.wall(3,3,true,false);configure(scene,atlas.emissiveChoices.get(0),1,atlas.emissiveChoices.get(1));
             for(TileEntityProgrammableGlass tile:scene.cells)if(tile.getPos().getX()>0){tile.setWorld(null);tile.setAppearance(GlassTextures.OPAQUE,true);tile.setWorld(scene.world);}
             scene.queue();flush(scene);CompiledChunk compiled=scene.compileAndUpload();flush(scene);flush(scene);
-            Set<GlassPaneRetained.Group> groups=Collections.newSetFromMap(new IdentityHashMap<>());Set<TileEntity> anchors=Collections.newSetFromMap(new IdentityHashMap<>());
-            for(TileEntityProgrammableGlass tile:scene.cells){GlassPaneRetained.Group group=panes().get(tile);need(group!=null,"mixed pane not retained");groups.add(group);anchors.add(group.anchor);if(GlassFrameRetained.anchor(tile))anchors.add(tile);}
-            need(groups.size()==2,"mixed opaque/translucent panes merged draw state or split per-cell");need(compiled.getTileEntities().size()==anchors.size(),"mixed frame and pane anchors not independently admitted");
+            Set<TileEntity> anchors=Collections.newSetFromMap(new IdentityHashMap<>());int opaque=0;
+            for(TileEntityProgrammableGlass tile:scene.cells){
+                nativePane(scene,tile,tile.getTint(),tile.getMaterial(),"mixed");if(tile.getTint()==GlassTextures.OPAQUE)opaque++;
+                if(GlassFrameRetained.anchor(tile))anchors.add(tile);
+            }
+            need(opaque>0&&opaque<scene.cells.size(),"mixed fixture lost one of its pane layers");
+            need(compiled.getTileEntities().size()==anchors.size(),"pane-only owners remain in the tile list beside the frame anchor");
             TEProgrammableGlass renderer=new TEProgrammableGlass();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
-            long p=GlassPaneRetained.mainDraws,f=GlassFrameRetained.mainDraws;
+            long f=GlassFrameRetained.mainDraws;
             for(int pass=0;pass<2;pass++){
                 ForgeHooksClient.setRenderPass(pass);for(TileEntity tile:compiled.getTileEntities())if(tile.shouldRenderInPass(pass)){BlockPos pos=tile.getPos();renderer.render((TileEntityProgrammableGlass)tile,pos.getX(),pos.getY(),pos.getZ(),0,-1,1);}
-                need(GlassPaneRetained.mainDraws==p+pass+1,"mixed opaque/translucent pass owns wrong draw count");
             }
             need(GlassFrameRetained.mainDraws==f+1,"mixed pane finishes split frame group");
-            for(GlassPaneRetained.Group group:groups)light(group.records,group.format,scene.world.light>>>16,group.key.opaque?240:scene.world.light&65535,"mixed pane");
         }
     }
     private static void dynamicAndFluids()throws Exception{
@@ -104,7 +105,7 @@ public final class GlassFramePipelineChecks {
             for(TileEntityProgrammableGlass tile:scene.cells)tile.glassPlayback.set(2,1);
             scene.queue();flush(scene);CompiledChunk compiled=scene.compileAndUpload();flush(scene);flush(scene);
             int frameAnchors=0;for(TileEntityProgrammableGlass tile:scene.cells){
-                need(!GlassPaneTerrain.rendered(tile)&&!GlassPaneRetained.handles(tile),"dynamic glass pane was frozen");
+                need(!GlassPaneTerrain.rendered(tile),"dynamic glass pane was frozen");
                 if(GlassFrameRetained.anchor(tile))frameAnchors++;
             }
             need(frameAnchors==1&&compiled.getTileEntities().size()==9,"dynamic panes rejected frame batching or lost pane admissions");
@@ -129,7 +130,7 @@ public final class GlassFramePipelineChecks {
             net.minecraft.nbt.NBTTagCompound data=new net.minecraft.nbt.NBTTagCompound();data.setBoolean("Waterlogged",true);wet.fluids.read(data);scene.queue();flush(scene);CompiledChunk compiled=scene.compileAndUpload();flush(scene);flush(scene);
             int anchors=0;for(TileEntityProgrammableGlass tile:scene.cells)if(GlassFrameRetained.anchor(tile))anchors++;
             need(anchors==1,"contained fluid split or rejected frame group");need(wet.fluids.any()&&compiled.getTileEntities().contains(wet)&&wet.shouldRenderInPass(1),"frame batching hid independent fluid/pane fallback");
-            need(!GlassPaneTerrain.rendered(wet)&&!GlassPaneRetained.handles(wet),"fluid pane incorrectly frozen into static coverage");
+            need(!GlassPaneTerrain.rendered(wet),"fluid pane incorrectly frozen into static coverage");
         }
     }
     private static void format(VertexFormat format){DefaultVertexFormats.BLOCK.clear();for(VertexFormatElement element:format.getElements())DefaultVertexFormats.BLOCK.addElement(element);}
@@ -165,7 +166,7 @@ public final class GlassFramePipelineChecks {
             scene.chunk.setPosition(16,0,0);flush(scene);need(!compiled.getTileEntities().isEmpty(),"recycled chunk lost fallback list");scene.chunk.setPosition(0,0,0);scene.compileAndUpload();flush(scene);flush(scene);
             scene.world.tiles.remove(old);scene.world.states.remove(old);scene.world.loadedTileEntityList.remove(anchor);anchor.invalidate();scene.world.notifyBlockUpdate(old,GlassPanePipelineChecks.block.getDefaultState(),net.minecraft.init.Blocks.AIR.getDefaultState(),3);flush(scene);need(!GlassFrameRetained.handles(anchor),"removed frame anchor kept ownership");scene.compileAndUpload();flush(scene);flush(scene);
             need(GL11.glGetError()==0,"lifecycle left GL error");
-        }finally{format(original);GlassFrameRetained.flush();GlassPaneRetained.flush();}
+        }finally{format(original);GlassFrameRetained.flush();}
         need(GlassFrameRetained.diagnostics().contains("retained-frame-bytes=0"),"unloaded world kept frame VBO bytes");
     }
     public static void main(String[] args)throws Exception{

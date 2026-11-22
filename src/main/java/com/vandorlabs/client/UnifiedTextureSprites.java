@@ -50,15 +50,11 @@ public final class UnifiedTextureSprites {
     private static Region shaderRegion(String name,int width,int height){TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getTextureExtry(name);if(sprite instanceof Sprite){Sprite custom=(Sprite)sprite;return region(width,height,custom.crop,custom.half);}return new Region(0,0,width,height,width>height?width:Math.max(width,height));}
     static boolean shaderCanvasNeeded(String name,int width,int height){TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getTextureExtry(name);if(!(sprite instanceof Sprite)&&width<=height)return false;return width>0&&height>0&&!shaderRegion(name,width,height).unchanged(width,height);}
     static BufferedImage shaderCanvas(String name,BufferedImage image){if(!shaderCanvasNeeded(name,image.getWidth(),image.getHeight()))return image;Region r=shaderRegion(name,image.getWidth(),image.getHeight());if(r.unchanged(image.getWidth(),image.getHeight()))return image;BufferedImage output=new BufferedImage(r.canvas,r.canvas,BufferedImage.TYPE_INT_ARGB);output.setRGB(0,0,r.canvas,r.canvas,pixels(image,r),0,r.canvas);return output;}
-    /** -1 when the sprite was not loaded by this class. */
-    static int minimumAlpha(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).minimumAlpha:-1;}
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;
         private final String diskSource;
         private final boolean crop,file,half;
         private float usedU=1,usedV=1;
-        /** Lowest positive source alpha, recorded at load before the atlas discards static pixels. */
-        volatile int minimumAlpha=-1;
         Sprite(String name,String source,boolean crop,boolean file){this(name,source,crop,file,false);}
         Sprite(String name,String source,boolean crop,boolean file,boolean half){super(name);this.half=half;this.diskSource=source;this.source=file?new ResourceLocation(name):new ResourceLocation("vandorlabs","textures/blocks/"+source+".png");this.crop=crop;this.file=file;}
         @Override public boolean hasCustomLoader(IResourceManager manager,ResourceLocation location){return true;}
@@ -69,13 +65,12 @@ public final class UnifiedTextureSprites {
                 Region region=region(image.getWidth(),image.getHeight(),crop,half);
                 setIconWidth(region.canvas);setIconHeight(region.canvas);usedU=(float)region.width/region.canvas;usedV=(float)region.height/region.canvas;
                 int[] pixels=pixels(image,region);
-                int minimum=256;for(int pixel:pixels){int a=pixel>>>24;if(a>0&&a<minimum)minimum=a;}minimumAlpha=minimum==256?0:minimum;
                 int[][] frame=new int[net.minecraft.client.Minecraft.getMinecraft().gameSettings.mipmapLevels+1][];frame[0]=pixels;
                 setFramesTextureData(new ArrayList<>(Collections.singletonList(frame)));return false;
             } catch(java.io.IOException e){
                 if(!file)throw new IllegalStateException("Shared texture load failed: "+source,e);
                 setIconWidth(16);setIconHeight(16);usedU=usedV=1;
-                int[] fallback=new int[256];java.util.Arrays.fill(fallback,0xff323944);minimumAlpha=255;
+                int[] fallback=new int[256];java.util.Arrays.fill(fallback,0xff323944);
                 int[][] frame=new int[net.minecraft.client.Minecraft.getMinecraft().gameSettings.mipmapLevels+1][];frame[0]=fallback;
                 setFramesTextureData(new ArrayList<>(Collections.singletonList(frame)));return false;
             }

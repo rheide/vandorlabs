@@ -141,7 +141,16 @@ public final class GlassFrameModel implements IBakedModel {
             List<BakedQuad> damaged=new ArrayList<>(stock.size()+frame.size()+pane.quads.size());
             damaged.addAll(stock);damaged.addAll(frame);damaged.addAll(pane.quads);return damaged;
         }
-        if(layer==BlockRenderLayer.SOLID)return delegate.getQuads(state,side,random);
+        if(layer==BlockRenderLayer.SOLID){
+            List<BakedQuad> stock=delegate.getQuads(state,side,random);
+            if(side!=null||!(state instanceof IExtendedBlockState)||WorldSceneBenchmark.omitGlazing())return stock;
+            // Opaque panes are solid terrain: no sorting, blending or alpha test.
+            GlassPaneTerrainMesh pane=GlassPaneTerrain.mesh(((IExtendedBlockState)state).getValue(BlockProgrammableGlass.PANE_MESH));
+            if(pane==null||!pane.opaque)return stock;
+            if(stock.isEmpty())return pane.quads;
+            List<BakedQuad> joined=new ArrayList<>(stock.size()+pane.quads.size());
+            joined.addAll(stock);joined.addAll(pane.quads);return joined;
+        }
         // OptiFine remaps CUTOUT_MIPPED to CUTOUT when mipmaps are disabled.
         if(layer!=BlockRenderLayer.CUTOUT_MIPPED&&layer!=BlockRenderLayer.CUTOUT&&layer!=BlockRenderLayer.TRANSLUCENT)return Collections.emptyList();
         if(side!=null||!(state instanceof IExtendedBlockState)||WorldSceneBenchmark.omitGlazing())return Collections.emptyList();
@@ -151,7 +160,7 @@ public final class GlassFrameModel implements IBakedModel {
         if(layer!=BlockRenderLayer.TRANSLUCENT)return mesh==null?Collections.emptyList():mesh.cutout;
         GlassPaneTerrainMesh pane=GlassPaneTerrain.mesh(extended.getValue(BlockProgrammableGlass.PANE_MESH));
         List<BakedQuad> frame=mesh==null?Collections.emptyList():mesh.translucent;
-        if(pane==null)return frame;
+        if(pane==null||pane.opaque)return frame;
         if(frame.isEmpty())return pane.quads;
         List<BakedQuad> joined=new ArrayList<>(frame.size()+pane.quads.size());
         joined.addAll(frame);joined.addAll(pane.quads);return joined;
@@ -161,9 +170,9 @@ public final class GlassFrameModel implements IBakedModel {
         if(state instanceof IExtendedBlockState){
             IExtendedBlockState extended=(IExtendedBlockState)state;
             BlockRenderLayer layer=MinecraftForgeClient.getRenderLayer();
+            BlockRenderLayer pane=GlassPaneTerrain.layer(extended.getValue(BlockProgrammableGlass.PANE_MESH));
             if(currentFrame(extended.getValue(BlockProgrammableGlass.FRAME_MESH))!=null
-                    ||(layer==null||layer==BlockRenderLayer.TRANSLUCENT)
-                    &&GlassPaneTerrain.hasMesh(extended.getValue(BlockProgrammableGlass.PANE_MESH)))return false;
+                    ||pane!=null&&(layer==null||layer==pane))return false;
         }
         return delegate.isAmbientOcclusion(state);
     }

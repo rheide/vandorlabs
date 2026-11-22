@@ -17,7 +17,7 @@ def main():
     parser.add_argument('--classpath-file', type=Path, required=True)
     parser.add_argument('--natives', type=Path, required=True,
                         help='Directory containing compatible liblwjgl64.so')
-    parser.add_argument('--mode', choices=('pipeline', 'retained', 'before', 'after',
+    parser.add_argument('--mode', choices=('pipeline',
                                           'frames-before', 'frames-after', 'frames-pipeline',
                                           'portholes-before', 'portholes-after', 'porthole-geometry',
                                           'porthole-pipeline'), required=True)
@@ -54,12 +54,6 @@ def main():
                     '-Wl,-l:libEGL.so.1', '-o', str(bridge)], check=True)
     java_sources = [source / 'EglPbufferLauncher.java',
                     root / 'testclient/java/com/vandorlabs/client/GlassPanePipelineChecks.java']
-    if args.mode == 'retained':
-        java_sources += [root / 'testclient/java/com/vandorlabs/client/GlassPaneRetainedPipelineChecks.java']
-    if args.mode in ('before', 'after'):
-        java_sources += [source / 'shader_facade/net/optifine/shaders/Shaders.java',
-                         root / 'testclient/java/com/vandorlabs/client/GlassPanePerformanceChecks.java',
-                         root / 'src/main/java/com/vandorlabs/client/GlassPaneGpuTimers.java']
     if args.mode.startswith('frames-'):
         java_sources += [root / 'testclient/java/com/vandorlabs/client/GlassAuthoredAtlas.java']
         if args.mode == 'frames-pipeline':
@@ -84,7 +78,7 @@ def main():
                                '-d', str(classes)] + [str(path) for path in java_sources])
     if compiled.returncode:
         return compiled.returncode
-    if args.mode == 'before' or args.mode.endswith('-before'):
+    if args.mode.endswith('-before'):
         if args.baseline_classes is None:
             parser.error('--baseline-classes is required for before; preserve the previous build before recompiling')
         production = args.baseline_classes.resolve()
@@ -95,11 +89,11 @@ def main():
     if not args.hardware:
         environment['LIBGL_ALWAYS_SOFTWARE'] = '1'
     environment['MESA_SHADER_CACHE_DISABLE'] = 'true'
-    entrypoint = {'pipeline': 'GlassPanePipelineChecks', 'retained': 'GlassPaneRetainedPipelineChecks',
+    entrypoint = {'pipeline': 'GlassPanePipelineChecks',
                   'frames-pipeline': 'GlassFramePipelineChecks', 'frames-before': 'GlassFramePerformanceChecks',
                   'frames-after': 'GlassFramePerformanceChecks', 'portholes-before': 'PortholePerformanceChecks',
                   'portholes-after': 'PortholePerformanceChecks', 'porthole-geometry': 'PortholeRetainedGeometryChecks',
-                  'porthole-pipeline': 'PortholeRetainedPipelineChecks'}.get(args.mode, 'GlassPanePerformanceChecks')
+                  'porthole-pipeline': 'PortholeRetainedPipelineChecks'}[args.mode]
     command = [str(args.java_home / 'bin/java'), '-Xmx2G',
                '-Djava.library.path=' + str(args.natives.resolve()), '-Degl.bridge=' + str(bridge),
                '-Djava.io.tmpdir=' + str(temporary), '-Dvandorlabs.glassBenchmarkMode=' + args.mode,

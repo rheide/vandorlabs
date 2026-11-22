@@ -21,11 +21,13 @@ final class GlassPaneTerrainMesh {
     final VertexFormat format;
     final TextureAtlasSprite sprite;
     final boolean rotated,singleSurface;
+    /** Opaque panes belong to the solid chunk layer; all others to the translucent layer. */
+    final boolean opaque;
     final int depth;
 
     private GlassPaneTerrainMesh(boolean rotated,int depth,TextureAtlasSprite sprite,
             boolean single,VertexFormat format){
-        this.rotated=rotated;this.depth=depth;this.sprite=sprite;singleSurface=single;
+        this.rotated=rotated;this.depth=depth;this.sprite=sprite;singleSurface=single;opaque=false;
         this.format=new VertexFormat(format);
         List<BakedQuad> result=new ArrayList<>(single?2:4);
         double offset=PanelDepth.offset(depth)/16D;
@@ -37,17 +39,18 @@ final class GlassPaneTerrainMesh {
         }
         quads=Collections.unmodifiableList(result);
     }
-    private GlassPaneTerrainMesh(boolean rotated,int depth,TextureAtlasSprite sprite,VertexFormat format,List<BakedQuad> quads){
-        this.rotated=rotated;this.depth=depth;this.sprite=sprite;singleSurface=false;this.format=format;this.quads=quads;
+    private GlassPaneTerrainMesh(boolean rotated,int depth,TextureAtlasSprite sprite,VertexFormat format,List<BakedQuad> quads,boolean opaque){
+        this.rotated=rotated;this.depth=depth;this.sprite=sprite;singleSurface=false;this.format=format;this.quads=quads;this.opaque=opaque;
     }
 
     /**
      * Selected artwork, already mapped onto the joined surface. The source mesh is
      * the two-sheet material plane; native backface culling leaves one visible
-     * sheet, so {@code opacity} must already be the single-layer equivalent.
+     * sheet, so {@code opacity} must already be the single-layer equivalent. Opaque
+     * meshes are drawn in the solid layer, where the same culling applies.
      */
     static GlassPaneTerrainMesh mapped(boolean rotated,int depth,TextureAtlasSprite sprite,StaticSurfaceMesh mesh,
-            float opacity,VertexFormat source){
+            float opacity,boolean opaque,VertexFormat source){
         if(sprite==null||mesh==null)throw new IllegalArgumentException("Missing pane artwork");
         if(!supports(source))throw new IllegalArgumentException("Unsupported native pane vertex format");
         VertexFormat format=new VertexFormat(source);
@@ -79,7 +82,7 @@ final class GlassPaneTerrainMesh {
                 @Override public int[] getVertexData(){return data;}
             });
         }
-        return new GlassPaneTerrainMesh(rotated,depth,sprite,format,Collections.unmodifiableList(result));
+        return new GlassPaneTerrainMesh(rotated,depth,sprite,format,Collections.unmodifiableList(result),opaque);
     }
 
     static GlassPaneTerrainMesh build(boolean rotated,int depth,TextureAtlasSprite sprite,

@@ -105,9 +105,9 @@ public class BlockProgrammableGlass extends BlockGlassWall {
         // still contributes terrain geometry when no frame snapshot is present.
         Object frame=tile.frameChunkMesh,pane=tile.paneTerrainMesh;
         net.minecraftforge.common.property.IExtendedBlockState extended=(net.minecraftforge.common.property.IExtendedBlockState)state;
-        if(frame==null){
-            if(tile.frameChunkPublication==null&&VandorLabs.proxy!=null)VandorLabs.proxy.glassFrameAppearanceChanged(tile);
-        }else{
+        // An owner seen by a chunk build before either client manager knows it is queued once here.
+        if((tile.frameChunkPublication==null||tile.paneTerrainPublication==null)&&VandorLabs.proxy!=null)VandorLabs.proxy.glassFrameAppearanceChanged(tile);
+        if(frame!=null){
             int light=world.getCombinedLight(pos,tile.frameChunkLight);if(tile.frameChunkLight>0)light=(light&0xffff0000)|240;
             extended=extended.withProperty(FRAME_MESH,frame).withProperty(FRAME_LIGHT,light);
         }
@@ -121,9 +121,9 @@ public class BlockProgrammableGlass extends BlockGlassWall {
             // A pane uses live cell lighting, never a selected frame's forced
             // fullbright material. Blended emissive frames have a separate
             // frame-only draw; opaque emissive frames retain their native layer.
-            if(com.vandorlabs.client.GlassPaneTerrain.hasMesh(extended.getValue(PANE_MESH))
-                    &&net.minecraftforge.client.MinecraftForgeClient.getRenderLayer()==BlockRenderLayer.TRANSLUCENT)
-                return world.getCombinedLight(pos,0);
+            BlockRenderLayer pane=com.vandorlabs.client.GlassPaneTerrain.layer(extended.getValue(PANE_MESH));
+            if(pane!=null&&net.minecraftforge.client.MinecraftForgeClient.getRenderLayer()==pane)
+                return com.vandorlabs.client.GlassPaneTerrain.light(world,pos);
             Integer light=extended.getValue(FRAME_LIGHT);if(light!=null)return light;
         }
         return super.getPackedLightmapCoords(state,world,pos);

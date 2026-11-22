@@ -138,7 +138,6 @@ public final class GlassPaneGpuTimers {
         context.addProperty("block_vertex_stride",DefaultVertexFormats.BLOCK.getNextOffset());
         context.addProperty("native_policy",GlassPanePolicy.diagnostics());
         context.addProperty("native_coverage",GlassPaneTerrain.diagnostics());
-        coverage(context,"retained_coverage","GlassPaneRetained");
         coverage(context,"frame_coverage","GlassFrameRetained");
         coverage(context,"porthole_coverage","PortholeRetained");
         if(mc!=null){

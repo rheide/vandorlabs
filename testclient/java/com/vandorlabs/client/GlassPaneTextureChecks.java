@@ -45,14 +45,16 @@ public final class GlassPaneTextureChecks {
             }
             need(GlassPanePolicy.terrainAlphaSafe(alpha,false)==(alpha==0||alpha>=27),"native alpha threshold");
             need(GlassPanePolicy.terrainAlphaSafe(alpha,true)==(expected==0||expected>=27),"compensated threshold");
+            int floored=GlassPanePixels.nativePixel((alpha<<24)|0x123456,true)>>>24;
+            need(floored==0?alpha==0:floored>=GlassPanePixels.NATIVE_ALPHA_FLOOR&&GlassPanePolicy.terrainAlphaSafe(floored,false),"native floor keeps faint pixels visible");
         }
         BufferedImage animation=new BufferedImage(4,12,BufferedImage.TYPE_INT_ARGB);
         for(int y=0;y<12;y++)for(int x=0;x<4;x++)animation.setRGB(x,y,((x+y*7)<<24)|(x*1024+y*32768));
         BufferedImage authored=GlassPaneTextures.transform(animation,true,false);
         need(authored.getWidth()==4&&authored.getHeight()==12,"animation frame layout flattened");
-        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(authored.getRGB(x,y)==GlassPanePixels.single(animation.getRGB(x,y)),"animation pixel changed");
+        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(authored.getRGB(x,y)==GlassPanePixels.nativePixel(animation.getRGB(x,y),true),"animation pixel changed");
         BufferedImage unchanged=GlassPaneTextures.transform(animation,false,false);
-        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(unchanged.getRGB(x,y)==animation.getRGB(x,y),"two-sheet artwork changed");
+        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(unchanged.getRGB(x,y)==GlassPanePixels.nativePixel(animation.getRGB(x,y),false),"two-sheet artwork changed beyond the native floor");
         BufferedImage smooth=GlassPaneTextures.transform(animation,true,true);
         need(smooth.getWidth()==4&&smooth.getHeight()==4,"explicit smooth frame dimensions");
         for(int y=0;y<4;y++)for(int x=0;x<4;x++)need(smooth.getRGB(x,y)==smooth.getRGB(0,0),"explicit smooth not uniform");
@@ -77,7 +79,7 @@ public final class GlassPaneTextureChecks {
         need(pack.resourceExists(new ResourceLocation("vandorlabs",target+".png")),"variant PNG missing");
         BufferedImage transformed=ImageIO.read(pack.getInputStream(new ResourceLocation("vandorlabs",target+".png")));
         need(transformed.getWidth()==4&&transformed.getHeight()==12,"authored animation alias lost frames");
-        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(transformed.getRGB(x,y)==GlassPanePixels.single(art.getRGB(x,y)),"variant RGB/alpha mismatch");
+        for(int y=0;y<12;y++)for(int x=0;x<4;x++)need(transformed.getRGB(x,y)==GlassPanePixels.nativePixel(art.getRGB(x,y),true),"variant RGB/alpha mismatch");
         need(Arrays.equals(bytes(pack.getInputStream(new ResourceLocation("vandorlabs",target+".png.mcmeta"))),meta),"animation metadata or pack priority lost");
         need(Arrays.equals(bytes(pack.getInputStream(new ResourceLocation("vandorlabs",target+"_n.png"))),png(art)),"normal map modified");
         need(Arrays.equals(bytes(pack.getInputStream(new ResourceLocation("vandorlabs",target+"_s.png"))),new byte[]{7,8,9}),"specular pack priority lost");

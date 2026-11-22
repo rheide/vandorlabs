@@ -5,7 +5,7 @@
 Use `/vandorglassprofile start 600` while holding the same camera and graphics
 settings for both builds. The client writes JSON below `vandorlabs-profiles` in
 its game directory after deferred GPU results arrive. `/vandorglassprofile status`
-prints capture state and native/retained coverage with fallback reasons. The
+prints capture state and native pane, retained frame and Porthole coverage with fallback reasons. The
 `glasstmp2` baseline already contains this command. No startup flag is required
 for the normal rendering optimizations.
 
@@ -61,8 +61,7 @@ python3 testclient/glass_egl/run.py \
 
 | Mode | Coverage |
 | --- | --- |
-| `pipeline` | Actual `RenderChunk` worker rebuild, extended state/model dispatch, VBO upload, native proof/admission, emissive lighting, joined interiors, holes/removal, cold frame registration, and one retained anchor for blended border frames. |
-| `retained` | Actual pane manager/worker/VBO/admission lifecycle, stationary reuse, incompatible-format retirement/recovery and removal. The isolated JVM selects grouped panes. |
+| `pipeline` | Actual `RenderChunk` worker rebuild, extended state/model dispatch, VBO upload, tile-list admission, emissive lighting, joined interiors, holes/removal and cold frame registration. Stationary panes are emitted by the block model from each tile's mesh; there is no publication proof or retained pane fallback. |
 | `frames-pipeline` | All eight shipped partially transparent emissive front textures and their generated rail crops, with real mipmaps; palette/custom panes crossed with transparent/opaque finishes; animated panes and fluid fallback independent of frame grouping; independent frame/pane light and render passes; native-frame to retained-frame handoff and back; format, resource, light, relocation, recycled chunk, removal and world-unload cases. `--case handoff` runs only the attached-tile edit handoff. |
 | `porthole-geometry` | Actual flat, full-depth, diagonal, bent and T-bar aperture geometry, all facings/depths/shapes, glimmer UVs, opaque/custom thickness and measured plane boundaries. Requires the classes produced by `compileNonRenderingChecks`. |
 | `porthole-pipeline` | Real porthole worker/upload/admission, separate housing/pane anchors, palette/custom and opaque/transparent combinations, dynamic screen panes with retained housing, decoded animation, fluid admission, same-chunk anchor replacement and GL-resource lifetime. A pass-selection facade also checks dynamic shadow policy. Add `--frames-only` for the optional shadow policy in a separate JVM. |
@@ -78,9 +77,8 @@ requires `--baseline-classes /path/to/preserved/classes`.
 
 | Pair | Fixed scene and measured path |
 | --- | --- |
-| `frames-before` / `frames-after` | 2,040 glass cells: eight joined 16×16 sections, one hole each, one actual emissive frame artwork per section. Both versions use retained panes so the comparison includes the previously remaining frame cost. The actual compiled tile lists and both pass 0 and pass 1 drive the real tile renderers. Baseline nonempty frame submissions are counted through its actual `Tessellator`; current retained frame and pane VBO draws are counted independently. |
+| `frames-before` / `frames-after` | 2,040 glass cells: eight joined 16×16 sections, one hole each, one actual emissive frame artwork per section. Current panes are chunk geometry, so only frame submissions pass through the tile renderer. The actual compiled tile lists and both pass 0 and pass 1 drive the real tile renderers. Baseline nonempty frame submissions are counted through its actual `Tessellator`; current retained frame VBO draws are counted. |
 | `portholes-before` / `portholes-after` | 2,048 actual joined portholes across eight 16×16 sections, all four aperture shapes and tint values, palette and static custom panes, and shipped housing textures. The comparison includes housing and aperture draws in both render passes. It distinguishes empty `Tessellator` calls from nonempty draw submissions. |
-| `before` / `after` | Historical pane-focused fixture: 1,533 cells across overlapping planes and six section/plane groups. It exercises main-view pane collection/sorting/batching and retained groups, but does not establish emissive-frame or porthole housing cost. Use the representative pairs above for this patch. |
 
 The representative workloads warm up and capture 80 frames per target. Separate
 framebuffers select the production main and shadow branches. A GLSL 150 program

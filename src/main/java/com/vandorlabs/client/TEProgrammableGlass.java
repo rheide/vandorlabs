@@ -78,7 +78,6 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             if(!GlassFrameRetained.draw(tile,x,y,z))renderSelectedFrame(tile,state,x,y,z);
         }
         if(terrain)return;
-        if(GlassPaneRetained.draw(tile,x,y,z))return;
         if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());

@@ -54,7 +54,7 @@ public final class GlassFramePerformanceChecks {
     }
     private static void frameFlush()throws Exception{if(AFTER)Class.forName("com.vandorlabs.client.GlassFrameRetained").getMethod("flush").invoke(null);}
     private static void flush(GlassPanePipelineChecks.Fixture scene)throws Exception{
-        scene.flush();frameFlush();GlassPaneRetained.flush();scene.flush();
+        scene.flush();frameFlush();scene.flush();
     }
     private static void installCapture()throws Exception{
         for(Field field:Tessellator.class.getDeclaredFields())if(Modifier.isStatic(field.getModifiers())&&field.getType()==Tessellator.class)tessellator=field;
@@ -105,7 +105,7 @@ public final class GlassFramePerformanceChecks {
         int frameDraws,paneDraws,legacyDraws,pass0,pass1;
         Submission(List<TileEntityProgrammableGlass> visible,boolean shadow){this.visible=visible;this.shadow=shadow;renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);}
         void run()throws Exception{
-            String field=shadow?"shadowDraws":"mainDraws";long frame=AFTER?counter("GlassFrameRetained",field):0,pane=counter("GlassPaneRetained",field),legacy=capture.draws;pass0=pass1=0;
+            String field=shadow?"shadowDraws":"mainDraws";long frame=AFTER?counter("GlassFrameRetained",field):0,pane=0,legacy=capture.draws;pass0=pass1=0;
             for(int pass=0;pass<2;pass++){
                 ForgeHooksClient.setRenderPass(pass);
                 for(TileEntityProgrammableGlass tile:visible)if(tile.shouldRenderInPass(pass)){
@@ -113,7 +113,8 @@ public final class GlassFramePerformanceChecks {
                     BlockPos pos=tile.getPos();renderer.render(tile,pos.getX(),pos.getY(),pos.getZ(),0,-1,1);
                 }
             }
-            frameDraws=AFTER?(int)(counter("GlassFrameRetained",field)-frame):0;paneDraws=(int)(counter("GlassPaneRetained",field)-pane);legacyDraws=(int)(capture.draws-legacy);
+            frameDraws=AFTER?(int)(counter("GlassFrameRetained",field)-frame):0;paneDraws=0; // Panes are chunk geometry and never use the tile dispatcher.
+            legacyDraws=(int)(capture.draws-legacy);
         }
         int draws(){return frameDraws+paneDraws+legacyDraws;}
     }
@@ -143,7 +144,7 @@ public final class GlassFramePerformanceChecks {
         }
     }
     public static void main(String[] args)throws Exception{
-        GlassPanePolicy.testRetainedGroupsOnly=true;GlassPanePipelineChecks.initialize();VandorLabs.proxy=new ClientProxy();GlassAuthoredAtlas atlas=new GlassAuthoredAtlas();GlassPanePipelineChecks.mc.displayHeight=HEIGHT;shaders();installCapture();
+        GlassPanePipelineChecks.initialize();VandorLabs.proxy=new ClientProxy();GlassAuthoredAtlas atlas=new GlassAuthoredAtlas();GlassPanePipelineChecks.mc.displayHeight=HEIGHT;shaders();installCapture();
         try(GlassPanePipelineChecks.Fixture scene=new GlassPanePipelineChecks.Fixture()){
             scene.wall(16,16,true,true);List<TileEntityProgrammableGlass> first=new ArrayList<>(scene.cells);
             for(TileEntityProgrammableGlass tile:first)tile.frameAppearance.front=atlas.emissiveChoices.get(0);
@@ -155,10 +156,10 @@ public final class GlassFramePerformanceChecks {
             List<CompiledChunk> chunks=new ArrayList<>();for(int i=0;i<8;i++)chunks.add(scene.compileAndUpload((GlassPanePipelineChecks.SceneChunk)scene.view.renderChunks[i]));for(int i=0;i<24;i++)flush(scene);
             List<TileEntityProgrammableGlass> visible=new ArrayList<>();for(CompiledChunk chunk:chunks)for(TileEntity tile:chunk.getTileEntities())visible.add((TileEntityProgrammableGlass)tile);Collections.sort(visible,(a,b)->a.getPos().compareTo(b.getPos()));
             need(visible.size()==(AFTER?8:544),"actual admission mismatch "+visible.size()+" "+GlassPaneTerrain.diagnostics());
-            long paneUploads=counter("GlassPaneRetained","uploads"),frameUploads=AFTER?counter("GlassFrameRetained","uploads"):0;
+            long frameUploads=AFTER?counter("GlassFrameRetained","uploads"):0;
             measure(visible,false,atlas);measure(visible,true,atlas);for(int i=0;i<20;i++)flush(scene);
-            need(counter("GlassPaneRetained","uploads")==paneUploads,"stationary panes reuploaded");if(AFTER)need(counter("GlassFrameRetained","uploads")==frameUploads,"stationary frames reuploaded");
-        }finally{shadow(false);restoreCapture();GL20.glUseProgram(0);GL20.glDeleteProgram(program);ForgeHooksClient.setRenderPass(-1);frameFlush();GlassPaneRetained.flush();}
+            if(AFTER)need(counter("GlassFrameRetained","uploads")==frameUploads,"stationary frames reuploaded");
+        }finally{shadow(false);restoreCapture();GL20.glUseProgram(0);GL20.glDeleteProgram(program);ForgeHooksClient.setRenderPass(-1);frameFlush();}
         need(GL11.glGetError()==0,"frame benchmark GL error");System.out.println("GlassFramePerformance PASS mode="+MODE+" actual eight authored blended emissive assets, both render passes, actual admission lists, stationary upload reuse; actualOptiFine=false");
     }
     private GlassFramePerformanceChecks(){}

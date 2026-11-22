@@ -48,16 +48,15 @@ public class ClientProxy extends CommonProxy {
     @Override public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){com.vandorlabs.client.FixedCanopyChunks.changed(tile);}
     @Override public void glassTileLoaded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.CornerGlassRefresh.loaded(tile);}
     @Override public void cornerTileLoaded(net.minecraft.tileentity.TileEntity tile){com.vandorlabs.client.CornerGlassRefresh.loaded(tile);}
-    @Override public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.GlassFrameChunks.changed(tile);com.vandorlabs.client.GlassPaneTerrain.changed(tile);com.vandorlabs.client.GlassPaneRetained.changed(tile);com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
+    @Override public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.GlassFrameChunks.changed(tile);com.vandorlabs.client.GlassPaneTerrain.changed(tile);com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
     @Override public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){if(tile.getWorld()!=null&&tile.getWorld().isRemote)com.vandorlabs.client.GlassLightUpdates.schedule(tile);else super.glassLightRefreshNeeded(tile);}
     @Override public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);com.vandorlabs.client.PortholeRetained.changed(tile);}
     @Override public void portholeAppearanceChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){com.vandorlabs.client.PortholeRetained.changed(tile);}
     @Override public void lightAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableLight tile){com.vandorlabs.client.LightGroupCache.changed(tile);}
     @Override public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return com.vandorlabs.client.ProgrammableGlassPasses.collectionOnly(tile);}
-    @Override public int glassPanePass(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,int pass){int nativePass=com.vandorlabs.client.GlassPaneTerrain.renderPass(tile,pass);return nativePass>=0?nativePass:com.vandorlabs.client.GlassPaneRetained.renderPass(tile,pass);}
+    @Override public int glassPanePass(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,int pass){return com.vandorlabs.client.GlassPaneTerrain.renderPass(tile,pass);}
     @Override public net.minecraft.util.math.AxisAlignedBB glassPaneBounds(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,net.minecraft.util.math.AxisAlignedBB bounds){
-        net.minecraft.util.math.AxisAlignedBB pane=com.vandorlabs.client.GlassPaneRetained.bounds(tile),frame=com.vandorlabs.client.GlassFrameRetained.bounds(tile);
-        if(pane!=null)bounds=bounds.union(pane);
+        net.minecraft.util.math.AxisAlignedBB frame=com.vandorlabs.client.GlassFrameRetained.bounds(tile);
         return frame==null?bounds:bounds.union(frame);
     }
     @Override public int portholeRenderPass(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,int pass){return com.vandorlabs.client.PortholeRetained.renderPass(tile,pass);}

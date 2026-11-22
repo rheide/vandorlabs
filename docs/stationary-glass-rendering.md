@@ -1,7 +1,6 @@
 # Stationary Programmable Glass and Portholes
 
-Eligible stationary glass panes render in Minecraft's ordinary translucent chunk
-buffers. Authored texture detail, including Gold glimmer, is enabled by default.
+Stationary glass panes render as Minecraft's ordinary chunk geometry. Authored texture detail, including Gold glimmer, is enabled by default.
 There is no world migration or required JVM argument.
 
 Frame and pane ownership are independent. Opaque emissive frame faces retain
@@ -34,27 +33,27 @@ metadata and shader companion resources are preserved. This approximation does
 not promise identical shader refraction or reflection to two physical sheets.
 
 Minecraft supplies lighting, optional shader attributes and normal translucent
-sorting. There is no separate native-pane draw, group anchor or private shader
-pointer setup. Once installed pane geometry is confirmed, every settled
-pane-only tile is removed from its compiled section's tile-render list. The tile
-entities continue to store gameplay and configuration data.
+sorting. There is no separate pane draw, group anchor or private shader pointer
+setup. Every settled pane-only tile is removed from its compiled section's
+tile-render list; the tile entities continue to store gameplay and configuration
+data.
 
-Stationary flat panes that cannot use native terrain have a retained grouped
-fallback. A group contains compatible coplanar panes within one 16-block render
-section. It retains its vertex buffer across frames, including shader shadow
-passes. One real member acts as the group's renderer, with bounds covering every
-member. Other pane-only members leave the compiled tile list. Retained frame
-groups have independent anchors. Main-view ordering uses the whole group's bounds;
-holes remain holes and each occupied cell retains its authored texture mapping.
-Grouping batches geometry; it does not replace a wall with a filled bounding box.
+Selected artwork, static-mode Screens and opaque panes use the mapped two-sheet
+material plane. Native backface culling leaves one visible sheet, so translucent
+artwork is written with the equivalent stacked opacity
+`1 - (1 - opacity)^2` (35%, 65% and 85% become about 58%, 88% and 98%). Opaque
+stock and artwork panes go to the `SOLID` layer: no sorting, blending or alpha
+test. A lit frame still backlights opaque replacement artwork. Translucent
+artwork pixels fainter than the native alpha test are dropped.
 
-Native-palette groups use the same compensated single sheet as native terrain,
-including very faint textures that cannot pass native terrain's alpha threshold.
-Static custom atlas inserts and opaque palette panes retain their established
-artwork, opacity and two-sheet geometry. Opaque groups draw in pass zero with
-depth writes. Moving panes, corners, fluids and animated custom displays continue
-to use their existing pane renderer; they do not disqualify an otherwise eligible
-stationary frame from native or retained rendering.
+Stock palette textures are prepared with a visibility floor: after compensation,
+every visible pixel has at least 27/255 alpha, so even the faintest tints (Soft
+Cyan Mild and Normal, Soft Dark Grey Mild) are chunk geometry. Their appearance
+is slightly more tinted than the authored texture.
+
+Moving panes, corners, fluids and animated or off custom displays continue to use
+their existing pane renderer; they do not disqualify an otherwise eligible
+stationary frame from native or retained frame rendering.
 
 ### Programmable Portholes
 
@@ -80,72 +79,44 @@ startup flag is needed.
 
 ## Edits and lifetime
 
-Chunk workers consume immutable client-thread publications. Ownership is checked
-against actual installed translucent vertex records, separately for each owner.
-Physical presence and exact material freshness are distinct, so an unrecognized
-sprite-local UV convention cannot cause duplicate fallback panes or endless
-material rebuilds. Proven incomplete or stale results receive a bounded retry.
+The client thread prepares each tile's immutable pane mesh and stores it on the
+tile. The block's extended state carries it and the block model emits it, so a
+pane is a pure function of the tile's settings and placement: no installed-record
+inspection, withdrawal or upload fence is involved. When a mesh changes, the
+section is marked for Minecraft's ordinary asynchronous rebuild, with the usual
+chunk-rebuild latency. Meshes written for an older vertex format are never
+emitted; a format or atlas change rebuilds every mesh and marks its section.
 
-If a rendering extension does not retain inspectable native vertex records,
-the manager withdraws its pane snapshots and requests a replacement chunk build.
-Retained groups can take ownership only after that rebuild has completed its
-uploads. A resort of the old geometry does not authorize the handoff. A successor
-resort can acknowledge the distinct replacement after its upload; the old
-installed result and the task present before withdrawal remain excluded. The
-same fence protects native-to-retained frame transitions, including material
-edits while a chunk task is uploading.
+Joined artwork depends on its whole joined surface. Owners of mapped artwork are
+rechecked when the connected-surface layout cache changes; an unchanged mapping
+reuses its cached mesh and requests no rebuild.
 
-Existing layer uploads finish before the next snapshot is published. Compile
-locks are polled without blocking the client thread. Edits retain Minecraft's
-ordinary asynchronous chunk-rebuild latency; the manager does not turn separate
-layer uploads into an atomic GPU transaction.
-
-Unchanged sections avoid per-owner admission sweeps. Local mesh templates share
-an 8 MiB cache, and at most 1,024 dirty owners are prepared per flush. Resource or
-vertex-format changes rebuild these templates. Repeated stale worker requests
-do not restart a format rebuild already progressing through that queue.
-Retained pane groups and porthole groups each have a separate 16 MiB budget;
-retained frame groups have a 32 MiB budget. Budgets cover CPU and GPU record
-copies and owner bookkeeping. Groups are limited to 2 MiB, with at most eight
-sections rebuilt per manager flush. Larger frame or porthole groups split into
-bounded groups. Exceeding a total budget restores the existing renderer rather
-than omitting geometry.
+Local mesh templates share two 8 MiB caches, and at most 1,024 dirty owners are
+prepared per flush. Retained frame groups have a 32 MiB budget and porthole
+groups a 16 MiB budget, covering CPU and GPU record copies and owner bookkeeping.
+Groups are limited to 2 MiB, with at most eight sections rebuilt per manager
+flush. Exceeding a total budget restores the existing renderer rather than
+omitting geometry. Native frame publication keeps its own upload fence.
 
 Changes are queued from tile callbacks and applied at safe render-thread flush
-boundaries. Group retirement and compiled tile-list restoration happen together,
-outside an active render iterator. Resource/format changes, world switches,
-member removal, relighting and joined porthole topology changes retire affected
-buffers. A long joined aperture records its full dependency region, including
-across section boundaries.
+boundaries. Compiled tile-list restoration happens outside an active render
+iterator. Resource/format changes, world switches, member removal, relighting
+and joined porthole topology changes retire affected frame and porthole buffers.
 
 ## Supported cases
 
-The native path supports flat, stationary native-palette panes, including Gold,
-with stock frames, selected emissive or nonemissive frames, or no frame. Tint, placement
-depth, orientation and frame joins remain intact.
-
-Static custom atlas inserts, opaque inserts and very faint palette materials use
-retained groups when their vertex format and shader hooks are supported. Native
-terrain's alpha threshold would otherwise remove some faint pixels. Frame
-selection does not force these inserts out of their fast path.
-
 | Stationary combination | Surround | Glass or insert |
 | --- | --- | --- |
-| Stock, bare or native-compatible selected frame | Existing native geometry, or empty | Native terrain when eligible; otherwise retained |
-| Selected blended emissive frame + palette glass | Retained frame group | Native terrain or retained pane group |
-| Selected blended emissive frame + static custom/opaque insert | Retained frame group | Retained pane group in the appropriate pass |
+| Stock, bare or native-compatible selected frame | Existing native geometry, or empty | Native terrain (`TRANSLUCENT`, or `SOLID` when opaque) |
+| Selected blended emissive frame + any static glass or insert | Retained frame group | Native terrain |
 | Selected blended emissive frame + animated insert or contained fluid | Retained frame group | Existing dynamic/fluid renderer |
 | Porthole + static palette/custom/opaque glass | Retained housing group | Retained aperture group |
 | Porthole + animated insert or contained fluid | Retained housing group | Retained static aperture where eligible; dynamic insert/fluid rendering remains independent |
 
 Programmable Glass corners keep their existing native frame and shaped-pane
-paths. Moving VehicleWorld geometry and unsupported retained formats keep the
-existing renderer. These are explicit compatibility cases, not eligibility
-tests based on whether a frame emits light.
-Native eligibility checks every animation frame of the palette texture after
-compensation; positive alpha must be at least 27/255. Fainter artwork uses
-retained panes and is not clamped or silently removed. This threshold does not
-reclassify blended frame artwork as opaque.
+paths. Moving VehicleWorld geometry keeps the existing renderer. These are
+explicit compatibility cases, not eligibility tests based on whether a frame
+emits light.
 
 Native transparency has Minecraft's usual sorting limitations. Overlapping
 windows are not discarded using an approximate layer cap.
@@ -168,14 +139,15 @@ only the automatic fallback for panes the chunk path cannot represent. The forme
 
 The benchmark's no-glass setting keeps its comparison behavior.
 `benchmarkLegacyGlazing=true` affects only the fallback renderers and no longer
-disables chunk-baked panes. Smooth and single-sheet settings apply to native and
-retained native-palette panes; they do not change custom insert artwork or the
-per-tile compatibility renderer.
+disables chunk-baked panes. Smooth and single-sheet settings apply to native-palette
+panes; they do not change custom insert artwork or the per-tile compatibility
+renderer.
 
 ## Diagnostics and verification
 
 For a settled eligible area, expect `renderer=terrain`, `texture=authored`, native
-or retained pane owners and pruned tiles, with pending sections draining. A wall
+pane owners (`opaque-owners` for solid panes) and pruned tiles, with pending owners
+draining. A wall
 using partial-alpha emissive frames should also show `retained-frame-owners` and
 `retained-frame-groups`; `legacy-frame-main-draws` and
 `legacy-frame-shadow-draws` should stop increasing for those stationary frames.
@@ -195,7 +167,7 @@ are written under `vandorlabs-profiles` in the game directory. No startup flag
 is required for this command.
 
 The report records frame intervals, render-event CPU elapsed time, asynchronous
-GPU timestamps where supported, native/retained pane, frame and porthole coverage,
+GPU timestamps where supported, native pane, retained frame and porthole coverage,
 and the camera and graphics settings at each end of the capture. Separate scopes
 name retained frames and porthole housing/panes in main and shadow rendering.
 These timings cover the named submissions, not the entire shader shadow pass. Nested scopes
@@ -208,18 +180,18 @@ build as the baseline. A changed camera, active rebuilds or dropped samples must
 be accounted for before interpreting a timing difference. Functional checks
 and owner counts alone do not establish an FPS improvement.
 The `glasstmp2` baseline already includes this command, so it can be used on both
-builds. The new report adds frame and porthole coverage. Selecting `legacy` is a
-useful diagnostic but does not reproduce every behavior of the earlier JAR.
+builds. The new report adds frame and porthole coverage.
 
 Focused Java checks cover authored pixels and metadata, native geometry and
-format compatibility, actual Forge/vanilla buffer consumption, publication and
-admission lifetime. `GlassPaneTerrainGpuChecks` exercises the actual block-model
-and upload paths in an OpenGL compatibility context. The additional
-`GlassPanePipelineChecks` and `GlassPaneRetainedPipelineChecks` use actual
-`RenderChunk` rebuilding, uploads and dispatcher admissions. The reproducible
-[EGL runner](../testclient/glass_egl/README.md) also compares the previous main
-batch and per-tile shadow path with retained groups. A software framebuffer check
-does not establish hardware FPS or acceptance with a particular shader pack.
+format compatibility, actual Forge/vanilla buffer consumption and admission
+lifetime. `GlassPaneTerrainGpuChecks` exercises the actual block-model and upload
+paths in an OpenGL compatibility context. The additional `GlassPanePipelineChecks`
+use actual `RenderChunk` rebuilding, uploads and dispatcher admissions through the
+reproducible [EGL runner](../testclient/glass_egl/README.md). The live
+`glassArtworkTerrainOnly` fixture on the `utility26` focus requires joined
+artwork, opaque stock and artwork panes and the faintest stock tints to be chunk
+geometry, with an animated Screen keeping its renderer. A software framebuffer
+check does not establish hardware FPS or acceptance with a particular shader pack.
 
 The additional `frames-before`/`frames-after` modes compare the exact branch
 baseline with retained frame groups using 2,040 cells across eight joined walls,

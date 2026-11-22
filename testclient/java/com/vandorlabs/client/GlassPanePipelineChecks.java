@@ -269,7 +269,8 @@ public final class GlassPanePipelineChecks {
             TileEntityProgrammableGlass interior=(TileEntityProgrammableGlass)current.world.getTileEntity(new BlockPos(3,3,1));
             need(interior.frameAppearance.light()>0,"fixture lost emissive frame selection");
             need(GlassFrameMesh.get(interior).vertexCount()==0,"joined interior still has frame geometry");
-            need(!GlassPaneTerrain.rendered(interior),"pane became owned before native compilation/upload");
+            // Deterministic model: the tile owns its mesh at once and the next section build emits it.
+            need(GlassPaneTerrain.rendered(interior)&&interior.paneTerrainMesh!=null,"pane mesh not prepared before native compilation");
             CompiledChunk compiled=current.compileAndUpload();
             need(!compiled.isLayerEmpty(BlockRenderLayer.TRANSLUCENT),"actual chunk builder omitted native panes");
             int[] records=compiled.getState().getRawBuffer();int stride=compiled.getState().getVertexFormat().getIntegerSize();int light=compiled.getState().getVertexFormat().getUvOffsetById(1)/4;
@@ -286,7 +287,7 @@ public final class GlassPanePipelineChecks {
             GlassPaneTerrain.changed(interior);GlassFrameChunks.changed(interior);current.world.notifyBlockUpdate(removed,block.getDefaultState(),Blocks.AIR.getDefaultState(),3);current.flush();
             current.compileAndUpload();current.flush();current.flush();
             need(!GlassPaneTerrain.rendered(interior),"removed owner retained native admission");
-            System.out.println("GlassPanePipeline PASS cells=255 real RenderChunk worker/model/VBO/ownership/admission, emissive frame lighting, empty joined interiors, hole, removal, stationary rebuild stability; "+GlassPaneTerrain.diagnostics());
+            System.out.println("GlassPanePipeline PASS cells=255 real RenderChunk worker/model/VBO/deterministic pane meshes/admission, emissive frame lighting, empty joined interiors, hole, removal, stationary rebuild stability; "+GlassPaneTerrain.diagnostics());
         }
     }
     static void coldFrameRegistration()throws Exception{

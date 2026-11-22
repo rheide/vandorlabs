@@ -40,7 +40,7 @@ public final class GlassPaneTextures {
         public final boolean singleSurface,terrainAlphaSafe;
         Selection(TextureAtlasSprite sprite,Variant variant){
             this.sprite=sprite;singleSurface=variant.single;
-            terrainAlphaSafe=GlassPanePolicy.terrainAlphaSafe(variant.minimumAlpha,variant.single);
+            terrainAlphaSafe=GlassPanePolicy.terrainAlphaSafe(variant.minimumAlpha,false);
         }
     }
     private static final class Variant {
@@ -54,12 +54,12 @@ public final class GlassPaneTextures {
             sprite=new ResourceLocation("vandorlabs","blocks/native_glass/"+shade+"/"+tint);
             source=new ResourceLocation(GlassTextures.fullTexture(shade,1,tint));
             single=GlassPanePolicy.singleSurface();smooth=GlassPanePolicy.smoothTextures();
-            int[] pixels=smooth?new int[]{GlassPanePixels.dominant(image.getRGB(0,0,image.getWidth(),
-                    Math.min(image.getWidth(),image.getHeight()),null,0,image.getWidth()))}
-                    :image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth());
+            BufferedImage transformed=transform(image,single,smooth);
+            // The stored (compensated, floored) alpha is what the native alpha test sees.
+            int[] pixels=transformed.getRGB(0,0,transformed.getWidth(),transformed.getHeight(),null,0,transformed.getWidth());
             int minimum=256;for(int pixel:pixels){int a=pixel>>>24;if(a>0&&a<minimum)minimum=a;}
             minimumAlpha=minimum==256?0:minimum;
-            diffuse=encode(transform(image,single,smooth));
+            diffuse=encode(transformed);
         }
     }
 
@@ -70,7 +70,7 @@ public final class GlassPaneTextures {
 
     @SubscribeEvent(priority=EventPriority.HIGH) public static void before(TextureStitchEvent.Pre event){
         if(event.getMap()!=Minecraft.getMinecraft().getTextureMapBlocks())return;
-        GlassPaneTerrain.reload();GlassPaneRetained.reload();GlassFrameRetained.reload();PortholeRetained.reload();close();selections=new Selection[0];prepared=Collections.emptyList();
+        GlassPaneTerrain.reload();GlassFrameRetained.reload();PortholeRetained.reload();close();selections=new Selection[0];prepared=Collections.emptyList();
         if(!GlassPanePolicy.staticEnabled())return;
         List<IResourcePack> active=ShaderAtlasResources.packs();
         Scope scope=new Scope(active);List<Variant> next=new ArrayList<>();
@@ -94,7 +94,7 @@ public final class GlassPaneTextures {
             TextureAtlasSprite sprite=event.getMap().getAtlasSprite(variant.sprite.toString());
             if(sprite!=event.getMap().getMissingSprite())next[variant.index]=new Selection(sprite,variant);
         }
-        selections=next;prepared=Collections.emptyList();close();GlassPaneTerrain.reload();GlassPaneRetained.reload();GlassFrameRetained.reload();PortholeRetained.reload();
+        selections=next;prepared=Collections.emptyList();close();GlassPaneTerrain.reload();GlassFrameRetained.reload();PortholeRetained.reload();
     }
     @SubscribeEvent public static void cleanup(TickEvent.ClientTickEvent event){
         if(loading!=null&&event.phase==TickEvent.Phase.END){close();prepared=Collections.emptyList();}
@@ -106,7 +106,8 @@ public final class GlassPaneTextures {
         int width=image.getWidth(),height=smooth?width:image.getHeight();
         int[] pixels=smooth?new int[width*height]:image.getRGB(0,0,width,height,null,0,width);
         if(smooth)java.util.Arrays.fill(pixels,GlassPanePixels.dominant(image.getRGB(0,0,width,Math.min(width,image.getHeight()),null,0,width)));
-        if(single)for(int i=0;i<pixels.length;i++)pixels[i]=GlassPanePixels.single(pixels[i]);
+        // Faint authored pixels would be discarded by the terrain alpha test; keep them barely visible instead.
+        for(int i=0;i<pixels.length;i++)pixels[i]=GlassPanePixels.nativePixel(pixels[i],single);
         BufferedImage result=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);result.setRGB(0,0,width,height,pixels,0,width);return result;
     }
     private static byte[] encode(BufferedImage image)throws IOException{
