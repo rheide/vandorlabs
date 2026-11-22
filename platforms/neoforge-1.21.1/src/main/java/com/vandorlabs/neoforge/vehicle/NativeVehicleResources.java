@@ -34,7 +34,6 @@ final class NativeVehicleResources {
     private final Map<BlockPos, Integer> growth = new HashMap<>();
     private final Map<BlockPos, NativeRawCell> states = new HashMap<>();
     private final List<Route> routes = new ArrayList<>();
-    private final List<Endpoint> endpoints = new ArrayList<>();
     private final List<NativeVehicleObservers.Receiver> observers;
     private final NativeVehiclePropulsion propulsion;
     private NativeTransferSnapshot savedInput, saved;
@@ -84,7 +83,6 @@ final class NativeVehicleResources {
 
     private void add(Map<BlockPos, List<Endpoint>> mounted, BlockPos pos, Endpoint endpoint) {
         mounted.computeIfAbsent(pos, unused -> new ArrayList<>()).add(endpoint);
-        endpoints.add(endpoint);
     }
 
     List<NativeVehicleObservers.Receiver> observers() { return observers; }
@@ -94,15 +92,13 @@ final class NativeVehicleResources {
         tick = level.getGameTime();
         for (var observer : observers) observer.sample(level, craft);
         if (routes.isEmpty()) return;
-        for (var endpoint : endpoints) {
-            endpoint.remaining = endpoint.limit;
-            endpoint.active = endpoint.config == null || activated(level, craft, endpoint);
-        }
         int size = routes.size(), work = Math.min(ROUTES_PER_TICK, size);
         for (int i = 0; i < work; i++) {
             var route = routes.get((next + i) % size);
             var source = route.source;
             var target = route.target;
+            prepare(level, craft, source);
+            prepare(level, craft, target);
             if (!source.active || !target.active || source.remaining == 0) continue;
             int moved = switch (source.kind) {
                 case POWER -> power(source, target);
@@ -112,6 +108,13 @@ final class NativeVehicleResources {
             source.remaining -= moved;
         }
         next = (next + (work == size ? 1 : work)) % size;
+    }
+
+    private void prepare(ServerLevel level, NativeGroundVehicle craft, Endpoint endpoint) {
+        if (endpoint.budgetTick == tick) return;
+        endpoint.budgetTick = tick;
+        endpoint.remaining = endpoint.limit;
+        endpoint.active = endpoint.config == null || activated(level, craft, endpoint);
     }
 
     private boolean activated(ServerLevel level, NativeGroundVehicle craft, Endpoint endpoint) {
@@ -307,6 +310,7 @@ final class NativeVehicleResources {
         NativeVehicleObservers.Receiver observer;
         IFluidHandler inlet;
         int remaining, energy, itemCursor;
+        long budgetTick = Long.MIN_VALUE;
         boolean active = true;
         FluidStack fluid = FluidStack.EMPTY;
         NonNullList<ItemStack> inventory;
@@ -317,9 +321,10 @@ final class NativeVehicleResources {
             this.config = config;
             this.key = key;
             this.capacity = capacity;
-            originalBytes = cell.tile().sizeInBytes();
+            var raw = cell.tile();
+            originalBytes = raw.sizeInBytes();
             long requested = config == null ? 0 : config.settings().throughput;
-            int legacy = cell.tile().getInt("BatteryLegacyRate");
+            int legacy = raw.getInt("BatteryLegacyRate");
             limit = Math.min(legacy == 0 ? Integer.MAX_VALUE : legacy,
                 (int)Math.min(Integer.MAX_VALUE, requested == 0 ? Integer.MAX_VALUE : requested));
             remaining = limit;

@@ -60,6 +60,7 @@ public final class NativeVehicleTransferChecks {
     private static ServerLevel world;
     private static FakePlayer player;
     private static NativeGroundVehicle craft, stale;
+    private static NativeVehicleResourceFixture transit;
     private static CompoundTag originalActor;
     private static int ticks, stage;
     private static boolean blockedBreak, blockedPlace, faulted, formed;
@@ -145,7 +146,7 @@ public final class NativeVehicleTransferChecks {
             }
             if (faulted || ticks < 12) return;
             if (stage == 0) {
-                if (phase().equals("roundtrip") && !formMaxwell()) return;
+                if (transit != null && (!formMaxwell() || !transit.formed(player))) return;
                 require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
                 if (phase().equals("roundtrip")) {
                     world.noSave = true;
@@ -170,11 +171,16 @@ public final class NativeVehicleTransferChecks {
                 require(world.getBlockState(ROOT.below(2)).is(Blocks.SMOOTH_STONE), "top-slab deck leaves the terrain in place");
                 craft = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
                 requireCarried(craft);
-                originalActor = craft.saveWithoutId(new CompoundTag());
-                craft.setYRot(90);
-                craft.setPos(PARK.getX() + .5, PARK.getY(), PARK.getZ() + .5);
-                movePlayer(PARK);
-                stage = 2;
+                if (transit != null) {
+                    stage = 5;
+                    return;
+                }
+                moveToParking();
+                return;
+            }
+            if (stage == 5) {
+                if (!transit.transferred(craft, player, FUEL_MB)) return;
+                moveToParking();
                 return;
             }
             if (stage == 2) {
@@ -203,7 +209,7 @@ public final class NativeVehicleTransferChecks {
                 if (!stale.isRemoved()) return;
                 require(actors() == 0, "the durable retirement removes a stale actor from its previous chunk");
                 requireInventory(parked(BARREL));
-                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/staleChunkActor");
+                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/RFFluidItemRoutes/surveyScanAndExactDebits/staleChunkActor");
                 return;
             }
             if (NativeCellTransactions.busy(world, PARK, OWNER)) return;
@@ -218,6 +224,7 @@ public final class NativeVehicleTransferChecks {
                 "native barrel facing rotates");
             requireInventory(parked(BARREL));
             requireMaxwellParked();
+            transit.parked(PARK);
             require(!new ChunkPos(ROOT).equals(new ChunkPos(PARK)), "parking crossed to a different entity storage chunk");
             stale = NativeVehicleBindings.VEHICLE.create(world);
             require(stale != null, "native actor factory is available for the stale-record regression");
@@ -277,6 +284,7 @@ public final class NativeVehicleTransferChecks {
             if (!pos.equals(ENGINE)) world.setBlock(pos, shape.frame(x, y, z)
                 ? NativeBuilderFormation.matter().defaultBlockState() : Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         }
+        transit = new NativeVehicleResourceFixture(world, ROOT, ENGINE, fuel);
     }
 
     private static boolean formMaxwell() {
@@ -299,7 +307,7 @@ public final class NativeVehicleTransferChecks {
     private static void requireMaxwellParked() {
         var at = parked(ENGINE);
         var core = (NativeBuilderEntity)world.getBlockEntity(at);
-        require(core.formed() && core.facing() == Direction.EAST && core.maxwellFuel() == FUEL_MB,
+        require(core.formed() && core.facing() == Direction.EAST && core.maxwellFuel() == FUEL_MB + NativeVehicleResourceFixture.FUEL_REFILL,
             "parked native Maxwell preserves its formed state, rotated facing and exact fuel amount");
         var layout = core.layout();
         for (int x = 0; x < layout.width; x++) for (int y = 0; y < layout.height; y++) for (int z = 0; z < layout.depth; z++) {
@@ -307,8 +315,16 @@ public final class NativeVehicleTransferChecks {
                 "rotated Maxwell frame member keeps its unique native owner");
         }
         var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, core.maxwellPort(Direction.EAST), Direction.EAST);
-        require(inlet != null && inlet.getFluidInTank(0).getFluid() == fuel && inlet.getFluidInTank(0).getAmount() == FUEL_MB,
+        require(inlet != null && inlet.getFluidInTank(0).getFluid() == fuel && inlet.getFluidInTank(0).getAmount() == FUEL_MB + NativeVehicleResourceFixture.FUEL_REFILL,
             "rotated front inlet exposes the original fuel identity and no duplicate owner");
+    }
+
+    private static void moveToParking() {
+        originalActor = craft.saveWithoutId(new CompoundTag());
+        craft.setYRot(90);
+        craft.setPos(PARK.getX() + .5, PARK.getY(), PARK.getZ() + .5);
+        movePlayer(PARK);
+        stage = 2;
     }
 
     private static void movePlayer(BlockPos anchor) {
