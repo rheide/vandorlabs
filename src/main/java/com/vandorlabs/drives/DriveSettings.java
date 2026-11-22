@@ -3,7 +3,7 @@ package com.vandorlabs.drives;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
 
-/** Cosmetic drive controls; these machines never supply vehicle propulsion. */
+/** Shared redstone controls for Core-mounted drives. */
 public final class DriveSettings {
     public static final DriveSettings DEFAULT=new DriveSettings(false,false,1,8);
     public final boolean levels,inverted;public final int particles,threshold;

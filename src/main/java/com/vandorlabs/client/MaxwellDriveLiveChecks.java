@@ -30,8 +30,8 @@ final class MaxwellDriveLiveChecks {
     private static final BlockPos CONTACT = LARGE.east(8).up(7);
     private static final double X = CONTACT.getX() + .5, Z = CONTACT.getZ() - 2.5;
     private static final LiveGallery GALLERY = new LiveGallery("shot_maxwell", ROOT)
-            .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
             .shot("afterburner-rear", 4.8, 2.7, 7.5, 149, 22)
+            .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
             .shot("scaled-inlets", 20, 7, -8, -37, 21);
     private static Future<?> setup;
     private static int stage, ticks;
