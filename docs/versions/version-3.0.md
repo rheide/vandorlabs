@@ -17,6 +17,8 @@ Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to set 
 
 Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The instruments show altitude during cruise and omit ground clearance.
 
+![Seed-colored coastlines viewed from a Pilot Seat above the Overworld](../images/gallery/maxwell-overworld-cruise.png)
+
 Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 50 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling. The craft descends until its thrust can support flight again.
 
 One full 3 × 3 × 4 drive supports 512 effective weight units at takeoff. Larger drives scale by volume. Above Y=256, multiply the takeoff thrust requirement by `1 + 24 × (Y − 256) / (100,000 − Y)`. For example, twice the takeoff thrust reaches about **Y=4,246**. Reaching **Y=10,000** takes about **3.60 times** the takeoff thrust.
