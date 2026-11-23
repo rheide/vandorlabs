@@ -3,7 +3,7 @@ package com.vandorlabs.persistence;
 import net.minecraft.nbt.NBTTagCompound;
 
 /** Forge 1.12.2 adapter for the portable primitive save codec. */
-public final class NbtPrimitiveData implements HousingTags, ControlLatchData.Tag, com.vandorlabs.screen.ScreenArtworkMigration.Tag {
+public final class NbtPrimitiveData implements com.vandorlabs.copier.core.CopyChannelFields.Tag {
     private final NBTTagCompound tag;
 
     public NbtPrimitiveData(NBTTagCompound tag) {

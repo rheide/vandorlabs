@@ -2,6 +2,7 @@
 
 ## 3.0.0 (in development)
 
+- Fix the Forge Copy Controller channel increment for built-in transmitters including Tanks and Thruster Levers, cockpit channel banks, installed Autopilot modules, and stored Arm sections.
 - Blend native Overworld terrain into the Forge seed view from Y=256 to Y=512. High-altitude descent sheds excess speed through this band. Seed-view water occludes the stars.
 
 - Count upright wheels on settled side-mounted swing arms as landing supports. Taxi and ordinary Park use the same tire contact at the runway surface.

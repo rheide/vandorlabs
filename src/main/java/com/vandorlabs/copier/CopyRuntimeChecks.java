@@ -2,6 +2,13 @@ package com.vandorlabs.copier;
 
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.RedstoneChannelMember;
+import com.vandorlabs.redstone.TransmitterSlots;
+import com.vandorlabs.tiles.TileEntityBattery;
+import com.vandorlabs.tiles.TileEntityHexTank;
+import com.vandorlabs.tiles.TileEntityModuleRack;
+import com.vandorlabs.rack.AutopilotModuleSettings;
+import com.vandorlabs.rack.ModuleAutopilotData;
 import com.vandorlabs.tiles.DeferredTileLoad;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.block.*;
@@ -60,8 +67,60 @@ public final class CopyRuntimeChecks {
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector source=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(f.source());source.setRedstoneChannels(ChannelList.of(channel));NBTTagCompound before=source.writeToNBT(new NBTTagCompound());f.copy();
             require(!f.tile.busy()&&CopyTransactions.pendingCount(world)==0,"high-ID copy retires actual async journal");require(world.getTileEntity(f.source())==source&&source.writeToNBT(new NBTTagCompound()).equals(before),"high-ID copy leaves original owner exact");
             require(world.getTileEntity(f.target()) instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector,"high-ID target factory");com.vandorlabs.tiles.TileEntityAnimatedScreenSelector target=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(f.target());require(target.getRedstoneChannels().equals(ChannelList.of(channel+1)),"actual published high-ID copy channel "+channel);NBTTagCompound saved=target.writeToNBT(new NBTTagCompound());com.vandorlabs.tiles.TileEntityAnimatedScreenSelector restored=new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);require(restored.getRedstoneChannels().equals(target.getRedstoneChannels()),"high-ID copied tile save/read exact");
-        }}finally{CopyTransactions.fault=null;actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(at.x,at.y,at.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}
+        }
+        configuredBanks(world,actor,base);
+        }finally{CopyTransactions.fault=null;actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(at.x,at.y,at.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}
         System.out.println("[vandorlabs][reprolab] copy-channel-range-live PASS assertions="+assertions+" 65535/67002/MAXminus1 actualQueuedJournal/publish/sourceExact/saveRead");
+    }
+    /** Exercise independent receiver and transmitter settings after real journal publication. */
+    private static void configuredBanks(WorldServer world,EntityPlayerMP actor,BlockPos base)throws Exception{
+        Fixture f=new Fixture(world,actor,base,EnumFacing.NORTH,2);
+        int delta=23;
+        f.tile.settings(1,delta,0,ChannelList.EMPTY);
+        String[] ids={"hexagonal_fuel_tank","thruster_lever","battery_block","module_rack"};
+        BlockPos[] positions=new BlockPos[ids.length];
+        for(int i=0;i<ids.length;i++){
+            positions[i]=f.tile.input.cell(i%2,i/2,1);
+            world.setBlockState(positions[i],block(ids[i]).getDefaultState(),2);
+        }
+        DeferredTileLoad.flush(world);
+        ChannelList receive=ChannelList.of(3001,3101);
+        TileEntityBattery battery=(TileEntityBattery)world.getTileEntity(positions[2]);
+        battery.configure(battery.settings(),1,receive);
+        TileEntityModuleRack rack=(TileEntityModuleRack)world.getTileEntity(positions[3]);
+        ItemStack module=new ItemStack(com.vandorlabs.items.ModItems.AUTOPILOT_MODULE);
+        ModuleAutopilotData.configure(module,new AutopilotModuleSettings(receive,1,"minecraft:concrete",0));
+        require(rack.insertModule(1,module,true),"real autopilot installed");
+        for(int i=0;i<ids.length;i++){
+            RedstoneChannelMember source=output(world.getTileEntity(positions[i]));
+            TransmitterSlots.configure(source,ChannelList.of(1101+i,2101+i),32,false);
+        }
+        CopyPlan plan=f.plan();
+        f.copy();
+        require(f.tile.error.isEmpty()&&!f.tile.busy(),"mixed-bank copy published "+f.tile.error);
+        for(int i=0;i<ids.length;i++){
+            BlockPos target=plan.targetOrigin.add(positions[i].subtract(plan.sourceOrigin));
+            TileEntity published=world.getTileEntity(target);
+            require(published!=null&&world.getBlockState(target).getBlock()==block(ids[i]),"published "+ids[i]);
+            TileEntity reloaded=TileEntity.create(world,published.writeToNBT(new NBTTagCompound()));
+            for(TileEntity tile:Arrays.asList(published,reloaded)){
+                RedstoneChannelMember port=output(tile);
+                require(port.transmittedChannels().equals(ChannelList.of(1101+i+delta,2101+i+delta))
+                        &&port.transmissionRange()==32&&!TransmitterSlots.localRedstone(tile),"published and reloaded output "+ids[i]);
+                if(i==1)require(port.getRedstoneChannels().equals(port.transmittedChannels()),"lever latch agrees with its transmitter");
+                if(i==2)require(((TileEntityBattery)tile).getRedstoneChannels().equals(ChannelList.of(3024,3124)),"independent battery input");
+                if(i==3)require(((TileEntityModuleRack)tile).moduleSettings(1).channels.equals(ChannelList.of(3024,3124)),"installed module input");
+            }
+            require(output(world.getTileEntity(positions[i])).transmittedChannels().equals(ChannelList.of(1101+i,2101+i)),"original output "+ids[i]);
+        }
+        require(battery.getRedstoneChannels().equals(receive)&&rack.moduleSettings(1).channels.equals(receive),"original input banks");
+        System.out.println("[vandorlabs][reprolab] copy-installed-channels PASS Tank ThrusterLever Battery ModuleRack published/reloaded independent receive/transmit");
+    }
+    private static RedstoneChannelMember output(TileEntity tile){
+        if(tile instanceof TileEntityHexTank)return ((TileEntityHexTank)tile).fullnessOutput;
+        if(tile instanceof TileEntityBattery)return ((TileEntityBattery)tile).fullnessOutput;
+        if(tile instanceof TileEntityModuleRack)return ((TileEntityModuleRack)tile).output;
+        return (RedstoneChannelMember)tile;
     }
     public static void transmitterOwnershipFocus(WorldServer world,EntityPlayerMP actor)throws Exception{BlockPos base=new BlockPos(2260,110,2100);boolean creative=actor.capabilities.isCreativeMode;net.minecraft.util.math.Vec3d position=actor.getPositionVector();try{transmitterOwnership(world,actor,base);}finally{actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(position.x,position.y,position.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}}
     private static void transmitterOwnership(WorldServer world,EntityPlayerMP actor,BlockPos base)throws Exception{
