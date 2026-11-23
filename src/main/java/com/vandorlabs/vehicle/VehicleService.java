@@ -314,7 +314,7 @@ public final class VehicleService {
                 require(player.getDistanceSq(controllerPoint.x,controllerPoint.y,controllerPoint.z)<=64,"Move closer to the Vehicle Controller.");permission(player,new BlockPos(controllerPoint));
                 require(VehicleRotation.turns(preview.entity.rotationYaw)==preview.turns,"Craft rotated; inspect it again.");
                 validateParking(player,preview.entity,preview.origin,true);
-                require(preview.entity.structure==preview.structure,"Craft changed; inspect it again.");
+                require(preview.structure.sameParkingPreview(preview.entity.structure),"Craft changed; inspect it again.");
                 VehicleTransfer.park(preview.world,preview.entity,preview.origin,player);
             } else {
                 require(preview.structure.hasDedicatedController() && player.getDistanceSqToCenter(preview.origin.add(preview.selected))<=64,"Move closer to the Vehicle Controller.");
