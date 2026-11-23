@@ -62,18 +62,32 @@ public final class CruiseRuntimeChecks {
             final int side=12, x=mc.displayWidth/4, y=mc.displayHeight*3/5;
             java.nio.ByteBuffer dark=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
             java.nio.ByteBuffer bright=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
+            java.nio.ByteBuffer background=org.lwjgl.BufferUtils.createByteBuffer(4);
+            // Shader packs can draw to a different FBO from the current pixel read target.
+            int previousRead=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER_BINDING);
+            int drawing=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+            org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER,drawing);
+            int previousBuffer=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_READ_BUFFER);
             org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_SCISSOR_BIT|org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
             try{
                 org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
                 org.lwjgl.opengl.GL11.glScissor(x,y,side,side);
+                org.lwjgl.opengl.GL11.glReadBuffer(org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL20.GL_DRAW_BUFFER0));
                 for(int pass=0;pass<2;pass++){
                     org.lwjgl.opengl.GL11.glClearColor(pass,0,pass,1);
                     org.lwjgl.opengl.GL11.glClear(org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
+                    org.lwjgl.opengl.GL11.glReadPixels(x,y,1,1,org.lwjgl.opengl.GL11.GL_RGBA,
+                            org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,background);
+                    require(Math.abs((background.get(0)&255)-255*pass)<=2,"cannot read the active cruise color buffer");
                     CruiseSky.render(event);
                     org.lwjgl.opengl.GL11.glReadPixels(x,y,side,side,org.lwjgl.opengl.GL11.GL_RGBA,
                             org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,pass==0?dark:bright);
                 }
-            }finally{org.lwjgl.opengl.GL11.glPopAttrib();}
+            }finally{
+                org.lwjgl.opengl.GL11.glPopAttrib();
+                org.lwjgl.opengl.GL11.glReadBuffer(previousBuffer);
+                org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER,previousRead);
+            }
             int largest=0;
             for(int i=0;i<dark.capacity();i++)if(i%4!=3)
                 largest=Math.max(largest,Math.abs((dark.get(i)&255)-(bright.get(i)&255)));
