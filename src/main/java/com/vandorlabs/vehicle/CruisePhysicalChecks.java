@@ -45,6 +45,8 @@ final class CruisePhysicalChecks {
     private static double lastCraftX=Double.NaN,firstArrivalY;
     private static int smoothSamples, mountedArrivalTicks;
     private static long exitTick;
+    private static double maximumWaypointMismatch;
+    private static int firstTerrainTick=-1,firstDescentTick=-1;
 
     private CruisePhysicalChecks() {}
     static boolean enabled(){return ENABLED;}
@@ -238,6 +240,16 @@ final class CruisePhysicalChecks {
         EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
         double delta=local.posX-lastCraftX;
         if(delta>.25&&delta<STEP*1.6)smoothSamples++;
+        if(System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null){
+            net.minecraft.client.renderer.entity.RenderManager camera=mc.getRenderManager();
+            net.minecraft.util.math.Vec3d position=mc.player.getPositionVector();
+            double separation=Math.abs(camera.viewerPosX-position.x);
+            if(separation<STEP*2)maximumWaypointMismatch=Math.max(maximumWaypointMismatch,separation);
+            net.minecraft.util.math.Vec3d origin=com.vandorlabs.client.CruiseMapView.beaconOrigin(position);
+            require(origin.x==camera.viewerPosX && origin.z==camera.viewerPosZ
+                    && origin.y==com.vandorlabs.client.CruiseMapView.y(camera.viewerPosY),
+                    "distant waypoint clamp and render translation share the interpolated client camera");
+        }
         lastCraftX=local.posX;
     }
 
@@ -275,11 +287,15 @@ final class CruisePhysicalChecks {
             "the destination is loaded and the route midpoint is still absent");
         System.out.println("[vandorlabs][cruise-arrival] mode="+MODE+" exit="+EXIT+" arrivalX="+arrivalX+
             " midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" serverTicks="+(world.getTotalWorldTime()-exitTick)
-            +" smoothSamples="+smoothSamples);
+            +" smoothSamples="+smoothSamples+" firstTerrainClientTick="+firstTerrainTick
+            +" firstDescentClientTick="+firstDescentTick+" previousBeaconOriginMismatch="+maximumWaypointMismatch);
     }
 
     private static boolean clientExitSettled(Minecraft mc){
         if("teleport".equals(EXIT))return !mc.player.isRiding()&&Math.abs(mc.player.posX-startX)<2&&mc.player.posY<120;
+        int arrivalColumn=(int)Math.floor(arrivalX/16), arrivalRow=(int)Math.floor(startZ/16);
+        if(firstTerrainTick<0&&mc.world.getChunkProvider().getLoadedChunk(arrivalColumn,arrivalRow)!=null)
+            firstTerrainTick=wait;
         if(mc.player.posY>=550)return false;
         require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"actual client kept the mounted craft at reentry");
         EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
@@ -291,6 +307,7 @@ final class CruisePhysicalChecks {
         require(local.addedToChunk&&local.isAddedToWorld()&&mc.world.getEntityByID(local.getEntityId())==local
             &&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
         if(mountedArrivalTicks++==0){
+            firstDescentTick=wait;
             firstArrivalY=local.posY;
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=18;
