@@ -3,6 +3,8 @@
 ## 3.0.0 (in development)
 
 - Walk on a moving Forge aircraft’s deck with Sprint + Sneak in powered Flight. The aircraft levels out while the pilot walks. Press the same keys to take the controls again.
+- Keep the full width and diagonal of the Shallow screen when lowering its casing by two pixels. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
+- Project a transparent flight HUD on the canopy windshield. The short rear roof of a Long Angled canopy uses the Side glass finish.
 
 - Recover completed parking after a drive burns fuel or controls change. A conflicting hull edit protects the affected area while nearby independent vehicles can still enter Taxi or Hover.
 
@@ -24,7 +26,7 @@
 - Raise Forge Hover ascent and descent to 8.4 blocks per second.
 - On Forge, show cruise coordinates and waypoints in JourneyMap, start preparing the seed view at Y=200, and interpolate the ground view and geographic map position between route updates. Independently cached near and distant seed tiles show finer ground and a wider horizon. Rain and snow stop above the build ceiling. Selecting a manual Taxi or Hover transition above Y=256 displays a descent reminder.
 - Stretch a single texture across side-by-side Canopies or Long Canopies.
-- Choose anchored, resident-only, or continuous physical X/Z cruise in the Forge server config. Anchored cruise is the default. A solo pilot can use physical mode to fly and operate the cockpit at the geographic coordinates shown by F3. Normal descent restores terrain at the destination.
+- Choose anchored or continuous physical X/Z cruise in the Forge server config. Anchored cruise is the default. A solo pilot can use physical mode to fly and operate the cockpit at the geographic coordinates shown by F3. Normal descent restores terrain at the destination.
 - Teleporting through JourneyMap or a vanilla command releases the rider. When the last pilot leaves, the craft lands at the surface beneath its geographic position.
 - Supply onboard engines and observers through Thermal Dynamics, Mekanism and Galacticraft conduits. Route RF, fluids or items through settled Arm endpoints.
 - On Vehicle Status, select Park, Taxi, Hover or Flight from a two-row grid. Unavailable modes are gray and fuel stays within the screen.
