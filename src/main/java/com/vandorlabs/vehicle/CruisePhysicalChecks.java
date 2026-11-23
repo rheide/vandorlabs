@@ -215,6 +215,10 @@ final class CruisePhysicalChecks {
         if("descend".equals(EXIT)) {
             require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"descend through the build ceiling");
             require(pilot.getRidingEntity()==craft,"descent preserves the mounted pilot");
+            int cx=(int)Math.floor(destination/16),cz=(int)Math.floor(startZ/16);
+            for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
+                require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,x,z),
+                    "the arrival footprint was delivered to the pilot before releasing high flight at "+x+","+z);
         }else if("teleport".equals(EXIT)) {
             int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
                 "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);
