@@ -45,7 +45,7 @@ final class VehicleFlightClientChecks {
     private static int stage,frame,total,settled,impactWallZ,inversionShot;
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
     private static float steepPitch,rollTravel,previousBank,heldBank;
-    private static double limitedCeiling,limitedX,limitedZ,glideZ;
+    private static double limitedCeiling,limitedX,limitedZ,glideZ,landingX,landingZ;
     private static boolean sawInversion,sawLimitedDescent,sawGlideTravel;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
@@ -69,7 +69,7 @@ final class VehicleFlightClientChecks {
         player.setSneaking(false);
         player.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
         for(int x=-16;x<=16;x+=16)for(int z=-112;z<=16;z+=16)world.getChunkFromBlockCoords(ORIGIN.add(x,0,z));
-        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-780),ORIGIN.add(23,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
+        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-88),ORIGIN.add(23,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(int x=1;x<=3;x++)for(int z=0;z<=4;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,z),Blocks.STONE.getDefaultState(),null));
         cells.removeIf(cell->cell.pos.equals(SEAT));
@@ -182,7 +182,10 @@ final class VehicleFlightClientChecks {
         if(stage==3&&frame>=13){
             if((!craft.flying()||craft.flightPitch()<=5||craft.posY<=runwayY+.7)&&frame<60)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
-            need(craft.flying()&&craft.flightPitch()>5&&craft.posY>runwayY+.7,"S pitches up and takes off from Taxi");
+            if(!craft.flying()||craft.flightPitch()<=5||craft.posY<=runwayY+.7){
+                String actual=mc.getIntegratedServer().callFromMainThread(()->flightState(server(mc))).get();
+                need(false,"S pitches up and takes off from Taxi; client "+flightState(craft)+" server "+actual);
+            }
             climbY=craft.posY;
             next();return false;
         }
@@ -310,6 +313,8 @@ final class VehicleFlightClientChecks {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
+                for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-2,-1,-630),ORIGIN.add(15,-1,-89)))
+                    world(mc).setBlockState(pos,Blocks.STONE.getDefaultState(),2);
                 moveCruise(actual,ORIGIN.getX()-actual.cruise.x(),259-actual.flightAltitude(),ORIGIN.getZ()-actual.cruise.z());
                 actual.driveSpeed=1.5;glideZ=actual.cruise.z();
                 need(((TileEntityConstructor)actual.view.getTileEntity(DRIVE)).purgeMaxwell(),"empty Maxwell tank during cruise");
@@ -337,8 +342,8 @@ final class VehicleFlightClientChecks {
                 configureAnalog(engine,false,0);
                 need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,
                         "refuel the real carried Maxwell for the impact sortie");
-                actual.rotationYaw=0;
-                actual.setPosition(ORIGIN.getX(),runwayY,ORIGIN.getZ());
+                landingX=actual.posX;
+                landingZ=actual.posZ;
             }).get();
             next();return false;
         }
@@ -371,9 +376,9 @@ final class VehicleFlightClientChecks {
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 actual.rotationYaw=0;
-                actual.setPosition(ORIGIN.getX(),runwayY+9,ORIGIN.getZ()-10);
-                impactWallZ=ORIGIN.getZ()-28;
-                for(BlockPos at:BlockPos.getAllInBox(new BlockPos(ORIGIN.getX()-3,runwayY,impactWallZ),new BlockPos(ORIGIN.getX()+20,runwayY+28,impactWallZ)))
+                actual.setPosition(landingX,runwayY+9,landingZ-10);
+                impactWallZ=MathHelper.floor(landingZ)-28;
+                for(BlockPos at:BlockPos.getAllInBox(new BlockPos(landingX-3,runwayY,impactWallZ),new BlockPos(landingX+20,runwayY+28,impactWallZ)))
                     world(mc).setBlockState(at,Blocks.STONE.getDefaultState(),2);
             }).get();
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),true);
@@ -428,6 +433,11 @@ final class VehicleFlightClientChecks {
     private static void shot(Minecraft mc,File output,String name)throws Exception{
         javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                 "png",new File(output,name));
+    }
+
+    private static String flightState(EntityGroundVehicle craft){
+        return "roll="+craft.takeoffRoll()+" flight="+craft.flying()+" recovery="+craft.descendingFromFlight()
+                +" pitch="+craft.flightPitch()+" bank="+craft.flightBank()+" speed="+craft.driveSpeed+" pos="+craft.getPositionVector();
     }
 
     private static String measurements(VehicleFlightReadout readout){
