@@ -42,7 +42,7 @@ final class CruisePhysicalChecks {
     private static Future<?> work;
     private static int stage, wait, steps, startingTicks;
     private static double startX,startZ,remoteX,arrivalX;
-    private static double lastCraftX=Double.NaN;
+    private static double lastCraftX=Double.NaN,firstArrivalY;
     private static int smoothSamples, mountedArrivalTicks;
     private static long exitTick;
 
@@ -114,7 +114,8 @@ final class CruisePhysicalChecks {
                 if("descend".equals(EXIT)) {
                     javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(
                         mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"cruise-arrival-"+MODE+".png"));
-                    work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::verifyArrival);
+                    double clientY=mc.player.getRidingEntity().posY;
+                    work=mc.getIntegratedServer().addScheduledTask(()->verifyArrival(clientY));
                 }
                 advance(5);
             } else if(wait%40==0) {
@@ -257,8 +258,10 @@ final class CruisePhysicalChecks {
         }else throw new IllegalStateException("Unknown cruise exit: "+EXIT);
     }
 
-    private static void verifyArrival(){
+    private static void verifyArrival(double clientY){
         require(pilot.getRidingEntity()==craft&&craft.posY<256,"descent continues underneath the ceiling with pilot aboard");
+        require(Math.abs(clientY-craft.posY)<4,"server and visible aircraft continue through the same descent");
+        require(world.getTotalWorldTime()-exitTick<120,"reentry keeps updating the client promptly");
         int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
         for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
             require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,x,z),"arrival footprint delivered at "+x+","+z);
@@ -285,12 +288,14 @@ final class CruisePhysicalChecks {
         int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
         for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
             require(mc.world.getChunkProvider().getLoadedChunk(x,z)!=null,"arrival terrain present on first client descent frame "+x+","+z);
-        require(local.addedToChunk&&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
+        require(local.addedToChunk&&local.isAddedToWorld()&&mc.world.getEntityByID(local.getEntityId())==local
+            &&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
         if(mountedArrivalTicks++==0){
+            firstArrivalY=local.posY;
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=18;
         }
-        return mountedArrivalTicks>=20&&local.posY<256;
+        return mountedArrivalTicks>=20&&local.posY<256&&local.posY<firstArrivalY-.5;
     }
 
     private static boolean generated(double x,double z){

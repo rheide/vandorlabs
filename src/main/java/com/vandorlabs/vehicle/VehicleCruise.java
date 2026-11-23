@@ -29,7 +29,8 @@ public final class VehicleCruise {
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
-    private CruiseArrival arrival;
+    private CruiseArrival arrival,resident;
+    private int residentSince;
     private MessageCruiseTerrain pending, published;
     private final java.util.Set<EntityPlayerMP> viewers = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     private int nextPixel, publishedX, publishedZ, publishedStep;
@@ -74,7 +75,8 @@ public final class VehicleCruise {
             VehiclePose pose=new VehiclePose(routeX,craft.posY,routeZ,yaw,pitch,bank,craft.structure.facing);
             AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
                 routeX-craft.posX,0,routeZ-craft.posZ));
-            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1));
+            closeResident();
+            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1),true);
             craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
             return finishArrival(yaw,pitch,bank);
         }
@@ -86,6 +88,7 @@ public final class VehicleCruise {
                 && CruiseTracking.ready(craft);
         if(!cruising)relocate(craft.posX,SKY_OFFSET+height,craft.posZ);
         if(physical) {
+            closeResident();
             if(!projected()) {
                 projection(true);
                 craft.snapPosition(routeX,SKY_OFFSET+height,routeZ,craft.rotationYaw);
@@ -94,12 +97,38 @@ public final class VehicleCruise {
         } else if(projected()) {
             projection(false);
             relocate(anchorX,SKY_OFFSET+height,anchorZ,true);
-        } else if(residentHop) {
-            relocate(routeX,SKY_OFFSET+height,routeZ,true);
-            anchor(routeX,routeZ);
-        } else if(cruising) craft.setPosition(craft.posX,SKY_OFFSET+height,craft.posZ);
+        } else if(cruising&&!moveToResident(residentHop,SKY_OFFSET+height,yaw,pitch,bank))
+            craft.setPosition(craft.posX,SKY_OFFSET+height,craft.posZ);
         updateTerrain(routeX, routeZ, height);
         return true;
+    }
+
+    private boolean moveToResident(boolean candidate,double y,float yaw,float pitch,float bank) {
+        if(resident==null) {
+            if(!candidate)return false;
+            VehiclePose target=new VehiclePose(routeX,y,routeZ,yaw,pitch,bank,craft.structure.facing);
+            AxisAlignedBB hull=craft.flightBounds(target).union(craft.getEntityBoundingBox().offset(
+                routeX-craft.posX,0,routeZ-craft.posZ));
+            resident=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1),false);
+            residentSince=craft.ticksExisted;
+        }
+        if(craft.ticksExisted-residentSince>20||!CruiseResidentReanchor.footprintReady(
+                craft,resident.x,y,resident.z,yaw,pitch,bank)) {
+            closeResident();
+            return false;
+        }
+        VehiclePose target=new VehiclePose(resident.x,y,resident.z,yaw,pitch,bank,craft.structure.facing);
+        if(!resident.ready(craft,target))return false;
+        anchor(resident.x,resident.z);
+        relocate(resident.x,y,resident.z,true,true);
+        closeResident();
+        return true;
+    }
+
+    private void closeResident() {
+        if(resident==null)return;
+        resident.close();
+        resident=null;
     }
 
     private boolean finishArrival(float yaw,float pitch,float bank) {
@@ -122,6 +151,7 @@ public final class VehicleCruise {
     }
 
     void cancelArrival() {
+        closeResident();
         if(arrival==null)return;
         arrival.close();
         arrival=null;
@@ -170,7 +200,7 @@ public final class VehicleCruise {
         relocate(x,y,z,moveWatches,false);
     }
 
-    private void relocate(double x,double y,double z,boolean moveWatches,boolean arrival) {
+    private void relocate(double x,double y,double z,boolean moveWatches,boolean handoff) {
         // The spatial index unions previous/current render bounds. A teleport has no swept path.
         craft.prevPosX = craft.lastTickPosX = x;
         craft.prevPosY = craft.lastTickPosY = y;
@@ -179,13 +209,13 @@ public final class VehicleCruise {
         craft.view.origin = new BlockPos(craft);
         WorldServer world=(WorldServer)craft.world;
         if (moveWatches) world.updateEntityWithOptionalForce(craft,false);
-        if(arrival) {
-            // Destination chunks have already been sent. Move the client craft out of its
-            // old chunk before updateMovingPlayer queues the old column's unload packet.
+        if(handoff) {
+            // Move the client craft out of its old chunk before updateMovingPlayer
+            // queues unload packets. The destination origin must arrive first.
             SPacketEntityMetadata metadata=new SPacketEntityMetadata(craft.getEntityId(),craft.getDataManager(),true);
             for(Entity rider:craft.getPassengers())if(rider instanceof EntityPlayerMP)
                 ((EntityPlayerMP)rider).connection.sendPacket(metadata);
-            VehicleNetwork.state(craft);
+            VehicleNetwork.state(craft,true);
         }
         for (Entity rider : craft.getPassengers()) {
             craft.updatePassenger(rider);

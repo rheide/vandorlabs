@@ -119,6 +119,10 @@ public final class TrackingPacketChecks {
         state.associationGeneration = new UUID(789, 123);
         need(encode(state).length == 103, "scoped state wire format unchanged");
         send(state, watchers("driver", "passenger", "observer"), riders);
+        state.reindex = true;
+        need(encode(state).length == 107, "a scoped cruise handoff adds four bytes only at the transition");
+        send(state, watchers("driver", "observer"), riders);
+        state.reindex = false;
         for (int type : new int[] {VehicleNetwork.DOORS, VehicleNetwork.CANOPIES, VehicleNetwork.TILE}) {
             VehicleNetwork.Packet packet = new VehicleNetwork.Packet(type);
             packet.entity = state.entity;

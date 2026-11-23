@@ -23,10 +23,14 @@ final class CruiseResidentReanchor {
     private CruiseResidentReanchor() {}
 
     static boolean ready(EntityGroundVehicle craft,double destinationX,double destinationY,double destinationZ,float yaw,float pitch,float bank) {
-        if (!BlockAvailability.reanchorResidentCruise() || craft.ticksExisted % INTERVAL != 0
-            || !(craft.world instanceof WorldServer) || !(craft.getControllingPassenger() instanceof EntityPlayerMP)) return false;
+        return craft.ticksExisted%INTERVAL==0&&footprintReady(craft,destinationX,destinationY,destinationZ,yaw,pitch,bank);
+    }
+
+    static boolean footprintReady(EntityGroundVehicle craft,double destinationX,double destinationY,double destinationZ,float yaw,float pitch,float bank) {
+        if(!BlockAvailability.reanchorResidentCruise()||!(craft.world instanceof WorldServer)
+            ||!(craft.getControllingPassenger() instanceof EntityPlayerMP))return false;
         double dx=destinationX-craft.posX, dz=destinationZ-craft.posZ;
-        if (dx*dx+dz*dz<DISTANCE*DISTANCE) return false;
+        if(dx*dx+dz*dz<DISTANCE*DISTANCE)return false;
         WorldServer world=(WorldServer)craft.world;
         if (Access.CHUNKS==null || Access.VIEW==null) return false;
         try {
@@ -53,6 +57,15 @@ final class CruiseResidentReanchor {
         } catch (ReflectiveOperationException | RuntimeException incompatible) {
             return false;
         }
+    }
+
+    static Chunk loaded(WorldServer world,int x,int z) {
+        if(Access.CHUNKS==null)return null;
+        try {
+            @SuppressWarnings("unchecked")
+            Long2ObjectMap<Chunk> chunks=(Long2ObjectMap<Chunk>)Access.CHUNKS.get(world.getChunkProvider());
+            return resident(chunks,x,z)?chunks.get(ChunkPos.asLong(x,z)):null;
+        } catch(ReflectiveOperationException|RuntimeException incompatible) {return null;}
     }
 
     private static boolean resident(Long2ObjectMap<Chunk> loaded,int x,int z) {
