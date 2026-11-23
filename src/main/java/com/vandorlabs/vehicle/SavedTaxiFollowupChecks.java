@@ -66,12 +66,15 @@ public final class SavedTaxiFollowupChecks {
         return assemble(world,actor,controller,null);
     }
     private static EntityGroundVehicle assemble(WorldServer world,EntityPlayerMP actor,BlockPos controller,Runnable change)throws Exception{
+        return assemble(world,actor,controller,change,1);
+    }
+    static EntityGroundVehicle assemble(WorldServer world,EntityPlayerMP actor,BlockPos controller,Runnable change,int requestedMode)throws Exception{
         actor.setPosition(controller.getX()+3.5,controller.getY()+3,controller.getZ()+3.5);
         Class<?> type=Class.forName("com.vandorlabs.vehicle.VehicleService$Job");Constructor<?> constructor=type.getDeclaredConstructor(EntityPlayerMP.class,BlockPos.class);constructor.setAccessible(true);Object job=constructor.newInstance(actor,controller);
         Field scanField=type.getDeclaredField("scan");scanField.setAccessible(true);VehicleScan scan=(VehicleScan)scanField.get(job);
         while(!scan.step(256)){}require(scan.error==null&&scan.result!=null,"exact saved scan: "+scan.error);
         for(String field:new String[]{"signal","screen"}){Field value=type.getDeclaredField(field);value.setAccessible(true);value.setBoolean(job,true);}
-        Field mode=type.getDeclaredField("requestedMode");mode.setAccessible(true);mode.setInt(job,1);
+        Field mode=type.getDeclaredField("requestedMode");mode.setAccessible(true);mode.setInt(job,requestedMode);
         Method action=VehicleService.class.getDeclaredMethod("assembleSignal",type);action.setAccessible(true);Exception[] error={null};
         NBTTagCompound[] changedSource={null};boolean[] changed={false};NBTTagCompound before=scan.result.write();List<EntityPainting> paintings=VehiclePaintings.attached(world,scan.result,scan.origin);
         try{VehicleTransferRuntimeChecks.slowDisk(world,()->VehicleTransfer.submit(world,scan.result,scan.origin,()->{

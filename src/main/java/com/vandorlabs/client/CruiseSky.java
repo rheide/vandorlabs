@@ -170,7 +170,7 @@ public final class CruiseSky {
         double physicalZ=owner.lastTickPosZ+partial*(owner.posZ-owner.lastTickPosZ);
         double physicalY=owner.lastTickPosY+partial*(owner.posY-owner.lastTickPosY);
         double altitude=owner.cruise.altitude()+physicalY-owner.posY;
-        double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude);
+        double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude,owner.cruise.handoffAltitude());
         if(opacity<=0)return 0;
         boolean earlyBlend=opacity<.8;
         if(mask)opacity=1;

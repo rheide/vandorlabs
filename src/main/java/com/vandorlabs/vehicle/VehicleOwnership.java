@@ -16,6 +16,10 @@ public final class VehicleOwnership {
         if(ledger==null){Path file=path(w);if(Files.exists(file))try(InputStream in=Files.newInputStream(file)){ledger=CompressedStreamTools.readCompressed(in);}else ledger=new NBTTagCompound();ledgers.put(w,ledger);}
         return ledger;
     }
+    static boolean retired(WorldServer world,UUID id)throws IOException {
+        NBTTagCompound entry=ledger(world).getCompoundTag(id.toString());
+        return entry.hasKey("Active",1)&&!entry.getBoolean("Active")&&entry.getLong("Epoch")>0;
+    }
     public static long update(WorldServer w,UUID id,long atLeast,boolean active)throws IOException {
         Long prepared=VehicleTransfer.preparedOwnership(w,id,active);if(prepared!=null)return prepared;
         Update update=prepare(w,id,atLeast,active);update.write();update.publish(w);return update.epoch;

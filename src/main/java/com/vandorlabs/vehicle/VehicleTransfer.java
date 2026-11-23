@@ -92,7 +92,11 @@ public final class VehicleTransfer {
         }
         public void close(){for(TileEntity tile:tiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);if(!tile.isInvalid()&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile&&!world.tickableTileEntities.contains(tile))world.tickableTileEntities.add(tile);}tiles.clear();}
     }
+    private static final Map<WorldServer,List<VehicleRecoveryArea>> CONFLICTS=new WeakHashMap<>();
+    private static final Set<WorldServer> UNKNOWN=Collections.newSetFromMap(new WeakHashMap<WorldServer,Boolean>());
+    private static final Set<WorldServer> RECOVER_NEXT=Collections.newSetFromMap(new WeakHashMap<WorldServer,Boolean>());
     static void unload(WorldServer world){
+        CONFLICTS.remove(world);UNKNOWN.remove(world);RECOVER_NEXT.remove(world);
         ArrayDeque<Work> queue=WORK.remove(world);if(queue==null)return;
         // Do not wait for disk on unload. An unfinished durable record is recovered
         // on the next load, including a write already queued on the I/O worker.
@@ -140,6 +144,7 @@ public final class VehicleTransfer {
     }
     /** At most one affected chunk is serialized per tick; disk waits never run on this thread. */
     static void tick(WorldServer world){
+        if(RECOVER_NEXT.remove(world))try{recover(world);}catch(Exception failure){com.vandorlabs.VandorLabs.logger.error("Vehicle recovery retained after checkpoint failure",failure);}
         ArrayDeque<Work> queue=WORK.get(world);if(queue==null||queue.isEmpty())return;Work work=queue.peek();
         if(!TransferCoordinator.acquire(world,work))return;
         try{
@@ -175,7 +180,7 @@ public final class VehicleTransfer {
             ACTIVE.remove();
             if(work.rollbackNotice){work.rollbackNotice=false;work.failed.accept(failure);return;}
             if(work.aborting){com.vandorlabs.VandorLabs.logger.error("Vehicle transfer cleanup failed; recovery journal retained",failure);release(work);queue.remove();return;}
-            if(work.committed||work.mutated){com.vandorlabs.VandorLabs.logger.error("Vehicle checkpoint failed; craft held and recovery journal retained",failure);work.failed.accept(new IOException("Vehicle checkpoint failed; craft held for recovery.",failure));release(work);if(work.held!=null)work.held.ownershipBlocked=true;queue.remove();return;}
+            if(work.committed||work.mutated){com.vandorlabs.VandorLabs.logger.error("Vehicle checkpoint failed; craft held and recovery journal retained",failure);work.failed.accept(new IOException("Vehicle checkpoint failed; craft held for recovery.",failure));release(work);if(work.held!=null)work.held.ownershipBlocked=true;queue.remove();RECOVER_NEXT.add(world);return;}
             work.failed.accept(failure);
             if(work.undo!=null&&work.ownership!=null){
                 try{work.io=IO.submit(()->{work.ownership.restore();deleteJournal(work.journal);return null;});work.aborting=true;}catch(RejectedExecutionException busy){/* Retry cleanup without mutating the world. */work.aborting=true;}
@@ -217,6 +222,13 @@ public final class VehicleTransfer {
     }
     private static void write(WorldServer world,NBTTagCompound tag)throws Exception {
         long began=System.nanoTime();
+        if(UNKNOWN.contains(world))throw new IOException("An unreadable vehicle transfer needs recovery.");
+        List<VehicleRecoveryArea> conflicts=CONFLICTS.get(world);
+        if(conflicts!=null&&!conflicts.isEmpty()){
+            VehicleRecoveryArea next=new VehicleRecoveryArea(tag);
+            for(VehicleRecoveryArea conflict:conflicts)if(conflict.overlaps(next))
+                throw new IOException("This area overlaps a vehicle transfer awaiting recovery at "+conflict.origin+".");
+        }
         if(world.disableLevelSaving)throw new IOException("World saving is disabled.");
         Work work=ACTIVE.get();
         if(work!=null){
@@ -238,6 +250,7 @@ public final class VehicleTransfer {
     }
     private static void flush(WorldServer world)throws Exception {
         if(ACTIVE.get()!=null)return;
+        if(world.disableLevelSaving)throw new IOException("World saving is disabled; recovery journal retained.");
         long began=System.nanoTime();
         world.saveAllChunks(true,null);world.getChunkProvider().flushToDisk();
         timing("save-flush",began);
@@ -454,13 +467,51 @@ public final class VehicleTransfer {
         for(BlockPos seat:occupied)if(!seatPositions.containsKey(seat))throw new IllegalArgumentException("A passenger seat is missing from prepared parking");
     }
     public static void recover(WorldServer world)throws Exception {
-        if(!pending(world))return;
-        NBTTagCompound tag;
-        try(InputStream in=Files.newInputStream(journal(world))){tag=com.vandorlabs.persistence.RetiredCockpitGlass.itemData(CompressedStreamTools.readCompressed(in));}
-        if(tag.getInteger("Schema")!=1)throw new IOException("Unknown vehicle recovery schema");
-        EntityGroundVehicle.validateCouplerOwnershipMetadata(tag);
-        rollback(world,tag);
+        UNKNOWN.add(world);
+        Path primary=journal(world);
+        List<Path> records=new ArrayList<>();
+        if(Files.exists(primary))records.add(primary);
+        if(Files.isDirectory(primary.getParent()))try(DirectoryStream<Path> files=Files.newDirectoryStream(primary.getParent(),conflictPrefix(world)+"*.nbt")){
+            for(Path path:files)records.add(path);
+        }
+        List<VehicleRecoveryArea> conflicts=new ArrayList<>();
+        CONFLICTS.put(world,conflicts);
+        Map<Path,NBTTagCompound> decoded=new LinkedHashMap<>();
+        List<VehicleRecoveryArea> areas=new ArrayList<>();
+        for(Path path:records){
+            NBTTagCompound tag;
+            try(InputStream in=Files.newInputStream(path)){tag=com.vandorlabs.persistence.RetiredCockpitGlass.itemData(CompressedStreamTools.readCompressed(in));}
+            if(tag.getInteger("Schema")!=1)throw new IOException("Unknown vehicle recovery schema");
+            EntityGroundVehicle.validateCouplerOwnershipMetadata(tag);
+            VehicleRecoveryArea area=new VehicleRecoveryArea(tag);
+            for(VehicleRecoveryArea previous:areas)if(previous.overlaps(area))
+                throw new IOException("Overlapping saved vehicle recovery records; journals retained.");
+            areas.add(area);
+            decoded.put(path,tag);
+        }
+        if(!records.isEmpty()&&world.disableLevelSaving)throw new IOException("World saving is disabled; recovery journals retained.");
+        for(Map.Entry<Path,NBTTagCompound> entry:decoded.entrySet()){
+            Path path=entry.getKey();
+            NBTTagCompound tag=entry.getValue();
+            try{rollback(world,tag,path,true);}
+            catch(RecoveryConflict changed){
+                VehicleRecoveryArea claim=new VehicleRecoveryArea(tag);
+                // Only classify a well-formed record after read-only conflict detection. Keep
+                // its exact bytes and continue serializing other transfers through the primary WAL.
+                if(path.equals(primary)){
+                    Path retained=primary.resolveSibling(conflictPrefix(world)+claim.id+".nbt");
+                    if(Files.exists(retained))throw new IOException("Duplicate vehicle recovery UUID "+claim.id,changed);
+                    Files.move(primary,retained,StandardCopyOption.ATOMIC_MOVE);
+                    com.vandorlabs.persistence.JournalFiles.syncDirectory(primary.getParent());
+                }
+                conflicts.add(claim);
+                com.vandorlabs.VandorLabs.logger.warn("Vehicle transfer at {} retained for recovery; other transfer areas are available",claim.origin,changed);
+            }
+        }
+        UNKNOWN.remove(world);
     }
+    private static String conflictPrefix(WorldServer world){return "vandorlabs-vehicle-conflict-"+world.provider.getDimension()+"-";}
+    private static final class RecoveryConflict extends IOException {RecoveryConflict(String message){super(message);}}
     /** Restore live state immediately; checkpoint and ownership persistence remain deferred. */
     private static void rollbackDeferred(Work work,NBTTagCompound undo)throws Exception{
         WorldServer world=work.world;work.updates.clear();work.ownership.restoreMemory(world);
@@ -483,7 +534,8 @@ public final class VehicleTransfer {
         }
         work.rolledBack=true;work.rollbackNotice=true;work.committed=true;
     }
-    private static void rollback(WorldServer world,NBTTagCompound undo)throws Exception {
+    private static void rollback(WorldServer world,NBTTagCompound undo)throws Exception {rollback(world,undo,journal(world),false);}
+    private static void rollback(WorldServer world,NBTTagCompound undo,Path file,boolean recovering)throws Exception {
         try(Transaction transaction=new Transaction(world)){
         VehicleStructure structure=VehicleStructure.read(undo.getCompoundTag("Craft"));BlockPos origin=BlockPos.fromLong(undo.getLong("Origin"));
         // Recovery alone may load the affected chunks: no transfer can have moved before its journal was retired.
@@ -494,8 +546,14 @@ public final class VehicleTransfer {
         VehicleStructure restoreSource=undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure;
         BlockPos restoreOrigin=undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin;
         if(!undo.getBoolean("Parking"))for(VehicleStructure.Cell cell:restoreSource.cells)world.getChunkFromBlockCoords(restoreOrigin.add(cell.pos));
-        requireUnchangedRecovery(world,undo.getBoolean("Parking")?affected:restoreSource,undo.getBoolean("Parking")?origin:restoreOrigin);
         UUID id=undo.getUniqueId("Entity");
+        try{requireUnchangedRecovery(world,undo.getBoolean("Parking")?affected:restoreSource,undo.getBoolean("Parking")?origin:restoreOrigin);}
+        catch(RecoveryConflict changed){
+            if(!recovering||!undo.getBoolean("Parking")||!ParkedOwnership.complete(world,id,affected,origin))throw changed;
+            flush(world);deleteJournal(file);
+            com.vandorlabs.VandorLabs.logger.info("Confirmed complete parked vehicle {} at {}; retained current native contents",id,origin);
+            return;
+        }
         for(net.minecraft.entity.Entity entity:world.loadedEntityList)
             if(entity.getUniqueID().equals(id)&&!(entity instanceof EntityGroundVehicle))throw new IOException("Recovery entity UUID conflict; journal retained.");
         for(net.minecraft.entity.Entity entity:new ArrayList<>(world.loadedEntityList))
@@ -513,7 +571,7 @@ public final class VehicleTransfer {
             if(!world.spawnEntity(restored))throw new IOException("Recovery vehicle spawn cancelled; journal retained.");
             restored.signals.tick();
         }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);VehiclePaintings.publish(world,restoreSource,restoreOrigin);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,restoreSource,restoreOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);}
-        flush(world);deleteJournal(journal(world));
+        flush(world);deleteJournal(file);
         }
     }
     /** Optional fields retain the previous schema-one interpretation when reading older journals. */
@@ -531,10 +589,10 @@ public final class VehicleTransfer {
             BlockPos target=origin.add(cell.pos);
             if(!world.isBlockLoaded(target))throw new IOException("Recovery chunk unavailable; journal retained.");
             if(world.isAirBlock(target))continue;
-            if(world.getBlockState(target)!=cell.state)throw new IOException("Recovery blocked by changed blocks at "+target+"; journal retained.");
+            if(world.getBlockState(target)!=cell.state)throw new RecoveryConflict("Recovery blocked by changed blocks at "+target+"; journal retained.");
             present.add(new VehicleStructure.Cell(cell.pos,cell.state,VehiclePaintings.nativeTile(cell.tileData())));
         }
-        if(!VehicleStructure.display(present).matches(world,origin))throw new IOException("Recovery blocked by changed block contents; journal retained.");
+        if(!VehicleStructure.display(present).matches(world,origin))throw new RecoveryConflict("Recovery blocked by changed block contents; journal retained.");
     }
     public static void blocks(WorldServer world,VehicleStructure structure,BlockPos origin,boolean place) {
         long began=System.nanoTime();

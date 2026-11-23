@@ -30,8 +30,10 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.cruiseSpeed(10000,120,1)==15,"light craft retain the absolute speed cap");
         require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
 
-        require(FlightEnvelope.seedOpacity(255)==0&&FlightEnvelope.seedOpacity(384)==.5&&FlightEnvelope.seedOpacity(513)==1,
+        require(FlightEnvelope.seedOpacity(255,512)==0&&FlightEnvelope.seedOpacity(384)==.5&&FlightEnvelope.seedOpacity(513,512)==1,
                 "seed transition endpoints and midpoint");
+        require(FlightEnvelope.seedOpacity(288,320)==.5&&FlightEnvelope.seedOpacity(320,320)==1
+                &&FlightEnvelope.seedOpacity(256,256)==0&&FlightEnvelope.seedOpacity(257,256)==1,"short or direct handoff");
         double speed=75,y=520;
         while(y>250){
             double previous=speed;
