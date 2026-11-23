@@ -18,7 +18,9 @@ public final class DisplayJoinGeometry {
             up=vertical;BlockPos row=new BlockPos(up.getFrontOffsetX(),up.getFrontOffsetY(),up.getFrontOffsetZ());
             if(state.getBlock() instanceof BlockProgrammableDiagonalScreen)row=row.offset(state.getValue(BlockProgrammableDiagonalScreen.INVERTED)?face:face.getOpposite());
             BlockPos column=new BlockPos(right.getFrontOffsetX(),right.getFrontOffsetY(),right.getFrontOffsetZ());
-            steps=new BlockPos[]{column,new BlockPos(-column.getX(),-column.getY(),-column.getZ()),row,new BlockPos(-row.getX(),-row.getY(),-row.getZ())};
+            BlockPos reverse=new BlockPos(-column.getX(),-column.getY(),-column.getZ());
+            steps=state.getBlock() instanceof BlockProgrammableDiagonalScreen&&tile.isShallowDiagonalScreen()
+                ?new BlockPos[]{column,reverse}:new BlockPos[]{column,reverse,row,new BlockPos(-row.getX(),-row.getY(),-row.getZ())};
         }
         public long cell(BlockPos pos){return com.vandorlabs.surface.JoinedRectangles.cell(pos.getX()*right.getFrontOffsetX()+pos.getZ()*right.getFrontOffsetZ(),pos.getX()*up.getFrontOffsetX()+pos.getY()*up.getFrontOffsetY()+pos.getZ()*up.getFrontOffsetZ());}
     }
@@ -29,6 +31,6 @@ public final class DisplayJoinGeometry {
         return !(tile.getBlockType() instanceof BlockProgrammableHalfConsole||tile.getBlockType() instanceof BlockDiagonalHalfConsole)
             &&!(tile.isSmallInput()&&tile.getBlockType() instanceof BlockProgrammableFullInput);
     }
-    public static boolean sameShape(TileEntityAnimatedScreenSelector a,TileEntityAnimatedScreenSelector b){return a.isCeilingMounted()==b.isCeilingMounted()&&a.isSmallInput()==b.isSmallInput()&&a.getCeilingPosition(-1)==b.getCeilingPosition(-1)&&a.getWallPosition(-1)==b.getWallPosition(-1);}
+    public static boolean sameShape(TileEntityAnimatedScreenSelector a,TileEntityAnimatedScreenSelector b){return a.isShallowDiagonalScreen()==b.isShallowDiagonalScreen()&&a.isCeilingMounted()==b.isCeilingMounted()&&a.isSmallInput()==b.isSmallInput()&&a.getCeilingPosition(-1)==b.getCeilingPosition(-1)&&a.getWallPosition(-1)==b.getWallPosition(-1);}
     private DisplayJoinGeometry(){}
 }

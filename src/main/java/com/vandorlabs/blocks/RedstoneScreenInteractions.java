@@ -33,7 +33,7 @@ public final class RedstoneScreenInteractions {
             int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;
         }
-        for(int slot=0;slot<2;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);
             int row=hitRow(state,tile,slot,eye,end,contents.rows().size());
             if(row>=0){
@@ -55,17 +55,24 @@ public final class RedstoneScreenInteractions {
             || block instanceof BlockProgrammableHalfConsole || block instanceof BlockDiagonalHalfConsole;
     }
     public static boolean supportsSlot(net.minecraft.block.Block block,int slot){
+        if(slot==TileEntityAnimatedScreenSelector.SPLIT_TOP||slot==TileEntityAnimatedScreenSelector.SPLIT_BOTTOM)
+            return supportsSplitVehiclePanel(block);
         return supports(block) && (slot==0 || slot==1 && (block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableHalfConsole));
     }
     public static boolean supportsSplitVehiclePanel(net.minecraft.block.Block block){return supports(block)&&!half(block,0);}
     public static boolean half(net.minecraft.block.Block block,int slot){
-        return block instanceof BlockProgrammableInput && !(block instanceof BlockProgrammableFullInput)
+        return slot>=TileEntityAnimatedScreenSelector.SPLIT_TOP||block instanceof BlockProgrammableInput && !(block instanceof BlockProgrammableFullInput)
             || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
             || block instanceof BlockProgrammableConsole && slot==1;
     }
     public static int displayHeight(net.minecraft.block.Block block,int slot){return half(block,slot)?com.vandorlabs.screen.ScreenControlLayout.HALF_HEIGHT:com.vandorlabs.screen.ScreenControlLayout.FULL_HEIGHT;}
     public static int rowTop(net.minecraft.block.Block block,int slot){return half(block,slot)?com.vandorlabs.screen.ScreenControlLayout.HALF_ROW_TOP:ROW_TOP;}
+    public static ScreenSurface.Quad splitSurface(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
+        return tile.frameAppearance.hasFront()?ScreenSurface.framedSplit(quad):quad;
+    }
     public static ScreenSurface.Quad surface(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot){
+        if(slot>=TileEntityAnimatedScreenSelector.SPLIT_TOP)
+            return ScreenSurface.half(splitSurface(tile,surface(state,tile,0)),slot==TileEntityAnimatedScreenSelector.SPLIT_TOP);
         net.minecraft.block.Block block=state.getBlock();
         if(block instanceof BlockProgrammableInput){
             boolean full=block instanceof BlockProgrammableFullInput;
@@ -111,7 +118,9 @@ public final class RedstoneScreenInteractions {
     }
     /** Uses the same mode button bounds as the rendered Vehicle Status screen. */
     public static int statusAction(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
-        ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);
+        ScreenSurface.Quad q=surface(state,tile,slot);
+        if(tile.hasSplitRedstone()&&tile.hasSplitVehiclePanel(slot))q=splitSurface(tile,q);
+        EnumFacing face=facing(state);
         Vec3d a=local(start,face),d=local(end,face).subtract(a);
         double denom=q.ny*d.y+q.nz*d.z;if(denom>=-1e-8)return -1;
         double t=(q.ny*(q.topRight.y-a.y)+q.nz*(q.topRight.z-a.z))/denom;

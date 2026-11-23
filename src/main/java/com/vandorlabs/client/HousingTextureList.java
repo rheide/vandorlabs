@@ -29,7 +29,9 @@ final class HousingTextureList {
     HousingTextureList vehicleHalf(java.util.function.IntConsumer action){vehicleHalf=true;return vehicle(action);}
     private String vehicleLabel(VehicleInstrument instrument){return vehicleHalf?instrument.label+" (Half)":instrument.label;}
     private Runnable redstoneAction;
+    private boolean redstoneHalf;
     HousingTextureList redstone(Runnable action){redstoneAction=action;setSelected(selected());return this;}
+    HousingTextureList redstoneHalf(Runnable action){redstoneHalf=true;return redstone(action);}
     private final Map<Integer,Option> options=new LinkedHashMap<>();
     private final Map<String,List<Option>> groups=new HashMap<>();
     private final boolean nativeOptions;
@@ -351,7 +353,7 @@ final class HousingTextureList {
             else if(VehicleInstrument.includes(choice)){
                 font.drawStringWithShadow(vehicleLabel(VehicleInstrument.forChoice(choice)),x+11,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
             }
-            else if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
+            else if(choice==REDSTONE_ROW){font.drawStringWithShadow(redstoneHalf?"Redstone (Half)...":"Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==CUSTOM_ROW){
                 if(custom>=0) {
                     if(!com.vandorlabs.tiles.CustomBlockMaterials.isCustom(custom))drawThumbnail(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(custom)),yy);

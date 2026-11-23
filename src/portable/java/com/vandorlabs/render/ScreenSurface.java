@@ -10,6 +10,7 @@ public final class ScreenSurface {
     public static final class Quad {
         public final Vertex topLeft,topRight,bottomRight,bottomLeft;
         private Quad[] halves;
+        private Quad framedSplit;
         public final Vertex[] vertices;
         public final float nx,ny,nz;
         private Quad(double x0,double x1,double bottomY,double bottomZ,double topY,double topZ) {
@@ -26,6 +27,10 @@ public final class ScreenSurface {
                 q.bottomLeft.y-dy*bottom,q.bottomLeft.z-dz*bottom,q.topLeft.y+dy*top,q.topLeft.z+dz*top);
     }
     public static synchronized Quad half(Quad q,boolean top){if(q.halves==null){double y=(q.topLeft.y+q.bottomLeft.y)/2,z=(q.topLeft.z+q.bottomLeft.z)/2;q.halves=new Quad[]{new Quad(q.topLeft.x,q.topRight.x,y,z,q.topLeft.y,q.topLeft.z),new Quad(q.topLeft.x,q.topRight.x,q.bottomLeft.y,q.bottomLeft.z,y,z)};}return q.halves[top?0:1];}
+    public static synchronized Quad framedSplit(Quad quad){
+        if(quad.framedSplit==null)quad.framedSplit=inset(quad,1D/16,1D/16,1D/16,1D/16);
+        return quad.framedSplit;
+    }
     private static final Quad FLAT=new Quad(0,16,0,-.1,16,-.1);
     private static final Quad CONSOLE=new Quad(.5,15.5,1.46,7.70,15.59,14.75);
     // Keep both images exactly on their housing planes. Moving them toward

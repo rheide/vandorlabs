@@ -13,6 +13,7 @@ public final class DiagonalScreenShape {
     public final AxisAlignedBB[] collision;
     public final double[][] outline;
     private final Triangle[] triangles;
+    public static DiagonalScreenShape of(EnumFacing facing,boolean upper){return of(facing,upper,false);}
     public static DiagonalScreenShape of(EnumFacing facing,boolean upper,boolean shallow){return SHAPES[facing.getHorizontalIndex()][upper?1:0][shallow?1:0];}
     private DiagonalScreenShape(EnumFacing facing,boolean upper,boolean shallow){
         collision=new AxisAlignedBB[16];

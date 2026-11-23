@@ -175,7 +175,8 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             return 11;
         }
         TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)te;
-        if(screen.getSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || screen.getSurfaceTexture(1)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return 11;
+        for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++)
+            if(screen.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return 11;
         // Brighter than the stock screens (7): keeps the wall-textured
         // housing readable in dark rooms next to the fullbright face.
         return ((TileEntityAnimatedScreenSelector) te).getEffectiveMode()
@@ -236,8 +237,10 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             configuration.removeTag("ChannelLevel");configuration.removeTag(com.vandorlabs.persistence.SaveSchema.Redstone.SIGNAL);
             configuration.removeTag("JoinedSignalLevel");configuration.removeTag("LightGroupPowered");
             TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
-            for(int slot=0;slot<2;slot++)if(configuration.hasKey(slot==0?"RedstonePrimary":"RedstoneSecondary",10))
-                configuration.setTag(slot==0?"RedstonePrimary":"RedstoneSecondary",screen.redstoneScreen(slot).configuration());
+            for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++){
+                String key=TileEntityAnimatedScreenSelector.redstoneTag(slot);
+                if(configuration.hasKey(key,10))configuration.setTag(key,screen.redstoneScreen(slot).configuration());
+            }
             stack.setTagInfo("BlockEntityTag", configuration);
         }
         return stack;

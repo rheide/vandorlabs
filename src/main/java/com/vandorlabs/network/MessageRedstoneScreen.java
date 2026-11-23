@@ -69,7 +69,7 @@ public final class MessageRedstoneScreen implements IMessage {
             title=b.readCharSequence(bytes,StandardCharsets.UTF_8).toString();
             slot=b.readUnsignedByte();
             if(b.isReadable()){if(b.readableBytes()!=4+count||b.readInt()!=0x50554C53)return;for(int i=0;i<count;i++){int kind=b.readUnsignedByte();if(kind>2||kind!=0&&sliders.get(i))return;pulses.add(kind==1);status.add(kind==2);}}
-            valid=slot<=1 && RedstoneScreenContents.validTitle(title) && !b.isReadable();
+            valid=slot<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SLOTS && RedstoneScreenContents.validTitle(title) && !b.isReadable();
         }catch(IndexOutOfBoundsException | IllegalArgumentException malformed){valid=false;}
     }
     public static final class Handler implements IMessageHandler<MessageRedstoneScreen,IMessage>{
@@ -79,9 +79,13 @@ public final class MessageRedstoneScreen implements IMessage {
                 if(!m.valid || !ConfigurationAccess.canConfigure(player) || !player.world.isBlockLoaded(m.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector))return;
                 ContainerAnimatedScreenSelector container=(ContainerAnimatedScreenSelector)player.openContainer;
-                if((container.redstoneSlot>=0&&container.redstoneSlot!=m.slot) || container.getTileEntity().getSurfaceTexture(m.slot)!=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || !com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(container.getTileEntity().getBlockType(),m.slot) || player.world.getTileEntity(m.pos)!=container.getTileEntity()
-                        || !container.canInteractWith(player))return;
-                RedstoneScreenContents contents=container.getTileEntity().redstoneScreen(m.slot);
+                com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=container.getTileEntity();
+                boolean selected=m.slot>=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.SPLIT_TOP
+                    ?tile.splitRedstoneSelected(m.slot):tile.getSurfaceTexture(m.slot)==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
+                if((container.redstoneSlot>=0&&container.redstoneSlot!=m.slot)||!selected
+                        ||!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),m.slot)
+                        ||player.world.getTileEntity(m.pos)!=tile||!container.canInteractWith(player))return;
+                RedstoneScreenContents contents=tile.redstoneScreen(m.slot);
                 net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();
                 for(int i=0;i<m.labels.size();i++){
                     net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();row.setString("Label",m.labels.get(i));com.vandorlabs.redstone.ChannelData.write(row,m.channels.get(i));

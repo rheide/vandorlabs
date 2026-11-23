@@ -106,7 +106,7 @@ public final class TransmitterSlots {
             for(com.vandorlabs.tiles.TileEntityCockpit.Control control:((com.vandorlabs.tiles.TileEntityCockpit)tile).controls)if(control.kind!=3&&control.active())level=Math.max(level,control.level);
         }else if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
-            for(int side=0;side<2;side++)if(screen.hasRedstoneScreen(side))for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())if(!row.status)level=Math.max(level,row.slider?row.level():row.active()?15:0);
+            for(int side=0;side<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;side++)if(screen.publishesRedstoneRows(side))for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())if(!row.status)level=Math.max(level,row.slider?row.level():row.active()?15:0);
         }
         return Math.max(0,Math.min(15,level));
     }

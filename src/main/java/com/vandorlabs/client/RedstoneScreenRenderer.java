@@ -36,6 +36,9 @@ final class RedstoneScreenRenderer {
     }
     static void draw(RedstoneScreenContents tile,IBlockState state){
         ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile.tile(),RedstoneScreenInteractions.surface(state,tile.tile(),tile.slot()));
+        draw(tile,state,q);
+    }
+    static void draw(RedstoneScreenContents tile,IBlockState state,ScreenSurface.Quad q){
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),tile.slot()),count=Math.min(tile.rows().size(),tile.maxRows());
         FloatBuffer transform=MATRICES.get(q);
         if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}

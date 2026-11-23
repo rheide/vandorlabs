@@ -69,9 +69,9 @@ public final class ScreenModeTransitionRuntimeChecks {
         }).get();stage=0;frame=0;
     }
     private static boolean ready(Minecraft mc)throws Exception{double[] server=mc.getIntegratedServer().callFromMainThread(()->{EntityPlayerMP p=player(mc);return new double[]{p.posX,p.posY,p.posZ,p.interactionManager.getGameType()==net.minecraft.world.GameType.CREATIVE?1:0,p.inventory.currentItem,p.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER&&p.getHeldItemOffhand().isEmpty()?1:0};}).get();return server[3]==1&&server[4]==0&&server[5]==1&&mc.playerController.getCurrentGameType()==net.minecraft.world.GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER&&mc.player.getHeldItemOffhand().isEmpty()&&mc.player.getDistanceSq(server[0],server[1],server[2])<.01&&mc.world.getBlockState(POS).getBlock()==blocks.get(scenario);}
-    private static Object field(Object object,String name)throws Exception{Field f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}
+    static Object field(Object object,String name)throws Exception{Field f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}
     private static void mouse(GuiScreen gui,int x,int y)throws Exception{Method m;try{m=GuiScreen.class.getDeclaredMethod("mouseClicked",int.class,int.class,int.class);}catch(NoSuchMethodException e){m=GuiScreen.class.getDeclaredMethod("func_73864_a",int.class,int.class,int.class);}m.setAccessible(true);m.invoke(gui,x,y,0);}
-    private static void button(GuiScreen gui,int id)throws Exception{List<GuiButton> list=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton b:list)if(b.id==id){require(b.enabled,"enabled picker tab/button "+id);mouse(gui,b.x+b.width/2,b.y+b.height/2);return;}throw new IllegalStateException("missing screen-mode button "+id);}
+    static void button(GuiScreen gui,int id)throws Exception{List<GuiButton> list=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton b:list)if(b.id==id){require(b.enabled,"enabled picker tab/button "+id);mouse(gui,b.x+b.width/2,b.y+b.height/2);return;}throw new IllegalStateException("missing screen-mode button "+id);}
     private static HousingTextureList pickerList(GuiScreen gui)throws Exception{
         if((Integer)field(gui,"textureTab")!=slot())button(gui,90+slot());
         String name=gui instanceof GuiProgrammableHalfConsole?(slot()==1?"topList":"bottomList"):slot()==1?"inputList":"screenList";
@@ -80,7 +80,7 @@ public final class ScreenModeTransitionRuntimeChecks {
     private static void choose(Minecraft mc,int sentinel)throws Exception{
         choose(mc.currentScreen,pickerList(mc.currentScreen),sentinel);
     }
-    private static void choose(GuiScreen gui,HousingTextureList list,int sentinel)throws Exception{
+    static void choose(GuiScreen gui,HousingTextureList list,int sentinel)throws Exception{
         List<?> rows=(List<?>)field(list,"rows");
         if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(gui,list,-100002);
         int index=rows.indexOf(sentinel),count=(Integer)field(list,"count");require(index>=0,"picker contains requested live surface");

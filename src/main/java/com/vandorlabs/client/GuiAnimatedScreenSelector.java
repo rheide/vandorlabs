@@ -173,10 +173,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         return framed ? selectedOption.framedId : selectedOption.bareId;
     }
 
-    private NativeRedstoneRowsPane[] rowEditors=new NativeRedstoneRowsPane[2];private int rowSlot=-1;
-    private boolean rowsPage(){return rowSlot>=0&&textureTab==rowSlot;}
+    private NativeRedstoneRowsPane[] rowEditors=new NativeRedstoneRowsPane[TileEntityAnimatedScreenSelector.REDSTONE_SLOTS];private int rowSlot=-1;
+    private boolean rowsPage(){return rowSlot>=0&&textureTab==(rowSlot>=TileEntityAnimatedScreenSelector.SPLIT_TOP?0:rowSlot);}
     int inlineTransmitterSelector(){return rowsPage()?rowEditors[rowSlot].selector():0;}
-    private void openRows(int slot){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
+    private void openRows(int slot){if(slot<TileEntityAnimatedScreenSelector.SPLIT_TOP){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));}rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
     private FrameAppearancePane framePane;
     private boolean splitPage(){return textureTab==0&&!rowsPage()&&framePane!=null&&framePane.splitDisplay();}
     private boolean framePage(){return textureTab==10;}
@@ -214,8 +214,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         channelField=receiver.field();
         ChannelFields.configure(channelField);
         channelField.setText(receiverDraft);
-        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
-        if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.initDisplay(buttonList);}
+        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
+        if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.initDisplay(buttonList);}
         if(activationPane==null)activationPane=new DisplayActivationPane(this,te,false);activationPane.init(layout,buttonList,textureTab,console?3:2);
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
@@ -351,14 +351,14 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,640,641))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,33,640,641))return;
         if(mouseButton==0)for(GuiButton option:new java.util.ArrayList<>(buttonList))if((option.id==640||option.id==641)&&option.visible&&option.mousePressed(mc,mouseX,mouseY)){option.playPressSound(mc.getSoundHandler());actionPerformed(option);return;}
         if(activationPane.active()){activationPane.click(mouseX,mouseY,mouseButton);super.mouseClicked(mouseX,mouseY,mouseButton);return;}
 
         if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
         if(textureTab==0&&!rowsPage()&&!splitPage()&&framePane.click(mouseX,mouseY,mouseButton))return;
         if(framePage()||splitPage()){if(!framePane.click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,0,4,30,32,33))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,0,4,30,32))return;
         if (textureTab==(console?2:1) && housingList.click(mouseX, mouseY, mouseButton)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();

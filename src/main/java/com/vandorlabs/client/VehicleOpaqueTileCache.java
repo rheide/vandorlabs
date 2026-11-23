@@ -18,7 +18,7 @@ final class VehicleOpaqueTileCache {
         if(!((Object)renderer instanceof TEAnimatedScreenSelector) || !(tile.getBlockType() instanceof BlockProgrammableWall))return false;
         if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
-            if(screen.fluids.any()||screen.hasRedstoneScreen(0)||screen.hasRedstoneScreen(1)||screen.hasVehiclePanel(0)||screen.hasVehiclePanel(1))return false;
+            if(screen.fluids.any()||screen.hasInteractiveSplit()||screen.hasRedstoneScreen(0)||screen.hasRedstoneScreen(1)||screen.hasVehiclePanel(0)||screen.hasVehiclePanel(1))return false;
         }
         BlockProgrammableWall wall=(BlockProgrammableWall)tile.getBlockType();
         return !wall.isPortholeShape() && !(wall instanceof BlockProgrammableDiagonalGlass);
