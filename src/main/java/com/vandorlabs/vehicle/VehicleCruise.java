@@ -93,7 +93,7 @@ public final class VehicleCruise {
                 routeX-craft.posX,0,routeZ-craft.posZ));
             closeResident();
             arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1),true);
-            craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+            publishRoute();
             return finishArrival(yaw,pitch,bank);
         }
         boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);

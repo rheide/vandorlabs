@@ -34,7 +34,7 @@ public final class CruiseAtlas {
     private final CruiseScratch scratch=new CruiseScratch();
     private Tile fallback;
     private int[] fallbackImage;
-    private int fallbackRow;
+    private int fallbackPixel;
     private long fallbackTick=Long.MIN_VALUE;
     public static int nearStep(double altitude){return Math.max(4,Integer.highestOneBit((int)altitude/64));}
     public static final class Tile {
@@ -156,13 +156,18 @@ public final class CruiseAtlas {
         MessageCruiseTerrain hit=cache.get(tile);
         if(hit!=null)return hit;
         if(workerFailed||layer==null&&constant==0){
-            if(fallback==null){fallback=tile;fallbackRow=0;fallbackImage=new int[SIZE*SIZE];}
+            if(fallback==null){fallback=tile;fallbackPixel=0;fallbackImage=new int[SIZE*SIZE];}
             if(fallbackTick!=world.getTotalWorldTime()){
                 fallbackTick=world.getTotalWorldTime();
-                for(int c=0;c<SIZE;c+=8)fill(fallbackImage,fallbackRow,c,8,
-                    NavigationService.cruiseColor(world,fallback.x+c*fallback.step,fallback.z+fallbackRow*fallback.step,fallback.step));
-                fallbackRow+=8;
-                if(fallbackRow==SIZE){retain(fallback,image(fallback,fallbackImage,null));fallback=null;fallbackImage=null;}
+                long deadline=System.nanoTime()+500000;
+                int stop=Math.min(64,fallbackPixel+8);
+                do{
+                    int c=(fallbackPixel%8)*8,r=(fallbackPixel/8)*8;
+                    int color=NavigationService.cruiseColor(world,fallback.x+c*fallback.step,fallback.z+r*fallback.step,fallback.step);
+                    fill(fallbackImage,r,c,8,color);
+                    fallbackPixel++;
+                }while(fallbackPixel<stop&&System.nanoTime()<deadline);
+                if(fallbackPixel==64){retain(fallback,image(fallback,fallbackImage,null));fallback=null;fallbackImage=null;}
             }
             return cache.get(tile);
         }
