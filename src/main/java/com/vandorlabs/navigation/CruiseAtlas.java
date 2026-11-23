@@ -18,15 +18,16 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class CruiseAtlas {
     public static final int SIZE=MessageCruiseTerrain.SIZE;
     private static final Map<World,CruiseAtlas> WORLDS=new IdentityHashMap<>();
-    private final LinkedHashMap<Tile,int[]> cache=new LinkedHashMap<>(128,.75f,true);
-    private final Map<Tile,Future<int[]>> pending=new HashMap<>();
+    private final LinkedHashMap<Tile,MessageCruiseTerrain> cache=new LinkedHashMap<>(128,.75f,true);
+    private final Map<Tile,Future<MessageCruiseTerrain>> pending=new HashMap<>();
     private final ExecutorService worker=Executors.newSingleThreadExecutor(r->{
         Thread t=new Thread(r,"Vandor flight seed atlas");t.setDaemon(true);t.setPriority(Thread.NORM_PRIORITY-1);return t;
     });
     private final GenLayer layer;
     private final List<GenLayer> landLevels=new ArrayList<>();
     private boolean workerFailed;
-    private final net.minecraft.world.gen.NoiseGeneratorPerlin surface;
+    private final CruiseRelief relief;
+    private final boolean amplified,vanillaRelief;
 
     private final int constant;
     private final Map<Integer,Integer> colors=new HashMap<>();
@@ -70,11 +71,10 @@ public final class CruiseAtlas {
         }
         layer=detached;
         if(layer instanceof GenLayerRiverMix)prepareLandLevels((GenLayerRiverMix)layer);
-        // Reproduce the vanilla surface generator's initialization from the seed.
-        // Its stone-depth variation gives exposed land a continuous, geographically stable texture.
-        Random seed=new Random(world.getSeed());
-        for(int octaves:new int[]{16,16,8})new net.minecraft.world.gen.NoiseGeneratorOctaves(seed,octaves);
-        surface=new net.minecraft.world.gen.NoiseGeneratorPerlin(seed,4);
+        net.minecraft.world.WorldType type=world.getWorldInfo().getTerrainType();
+        amplified=type==net.minecraft.world.WorldType.AMPLIFIED;
+        vanillaRelief=amplified||type==net.minecraft.world.WorldType.DEFAULT||type==net.minecraft.world.WorldType.LARGE_BIOMES;
+        relief=layer!=null?new CruiseRelief(world.getSeed()):null;
         for(Biome biome:Biome.REGISTRY)colors.put(Biome.getIdForBiome(biome),NavigationService.biomeColor(biome));
     }
     /** At the horizon one pixel can span many chunks. Query the land generator before its
@@ -100,9 +100,10 @@ public final class CruiseAtlas {
             }
         return true;
     }
-    private int[] sample(Tile tile){
+    private MessageCruiseTerrain sample(Tile tile){
+        byte[] heights=null;
         int[] pixels=new int[SIZE*SIZE];
-        if(constant!=0){Arrays.fill(pixels,constant);return pixels;}
+        if(constant!=0){Arrays.fill(pixels,constant);return image(tile,pixels,null);}
         // Quarter-scale biome coordinates. Batch neighbouring samples into one layer traversal.
         int zoom=tile.step<64?0:Math.min(landLevels.size(),Integer.numberOfTrailingZeros(tile.step/4));
         int cell=4<<zoom;
@@ -125,21 +126,25 @@ public final class CruiseAtlas {
                 int i=r*SIZE+c,color=pixels[i];
                 if(color==0xff28659b)continue;
                 int x=tile.x+c*tile.step,z=tile.z+r*tile.step;
-                double n=surface.getValue(x*.0625,z*.0625);
-                double broad=surface.getValue(x*.0078125,z*.0078125);
+                double n=relief.surface.getValue(x*.0625,z*.0625);
+                double broad=relief.surface.getValue(x*.0078125,z*.0078125);
                 double light=1+Math.max(-.18,Math.min(.18,n*.017+broad*.014));
                 pixels[i]=0xff000000|(Math.min(255,(int)((color>>16&255)*light))<<16)
                         |(Math.min(255,(int)((color>>8&255)*light))<<8)|Math.min(255,(int)((color&255)*light));
             }
+            if(vanillaRelief&&tile.step<=32)heights=relief.shade(tile,layer,scratch,amplified,pixels);
         }finally{scratch.release();}
-        return pixels;
+        return image(tile,pixels,heights);
+    }
+    private static MessageCruiseTerrain image(Tile t,int[] pixels,byte[] heights){
+        return new MessageCruiseTerrain(0,t.x,t.z,t.step,pixels,heights);
     }
     private static void fill(int[] pixels,int row,int col,int width,int color){
         for(int r=row;r<row+width;r++)Arrays.fill(pixels,r*SIZE+col,r*SIZE+col+width,color);
     }
     /** Called only on the world thread. Custom providers keep ownership of their mutable state. */
-    public int[] request(World world,Tile tile){
-        int[] hit=cache.get(tile);
+    public MessageCruiseTerrain request(World world,Tile tile){
+        MessageCruiseTerrain hit=cache.get(tile);
         if(hit!=null)return hit;
         if(workerFailed||layer==null&&constant==0){
             if(fallback==null){fallback=tile;fallbackRow=0;fallbackImage=new int[SIZE*SIZE];}
@@ -148,13 +153,13 @@ public final class CruiseAtlas {
                 for(int c=0;c<SIZE;c+=8)fill(fallbackImage,fallbackRow,c,8,
                     NavigationService.cruiseColor(world,fallback.x+c*fallback.step,fallback.z+fallbackRow*fallback.step,fallback.step));
                 fallbackRow+=8;
-                if(fallbackRow==SIZE){retain(fallback,fallbackImage);fallback=null;fallbackImage=null;}
+                if(fallbackRow==SIZE){retain(fallback,image(fallback,fallbackImage,null));fallback=null;fallbackImage=null;}
             }
             return cache.get(tile);
         }
-        Iterator<Map.Entry<Tile,Future<int[]>>> it=pending.entrySet().iterator();
+        Iterator<Map.Entry<Tile,Future<MessageCruiseTerrain>>> it=pending.entrySet().iterator();
         while(it.hasNext()){
-            Map.Entry<Tile,Future<int[]>> entry=it.next();
+            Map.Entry<Tile,Future<MessageCruiseTerrain>> entry=it.next();
             if(!entry.getValue().isDone())continue;
             try{retain(entry.getKey(),entry.getValue().get());}
             catch(ExecutionException e){
@@ -172,8 +177,8 @@ public final class CruiseAtlas {
         return hit;
     }
     public boolean usesDetachedLayers(){return layer!=null&&!workerFailed;}
-    private void retain(Tile tile,int[] pixels){
+    private void retain(Tile tile,MessageCruiseTerrain pixels){
         cache.put(tile,pixels);
-        if(cache.size()>4096)cache.remove(cache.keySet().iterator().next()); // 64 MiB of pixels per world
+        if(cache.size()>4000)cache.remove(cache.keySet().iterator().next()); // under 64 MiB of tile data per world
     }
 }

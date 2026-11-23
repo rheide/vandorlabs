@@ -42,9 +42,9 @@ final class CruiseTiles {
             int budget=3;
             for(Tile tile:footprint){
                 if(known.contains(tile))continue;
-                int[] pixels=atlas.request(craft.world,tile);
-                if(pixels==null)continue;
-                PacketHandler.INSTANCE.sendTo(new MessageCruiseTerrain(craft.getEntityId(),tile.x,tile.z,tile.step,pixels),player);
+                MessageCruiseTerrain image=atlas.request(craft.world,tile);
+                if(image==null)continue;
+                PacketHandler.INSTANCE.sendTo(new MessageCruiseTerrain(craft.getEntityId(),tile.x,tile.z,tile.step,image.pixels,image.heights),player);
                 known.add(tile);
                 if(known.size()>96)known.remove(known.iterator().next());
                 if(--budget==0)break;

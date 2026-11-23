@@ -83,6 +83,7 @@ public final class CruiseRuntimeChecks {
         NBTTagCompound state=new NBTTagCompound();state.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(state);
         craft.setPosition(startX,255.9,craft.posZ);
+        verifyRelief((WorldServer)craft.world);
         observeRoute();
         require(craft.cruise.move(0,32,0),"cross build ceiling");
         routeSteps=64;
@@ -101,6 +102,25 @@ public final class CruiseRuntimeChecks {
         require(loaded.cruise.active()&&loaded.cruise.x()==destination&&loaded.cruise.altitude()==craft.cruise.altitude(),"persisted route and altitude");
     }
 
+    private static void verifyRelief(WorldServer world){
+        com.vandorlabs.navigation.CruiseAtlas atlas=com.vandorlabs.navigation.CruiseAtlas.forWorld(world);
+        int x=(int)Math.floor(craft.posX/256)*256,z=(int)Math.floor(craft.posZ/256)*256;
+        com.vandorlabs.navigation.CruiseAtlas.Tile key=new com.vandorlabs.navigation.CruiseAtlas.Tile(x,z,4);
+        com.vandorlabs.network.MessageCruiseTerrain tile=atlas.request(world,key);
+        require(tile!=null&&tile.heights!=null&&tile==atlas.request(world,key),"cached near tile includes elevations");
+        net.minecraft.world.gen.ChunkGeneratorOverworld generator=(net.minecraft.world.gen.ChunkGeneratorOverworld)world.getChunkProvider().chunkGenerator;
+        int worst=0;
+        for(int row=2;row<=14;row+=6)for(int col=2;col<=14;col+=6){
+            net.minecraft.world.chunk.ChunkPrimer primer=new net.minecraft.world.chunk.ChunkPrimer();
+            generator.setBlocksInChunk((x>>4)+col,(z>>4)+row,primer);
+            int y=255;
+            while(y>0 && primer.getBlockState(0,y,0).getBlock()==net.minecraft.init.Blocks.AIR)y--;
+            int estimate=tile.heights[row*17+col]&255;
+            worst=Math.max(worst,Math.abs(estimate-y));
+        }
+        require(worst<=2,"seed elevations against nine vanilla terrain columns, largest error="+worst);
+        System.out.println("[vandorlabs] seed relief vs nine generated columns max error="+worst+" blocks");
+    }
     private static void saveFlight(Minecraft mc) {
         EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
         checkRoute();
@@ -142,7 +162,7 @@ public final class CruiseRuntimeChecks {
                 flight.setByte("MaxwellFlightPhase",(byte)3);
                 craft.readFlightMode(flight);
             });stage=9;
-        }else if(stage==9 && CruiseSky.buffered()){
+        }else if(stage==9 && CruiseSky.reliefAtCenter()){
             require(!CruiseSky.ready(),"preview arrived before crossing Y=256");
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=11;
         }else if(stage==11 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){

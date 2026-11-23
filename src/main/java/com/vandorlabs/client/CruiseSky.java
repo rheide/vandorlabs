@@ -23,6 +23,7 @@ public final class CruiseSky {
     private static EntityGroundVehicle owner;
     private static final Map<Tile,ResourceLocation> tiles=new LinkedHashMap<>();
     private static final List<Tile> renderOrder=new ArrayList<>();
+    private static final Map<Tile,byte[]> elevations=new HashMap<>();
     private static final Set<Tile> backed=new HashSet<>();
     private static boolean covers(Tile t,double x,double z){
         int span=t.step*MessageCruiseTerrain.SIZE;
@@ -46,6 +47,11 @@ public final class CruiseSky {
         }
         return true;
     }
+    public static boolean reliefAtCenter(){
+        if(owner==null)return false;
+        for(Tile t:elevations.keySet())if(t.step==4&&covers(t,owner.cruise.x(),owner.cruise.z()))return true;
+        return false;
+    }
     public static boolean buffered(){
         if(owner==null)return false;
         for(Tile t:tiles.keySet())if(covers(t,owner.cruise.x(),owner.cruise.z()))return true;
@@ -53,7 +59,7 @@ public final class CruiseSky {
     }
     private static void clear(){
         for(ResourceLocation loc:tiles.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(loc);
-        tiles.clear();renderOrder.clear();backed.clear();owner=null;
+        tiles.clear();elevations.clear();renderOrder.clear();backed.clear();owner=null;
     }
     public static void receive(MessageCruiseTerrain image){
         Minecraft mc=Minecraft.getMinecraft();
@@ -71,9 +77,11 @@ public final class CruiseSky {
         GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D,GL11.GL_TEXTURE_WRAP_S,GL12_CLAMP_TO_EDGE);
         GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D,GL11.GL_TEXTURE_WRAP_T,GL12_CLAMP_TO_EDGE);
         tiles.put(tile,location);
+        if(image.heights!=null)elevations.put(tile,image.heights);
         if(tiles.size()>96){
-            Iterator<ResourceLocation> it=tiles.values().iterator();
-            mc.getTextureManager().deleteTexture(it.next());it.remove();
+            Tile oldest=tiles.keySet().iterator().next();
+            mc.getTextureManager().deleteTexture(tiles.remove(oldest));
+            elevations.remove(oldest);
         }
         renderOrder.clear();renderOrder.addAll(tiles.keySet());
         renderOrder.sort(Comparator.comparingInt((Tile t)->t.step).reversed());
@@ -119,13 +127,14 @@ public final class CruiseSky {
                     mc.getTextureManager().bindTexture(tiles.get(t));
                     BufferBuilder b=Tessellator.getInstance().getBuffer();
                     b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
-                    int divisions=8;
+                    byte[] heights=elevations.get(t);
+                    int divisions=heights==null?8:MessageCruiseTerrain.HEIGHT_GRID-1;
                     boolean fade=backed.contains(t);
                     for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
-                        vertex(b,dx,dz,span,col,row,divisions,horizon,y,scale,fade);
-                        vertex(b,dx,dz,span,col,row+1,divisions,horizon,y,scale,fade);
-                        vertex(b,dx,dz,span,col+1,row+1,divisions,horizon,y,scale,fade);
-                        vertex(b,dx,dz,span,col+1,row,divisions,horizon,y,scale,fade);
+                        vertex(b,dx,dz,span,col,row,divisions,horizon,y,scale,fade,heights);
+                        vertex(b,dx,dz,span,col,row+1,divisions,horizon,y,scale,fade,heights);
+                        vertex(b,dx,dz,span,col+1,row+1,divisions,horizon,y,scale,fade,heights);
+                        vertex(b,dx,dz,span,col+1,row,divisions,horizon,y,scale,fade,heights);
                     }
                     Tessellator.getInstance().draw();
             }
@@ -136,7 +145,7 @@ public final class CruiseSky {
             GL11.glDepthRange(0,1);GlStateManager.depthMask(true);GlStateManager.popMatrix();
         }
     }
-    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double horizon,double y,double scale,boolean fade){
+    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double horizon,double y,double scale,boolean fade,byte[] heights){
         double u=col/(double)divisions,v=row/(double)divisions,x=dx+u*span,z=dz+v*span;
         double distance=Math.sqrt(x*x+z*z)/horizon;
         double haze=Math.max(0,Math.min(1,(distance-.06)/.94));
@@ -144,7 +153,8 @@ public final class CruiseSky {
         // change around the aircraft so individual square tile boundaries stay invisible.
         double detail=fade?Math.max(0,Math.min(1,(1-Math.max(Math.abs(x),Math.abs(z))/span)*2.5)):1;
         int opacity=(int)(255*(1-haze)*(1-haze)*detail);
-        b.pos(x*scale,y,z*scale).tex(u,v).color(255,255,255,opacity).endVertex();
+        double ground=heights==null?0:((heights[row*MessageCruiseTerrain.HEIGHT_GRID+col]&255)-63)*detail;
+        b.pos(x*scale,y+ground*scale,z*scale).tex(u,v).color(255,255,255,opacity).endVertex();
     }
     private CruiseSky(){}
 }
