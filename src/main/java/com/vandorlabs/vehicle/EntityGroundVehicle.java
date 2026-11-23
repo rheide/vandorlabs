@@ -873,6 +873,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(result==VehicleFlightMotion.Result.OBSTRUCTED){
             if(flightMotion.touchdown(motionX,motionY,motionZ)){
                 finishFlight(false,Math.hypot(motionX,motionZ));
+                landedFromFlight=true;
                 onGround=true;
                 return;
             }
@@ -992,8 +993,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         driveSpeed=approach(driveSpeed,takeoffRoll()?limit:active&&(!brake || hover)?forward*(boost?limit:cruise):0,
                 takeoffRoll()?FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust):brake||!active?.045:forward==0?.008:boost?.028:.018);
         // Preserve forward rollout on touchdown and shed excess speed through wheel braking.
-        if(!hover&&!takeoffRoll()&&driveSpeed>limit)driveSpeed=approach(driveSpeed,limit,brake?.055:.025);
-        else driveSpeed=MathHelper.clamp(driveSpeed,-limit,limit);
+        if(landedFromFlight&&!hover&&!takeoffRoll()&&driveSpeed>limit)driveSpeed=approach(driveSpeed,limit,brake?.055:.025);
+        else{
+            driveSpeed=MathHelper.clamp(driveSpeed,-limit,limit);
+            landedFromFlight=false;
+        }
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
         // Both modes reverse steering while travelling backwards.
