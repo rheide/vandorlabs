@@ -73,7 +73,17 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         if(hasLiveBlock())lastFacing=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING);
         return lastFacing;
     }
-    public double seatHeight(){return data().riderY+.725;}
+    public double seatHeight(){
+        double height=data().riderY+.725;
+        if(world==null||!design.equals("cockpit"))return height;
+        Vec3d seat=CockpitData.rotate(seatLocation(),facing());
+        TileEntityCanopy glass=TileEntityCanopy.at(world,pos.add(seat.x,1,seat.z));
+        if(glass!=null && glass.block()!=null && "long_canopy".equals(glass.block().kind)){
+            TileEntityCanopy roof=glass.owner();
+            if(roof.large.angle==2)return height-(1-roof.progress)*2/16D;
+        }
+        return height;
+    }
     private void prepare(){
         if(!displays.isEmpty())return;
         for(CockpitData.Surface surface:data().surfaces){
@@ -91,19 +101,25 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
     public boolean configureRows(int index,NBTTagList rows){
-        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;
+        return configureRows(index,rows,false);
+    }
+    public boolean configureRows(int index,NBTTagList rows,boolean bottom){
+        if(index<0||index>=displays.size())return false;Display d=displays.get(index);
+        if(bottom&&!d.split||rows.tagCount()>d.panelCapacity())return false;
+        int base=bottom?3:0;
         for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);int kind=row.getInteger("Kind"),min=row.getInteger("Min"),max=row.getInteger("Max");if(row.getString("Label").length()>24||kind<0||kind>3||min<0||min>13||max<min+2||max>15)return false;ChannelData.read(row,0);}
         boolean placed=ordinary();if(placed)RedstoneChannels.beginTransfer(world);
         try{
-            if(placed)for(int i=0;i<d.maxRows();i++)RedstoneChannels.unregister(control(d.id+"/"+i));
-            d.rows=rows.tagCount();
-            for(int i=0;i<d.maxRows();i++){
-                Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();int previousKind=c.kind;c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;
-                if(i>=d.rows||previousKind!=c.kind){c.level=0;c.until=0;c.levels.clear();}
-                c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);
+            if(placed)for(int i=0;i<d.panelCapacity();i++)RedstoneChannels.unregister(control(d.id+"/"+(base+i)));
+            if(bottom)d.bottomRows=rows.tagCount();else d.rows=rows.tagCount();
+            int count=rows.tagCount();
+            for(int i=0;i<d.panelCapacity();i++){
+                Control c=control(d.id+"/"+(base+i));NBTTagCompound row=i<count?rows.getCompoundTagAt(i):new NBTTagCompound();int previousKind=c.kind;c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<count?row.getInteger("Min"):5;c.max=i<count?row.getInteger("Max"):15;
+                if(i>=count||previousKind!=c.kind){c.level=0;c.until=0;c.levels.clear();}
+                c.setRedstoneChannels(i<count?ChannelData.read(row,0):ChannelList.EMPTY);
                 if(placed)RedstoneChannels.register(c);
             }
-            d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
+            d.setChoice(bottom,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);changed();return true;
         }finally{if(placed)RedstoneChannels.endTransfer(world);}
     }
     public void sharedTransmitterChanged(){
@@ -141,18 +157,29 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             if(new AxisAlignedBB(2.8/16,10.45/16,9.6/16,5.1/16,11.0/16,11.1/16).calculateIntercept(buttonStart,buttonEnd)!=null){toggleSeat(actor);return true;}
         }
         CockpitData.Surface nearest=null;double[] uv=null;
-        for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
+        for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && (display(surface.id).split||"touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         ControlHit lever=controlHitLocal(start,end);
         if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){if(emergencyOnly)return false;Control c=control(lever.id);c.activate(c.nextColumn());return true;}
-        if(nearest!=null&&display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){
-            int height="touch".equals(nearest.role)?64:128;
+        if(nearest==null)return false;
+        Display screen=display(nearest.id);
+        boolean bottom=screen.split&&uv[1]<.5;
+        if(screen.split){nearest=nearest.half(bottom);uv[1]=uv[1]*2-(bottom?0:1);}
+        int choice=screen.choice(bottom);
+        if(choice==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){
+            int height=screen.split||"touch".equals(nearest.role)?64:128;
             int action=com.vandorlabs.vehicle.VehicleStatus.panelAction(height,uv[0]*128,(1-uv[1])*height);
             if(emergencyOnly!=(action==com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION))return false;
             if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);
             return true;
         }
-        if(nearest!=null&&com.vandorlabs.screen.VehicleInstrument.includes(display(nearest.id).texture))return !emergencyOnly;
-        if(nearest!=null&&!emergencyOnly){com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,display(nearest.id).rows);if(layout.rows==0)return true;Control c=control(nearest.id+"/"+layout.row(uv[1]));c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);return true;}
+        if(com.vandorlabs.screen.VehicleInstrument.includes(choice))return !emergencyOnly;
+        if(!emergencyOnly&&(choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE||"touch".equals(nearest.role)&&choice>=0)){
+            com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,screen.count(bottom));
+            if(layout.rows==0)return true;
+            Control c=control(nearest.id+"/"+((bottom?3:0)+layout.row(uv[1])));
+            c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);
+            return true;
+        }
         return false;
     }
     /** Cosmetic dialog navigation uses the same posed screen planes and grip rays as interaction. */
@@ -221,7 +248,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
         public void setRedstoneChannels(ChannelList next){ChannelList before=targets();channels=next;ChannelList effective=targets();levels.keySet().removeIf(channel->!effective.contains(channel));for(int i=0;i<effective.size();i++)levels.putIfAbsent(effective.get(i),0);if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
         public void setKind(int value){if(isThrottle())value=1;if(value<0||value>(id.contains("/")?3:2)||kind==value)return;if(ordinary())RedstoneChannels.unregister(this);boolean pulse=kind>=2||value>=2;kind=value;if(pulse){level=0;until=0;levels.clear();for(int i=0;i<targets().size();i++)levels.put(targets().get(i),0);}if(ordinary())RedstoneChannels.register(this);changed();}
-        public boolean active(){int slash=id.lastIndexOf('/');if(slash>=0){Display display=display(id.substring(0,slash));return display!=null&&display.texture==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&Integer.parseInt(id.substring(slash+1))<display.rows;}return !id.equals("throttle_right")||throttleCount==2;}
+        public boolean active(){int slash=id.lastIndexOf('/');if(slash>=0){Display display=display(id.substring(0,slash));return display!=null&&display.rowActive(Integer.parseInt(id.substring(slash+1)));}return !id.equals("throttle_right")||throttleCount==2;}
         public boolean hasLocalRedstoneSignal(){if(!active()||kind==3)return false;if(kind==2||targets().isEmpty())return level>0;for(int i=0;i<targets().size();i++)if(latchedLevel(targets().get(i))>0)return true;return false;}
         public boolean hasLocalRedstoneSignal(int channel){return localSignalLevel(channel)>0;}
         public int localSignalLevel(int channel){return active()&&kind!=3?(kind==2?level:latchedLevel(channel)):0;}
@@ -251,7 +278,20 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     }
     public static final class Display {
         public final String id,role;
-        public int texture=-1,speed=1,gate,rows=3;
+        public int texture=-1,bottomTexture=-1,speed=1,gate,rows=3,bottomRows=3;
+        public boolean split;
+        public int panelCapacity(){return split?3:maxRows();}
+        public int count(boolean bottom){return Math.min(panelCapacity(),bottom?bottomRows:rows);}
+        public int choice(boolean bottom){return bottom?bottomTexture:texture;}
+        public void setChoice(boolean bottom,int value){if(bottom)bottomTexture=value;else texture=value;}
+        public boolean rowActive(int row){
+            boolean bottom=split&&row>=3;
+            return choice(bottom)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&(bottom?row-3:row)<count(bottom);
+        }
+        private static int validChoice(int choice){
+            return choice>=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&choice<ScreenHousingTextures.IDS.length
+                ||com.vandorlabs.screen.VehicleInstrument.includes(choice)?choice:-1;
+        }
         public boolean animated=true,inverted,active=true;
         private ChannelList receiveChannels;
         private int receiverGate=-1;
@@ -262,7 +302,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
 
         Display(String id,String role){this.id=id;this.role=role;}
         public int maxRows(){return "screen".equals(role)?6:3;}
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);if(receiveChannels().size()>1)tag.setIntArray("ReceiveChannels",receiveChannels().toArray());if(activation()!=(gate==0?0:inverted?2:1))tag.setInteger("Activation",activation());return tag;}
-        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && !com.vandorlabs.screen.VehicleInstrument.includes(texture) || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,tag.getInteger("Gate"));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");receiveChannels=tag.hasKey("ReceiveChannels",11)?ChannelData.read(tag,"ReceiveChannels",ChannelList.of(gate)):null;receiverGate=gate;activation=tag.hasKey("Activation",3)?Math.max(0,Math.min(2,tag.getInteger("Activation"))):-1;active=gate==0||activation()==0 || tag.getBoolean("Active");}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);if(split)tag.setBoolean("Split",true);if(bottomTexture!=-1)tag.setInteger("BottomTexture",bottomTexture);tag.setInteger("BottomRows",bottomRows);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);if(receiveChannels().size()>1)tag.setIntArray("ReceiveChannels",receiveChannels().toArray());if(activation()!=(gate==0?0:inverted?2:1))tag.setInteger("Activation",activation());return tag;}
+        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=validChoice(tag.getInteger("Texture"));split="screen".equals(role)&&tag.getBoolean("Split");bottomTexture=tag.hasKey("BottomTexture",3)?validChoice(tag.getInteger("BottomTexture")):-1;bottomRows=tag.hasKey("BottomRows",3)?Math.max(0,Math.min(3,tag.getInteger("BottomRows"))):3;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,tag.getInteger("Gate"));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");receiveChannels=tag.hasKey("ReceiveChannels",11)?ChannelData.read(tag,"ReceiveChannels",ChannelList.of(gate)):null;receiverGate=gate;activation=tag.hasKey("Activation",3)?Math.max(0,Math.min(2,tag.getInteger("Activation"))):-1;active=gate==0||activation()==0 || tag.getBoolean("Active");}
     }
 }

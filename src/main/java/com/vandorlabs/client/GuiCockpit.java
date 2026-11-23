@@ -16,7 +16,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     private final List<GuiTextField> fields=new ArrayList<>();
     private HousingTextureList textures;
     private ReceiverPane receiverPane;
-    private boolean surfaceRedstone,surfaceControls;
+    private boolean surfaceRedstone,surfaceControls,bottom;
     private RedstoneRowsPane rowsPane;
     @Override protected HousingTextureList materialPicker(){return textures;}
     private int page;
@@ -55,12 +55,18 @@ public final class GuiCockpit extends GuiMaterialPicker {
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
             GuiButton displayTab=new DialogTabButton(400,x,guiTop+74,76,18,"Displays"),receiveTab=new DialogTabButton(401,x+160,guiTop+74,84,18,"Redstone"),controlsTab=new DialogTabButton(402,x+80,guiTop+74,76,18,"Controls");displayTab.enabled=surfaceRedstone||surfaceControls;receiveTab.enabled=!surfaceRedstone;controlsTab.enabled=!surfaceControls;buttonList.add(displayTab);buttonList.add(receiveTab);buttonList.add(controlsTab);
-            if(surfaceControls){net.minecraft.nbt.NBTTagList values=new net.minecraft.nbt.NBTTagList();for(int row=0;row<screen.rows;row++)values.appendTag(tile.control(screen.id+"/"+row).write());final int display=d;rowsPane=new RedstoneRowsPane(fontRenderer,screen.maxRows(),values,rows->applyRows(display,rows));rowsPane.layout(x,guiTop+98,w,ySize-124,buttonList);}
+            if(!screen.split)bottom=false;
+            if(surfaceControls){net.minecraft.nbt.NBTTagList values=new net.minecraft.nbt.NBTTagList();for(int row=0;row<screen.count(bottom);row++)values.appendTag(tile.control(screen.id+"/"+((bottom?3:0)+row)).write());final int display=d;rowsPane=new RedstoneRowsPane(fontRenderer,screen.panelCapacity(),values,rows->applyRows(display,rows));rowsPane.layout(x,guiTop+98,w,ySize-124,buttonList);}
             else if(surfaceRedstone){receiverPane=new ReceiverPane(40,32,fontRenderer,x,guiTop+104,Math.min(240,w),screen.receiveChannels(),screen.activation());buttonList.add(receiverPane.button());}
             else{
-                textures=new HousingTextureList(x,guiTop+100,cx-x-10,screen.texture,Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT),null,
-                        value->HousingTextureList.generalTexture(value)||ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT)).custom(this::choose)
-                        .redstone(this::redstone).vehicle(this::choose);
+                textures=new HousingTextureList(x,guiTop+100,cx-x-10,screen.choice(bottom),Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT),null,
+                        value->HousingTextureList.generalTexture(value)||ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT)).custom(this::choose);
+                if(screen.split)textures.redstoneHalf(this::redstone).vehicleHalf(this::choose);
+                else textures.redstone(this::redstone).vehicle(this::choose);
+                if(!input){
+                    buttonList.add(new CockpitButton(35,cx,guiTop+176,controlW,18,"Split display: "+(screen.split?"On":"Off")));
+                    if(screen.split)buttonList.add(new CockpitButton(36,cx,guiTop+196,controlW,18,"Editing: "+(bottom?"Bottom":"Top")));
+                }
                 buttonList.add(new CockpitButton(30,cx,guiTop+104,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
                 buttonList.add(new CockpitButton(31,cx,guiTop+128,controlW,20,"Speed: "+new String[]{"Slow","Normal","Fast"}[screen.speed]));
                 buttonList.add(new CockpitButton(33,cx,guiTop+152,controlW,20,"Blank surface"));
@@ -78,8 +84,8 @@ public final class GuiCockpit extends GuiMaterialPicker {
     private void text(int id,int x,int y,int width,String value){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,width,18);field.setMaxStringLength(id==0?128:256);field.setText(value);fields.add(field);}
     private void packet(int op,NBTTagCompound values){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCockpit(inventorySlots.windowId,op,values));}
     private void redstone(){choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);surfaceControls=true;surfaceRedstone=false;initGui();}
-    private void applyRows(int display,net.minecraft.nbt.NBTTagList rows){if(!tile.configureRows(display,rows))return;NBTTagCompound tag=new NBTTagCompound();tag.setInteger("RedstoneDisplay",display);tag.setTag("Rows",rows);packet(0,tag);}
-    private void choose(int value){if(sidePage())tile.setSideTexture(value);else tile.displays.get(displayIndex()).texture=value;save();}
+    private void applyRows(int display,net.minecraft.nbt.NBTTagList rows){if(!tile.configureRows(display,rows,bottom))return;NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("Bottom",bottom);tag.setInteger("RedstoneDisplay",display);tag.setTag("Rows",rows);packet(0,tag);}
+    private void choose(int value){if(sidePage())tile.setSideTexture(value);else tile.displays.get(displayIndex()).setChoice(bottom,value);save();}
     private void save(){
         if(rowsPane!=null){rowsPane.save();return;}if(redstonePage)return;
         int d=displayIndex(),c=controlIndex();NBTTagCompound tag;
@@ -97,8 +103,8 @@ public final class GuiCockpit extends GuiMaterialPicker {
     }
     @Override protected void actionPerformed(GuiButton button){
         if(button.id>=400&&button.id<=402){save();surfaceRedstone=button.id==401;surfaceControls=button.id==402;initGui();return;}
-        if(button.id>=200&&button.id<206){save();surfaceRedstone=false;surfaceControls=false;int category=button.id-200;redstonePage=category==5;if(!redstonePage){java.util.List<Integer> children=categoryPages(category);if(!children.isEmpty())page=children.get(0);}initGui();return;}
-        if(button.id>=300&&button.id<400){save();surfaceRedstone=false;surfaceControls=false;redstonePage=false;page=button.id-300;initGui();return;}
+        if(button.id>=200&&button.id<206){save();surfaceRedstone=false;surfaceControls=false;bottom=false;int category=button.id-200;redstonePage=category==5;if(!redstonePage){java.util.List<Integer> children=categoryPages(category);if(!children.isEmpty())page=children.get(0);}initGui();return;}
+        if(button.id>=300&&button.id<400){save();surfaceRedstone=false;surfaceControls=false;bottom=false;redstonePage=false;page=button.id-300;initGui();return;}
         if(rowsPane!=null&&rowsPane.action(button))return;
         if(button.id==90)return;
         if(button.id==2){save();mc.player.closeScreen();return;}
@@ -112,7 +118,9 @@ public final class GuiCockpit extends GuiMaterialPicker {
         else if(button.id==30)tile.displays.get(d).animated=!tile.displays.get(d).animated;
         else if(button.id==31)tile.displays.get(d).speed=GuiOptionCycle.next(tile.displays.get(d).speed,3);
         else if(button.id==32){TileEntityCockpit.Display display=tile.displays.get(d);ChannelList channels=receiverPane.channels();if(channels==null)return;display.receiver(channels,GuiOptionCycle.next(display.activation(),3));}
-        else if(button.id==33)tile.displays.get(d).texture=-1;
+        else if(button.id==33)tile.displays.get(d).setChoice(bottom,-1);
+        else if(button.id==35){tile.displays.get(d).split=!tile.displays.get(d).split;bottom=false;}
+        else if(button.id==36){bottom=!bottom;initGui();return;}
         else if(button.id==34)tile.setSideTexture(-1);
         else if(button.id==40)tile.controls.get(c).kind=GuiOptionCycle.next(tile.controls.get(c).kind,tile.controls.get(c).id.contains("/")?4:3);
         else if(button.id==42){TileEntityCockpit.Control value=tile.controls.get(c);value.min=GuiOptionCycle.next(value.min,1,value.max-2);}
@@ -121,7 +129,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         save();initGui();
     }
     @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=rowsPane!=null&&rowsPane.keyTyped(ch,key)||receiverPane!=null&&receiverPane.keyTyped(ch,key);for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43,604,605,606))return;if(rowsPane!=null)rowsPane.mouseClicked(x,y,button);if(receiverPane!=null)receiverPane.mouseClicked(x,y,button);for(GuiTextField f:fields)if(f.getVisible())f.mouseClicked(x,y,button);HousingTextureList clickedTextures=textures;if(clickedTextures!=null && clickedTextures.click(x,y,button)){if(textures==clickedTextures && clickedTextures.picked())choose(clickedTextures.selected());return;}super.mouseClicked(x,y,button);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,35,36,40,42,43,604,605,606))return;if(rowsPane!=null)rowsPane.mouseClicked(x,y,button);if(receiverPane!=null)receiverPane.mouseClicked(x,y,button);for(GuiTextField f:fields)if(f.getVisible())f.mouseClicked(x,y,button);HousingTextureList clickedTextures=textures;if(clickedTextures!=null && clickedTextures.click(x,y,button)){if(textures==clickedTextures && clickedTextures.picked())choose(clickedTextures.selected());return;}super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){if(rowsPane!=null)rowsPane.update();if(receiverPane!=null)receiverPane.field().updateCursorCounter();for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,28);}

@@ -108,6 +108,7 @@ final class CanopyDisplayRuntimeChecks {
             aim(mc,tile,false);next(6);return false;
         }
         if(stage==6&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,main(),false)){
+            if(main()==VehicleInstrument.HUD)checkHud(tile);
             shot(mc,output,"main");aim(mc,tile,true);next(7);return false;
         }
         if(stage==7&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,side(),true)){
@@ -232,7 +233,7 @@ final class CanopyDisplayRuntimeChecks {
 
     private static BlockPos position(){return FIRST.east(variant*16);}
     private static boolean joined(){return variant==KINDS.length-1;}
-    private static VehicleInstrument main(){return CHOICES[variant%CHOICES.length];}
+    private static VehicleInstrument main(){return variant==1||variant==2?VehicleInstrument.HUD:CHOICES[variant%CHOICES.length];}
     private static VehicleInstrument side(){return CHOICES[(variant+2)%CHOICES.length];}
     private static void next(int value){stage=value;ticks=0;}
     private static void require(boolean ok,String message){
@@ -254,6 +255,7 @@ final class CanopyDisplayRuntimeChecks {
             BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+id);
             require(world.setBlockState(pos,block.getDefaultState(),3),"place canopy root");
             block.onBlockPlacedBy(world,pos,block.getDefaultState(),p,new ItemStack(block));
+            if(variant==1){TileEntityCanopy roof=TileEntityCanopy.at(world,pos);roof.large.angle=2;roof.markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
             if(joined()){
                 require(world.setBlockState(pos.east(),block.getDefaultState(),3),"place adjacent canopy root");
                 block.onBlockPlacedBy(world,pos.east(),block.getDefaultState(),p,new ItemStack(block));
@@ -318,6 +320,15 @@ final class CanopyDisplayRuntimeChecks {
     private static void verify(Minecraft mc){
         TileEntityCanopy tile=TileEntityCanopy.at(player(mc).world,position()).owner();
         require(tile.large.material==main().choice&&tile.large.material(true)==side().choice,"both server choices saved");
+        if(variant==1){
+            int roofs=0,slopes=0;
+            for(CanopyMesh.Face face:tile.faces())if(face.glazing){
+                Vec3d normal=face.vertices[1].subtract(face.vertices[0]).crossProduct(face.vertices[2].subtract(face.vertices[0])).normalize();
+                if(Math.abs(normal.y)>.999){require(face.sideGlass&&face.display==side(),"horizontal roof follows Side");roofs++;}
+                if(Math.abs(normal.y)>.1 && Math.abs(normal.z)>.1){require(!face.sideGlass&&face.display==main(),"windshield follows Main");slopes++;}
+            }
+            require(roofs>0&&slopes>0,"Long Angled roof and windshield verified");
+        }
         for(boolean side:new boolean[]{false,true}){
             VehicleInstrument expected=side?side():main();
             require(tile.faces().stream().anyMatch(face->face.sideGlass==side&&face.display==expected),"selected choice reaches exact posed pane");
@@ -368,6 +379,20 @@ final class CanopyDisplayRuntimeChecks {
         Field field=HousingTextureList.class.getDeclaredField("scroll");field.setAccessible(true);field.setInt(list,scroll);
         int x=(Integer)field(list,"x"),y=(Integer)field(list,"y");
         gui.mouseClicked(x+4,y+(index-scroll)*HousingTextureList.ROW_HEIGHT+10,0);
+    }
+
+    private static void checkHud(TileEntityCanopy tile)throws Exception{
+        Field cache=CanopyDisplayRenderer.class.getDeclaredField("DISPLAYS");cache.setAccessible(true);
+        Object[] displays=(Object[])((java.util.Map<?,?>)cache.get(null)).get(tile);
+        net.minecraft.client.shader.Framebuffer frame=(net.minecraft.client.shader.Framebuffer)field(displays[0],"frame");
+        int old=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D);
+        java.nio.ByteBuffer alpha=org.lwjgl.BufferUtils.createByteBuffer(frame.framebufferWidth*frame.framebufferHeight);
+        frame.bindFramebufferTexture();org.lwjgl.opengl.GL11.glGetTexImage(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,0,org.lwjgl.opengl.GL11.GL_ALPHA,org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,alpha);
+        net.minecraft.client.renderer.GlStateManager.bindTexture(old);
+        int clear=0,marks=0;
+        for(int i=0;i<alpha.capacity();i++){int coverage=alpha.get(i)&255;if(coverage==0)clear++;if(coverage>127)marks++;}
+        require(clear>alpha.capacity()*.8 && marks>200,"HUD glass alpha coverage cleared="+clear+" marked="+marks);
+        System.out.println("[vandorlabs] canopy HUD alpha PASS "+clear+" clear, "+marks+" marked");
     }
 
     private static void shot(Minecraft mc,File output,String face)throws Exception{
