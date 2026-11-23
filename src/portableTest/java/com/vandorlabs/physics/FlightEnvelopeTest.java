@@ -30,6 +30,18 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.cruiseSpeed(10000,120,1)==75,"light craft retain the absolute speed cap");
         require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
 
+        require(FlightEnvelope.seedOpacity(255)==0&&FlightEnvelope.seedOpacity(384)==.5&&FlightEnvelope.seedOpacity(513)==1,
+                "seed transition endpoints and midpoint");
+        double speed=75,y=520;
+        while(y>250){
+            double previous=speed;
+            speed=FlightEnvelope.descentSpeed(speed,y,5);
+            require(speed<=previous && previous-speed<1.5,"progressive descent braking");
+            y-=5;
+        }
+        require(speed==FlightEnvelope.LOW_SPEED&&FlightEnvelope.descentSpeed(1,290,60)==1,"low-flight limit without speeding up a slow craft");
+        require(FlightEnvelope.descentSpeed(55,400,0)==55,"level flight retains speed");
+
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
         require(!hull.intersects(pane)&&hull.sweepsInto(pane,1.5,0,0),"thin terrain crossed between positional samples");

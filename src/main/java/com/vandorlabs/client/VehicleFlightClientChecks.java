@@ -292,17 +292,17 @@ final class VehicleFlightClientChecks {
             if(frame<18)return false;
             need(Math.abs(heldBank)>10&&Math.abs(MathHelper.wrapDegrees(craft.flightBank()-heldBank))<2,
                     "neutral roll control holds the selected bank; held="+heldBank+" current="+craft.flightBank());
-            mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),255.7,14,0)).get();
+            mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),511.7,14,0)).get();
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
         if(stage==11){
-            if(!craft.cruise.active()||craft.flightAltitude()<=256){need(frame<120,"powered S climb crosses Y=256");return false;}
+            if(!craft.cruise.active()||craft.flightAltitude()<=512){need(frame<120,"powered S climb crosses Y=512");return false;}
             need(Double.isInfinite(craft.groundClearance()),"cruise does not query ground clearance");
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 VehicleFlightReadout readout=actual.flightReadout();
-                need(actual.cruise.active()&&actual.flightAltitude()>256&&actual.poweredFlight()&&readout.fuel>0,
+                need(actual.cruise.active()&&actual.flightAltitude()>512&&actual.poweredFlight()&&readout.fuel>0,
                         "authoritative crossing happened under powered flight ticks");
                 int reduced=(int)Math.ceil(readout.effectiveMass/FlightEnvelope.takeoffMass(readout.ratedThrust)*15)+2;
                 need(reduced<15,"real fixture can support lower thrust");

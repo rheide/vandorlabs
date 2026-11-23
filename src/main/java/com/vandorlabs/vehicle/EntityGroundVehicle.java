@@ -818,6 +818,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
         double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);
         EnumFacing front=structure.facing;
+        if(!launching && dimension==0){
+            double drop=AircraftAttitude.bankSink(roll,driveSpeed)-Math.sin(radians)*driveSpeed;
+            driveSpeed=FlightEnvelope.descentSpeed(driveSpeed,altitude,gliding||limited?Math.max(.06,drop):drop);
+        }
         double horizontal=Math.cos(radians)*driveSpeed;
         motionX=(front.getFrontOffsetX()*Math.cos(angle)-front.getFrontOffsetZ()*Math.sin(angle))*horizontal;
         motionZ=(front.getFrontOffsetX()*Math.sin(angle)+front.getFrontOffsetZ()*Math.cos(angle))*horizontal;
@@ -836,7 +840,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             applyFlightPose(new VehiclePose(posX,posY,posZ,yaw,pitch,bank,structure.facing));
             return VehicleFlightMotion.Result.MOVED;
         }
-        boolean enteringCruise=dimension==0&&dy>0&&posY+dy>FlightEnvelope.WORLD_CEILING;
+        boolean enteringCruise=dimension==0&&dy>0&&posY+dy>FlightEnvelope.CRUISE_ALTITUDE;
         VehicleFlightMotion.Result result=flightMotion.move(dx,dy,dz,yaw,pitch,bank);
         if(enteringCruise&&result==VehicleFlightMotion.Result.MOVED)cruise.move(0,0,0);
         return result;

@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Blend native Overworld terrain into the Forge seed view from Y=256 to Y=512. High-altitude descent sheds excess speed through this band. Seed-view water occludes the stars.
+
 - Count upright wheels on settled side-mounted swing arms as landing supports. Taxi and ordinary Park use the same tire contact at the runway surface.
 
 - Fuel Maxwell Drives through three inlets and select Digital or Analog redstone response with the shared activation selector. Build five engine sizes and inspect remaining fuel on the front gauge. The front casing and corner trim render without flickering.

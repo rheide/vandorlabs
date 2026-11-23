@@ -147,13 +147,13 @@ final class CruisePhysicalChecks {
         startX=pilot.posX;
         startZ=pilot.posZ;
         remoteX=startX+FAR;
-        craft.setPosition(startX,255.9,startZ);
+        craft.setPosition(startX,511.9,startZ);
         world.spawnEntity(craft);
-        pilot.setPositionAndUpdate(startX,256,startZ);
+        pilot.setPositionAndUpdate(startX,512,startZ);
         craft.assignSeat(pilot,seat);
         require(pilot.startRiding(craft,true),"real pilot mounts");
         craft.hover=true;
-        craft.hoverTarget=255.9;
+        craft.hoverTarget=511.9;
     }
 
     private static void resume(Minecraft mc){
@@ -180,7 +180,7 @@ final class CruisePhysicalChecks {
         NBTTagCompound restoredFlight=new NBTTagCompound();
         restoredFlight.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(restoredFlight);
-        craft.setPosition(startX,255.9,startZ);
+        craft.setPosition(startX,511.9,startZ);
         require(craft.cruise.move(0,1,0),"enter high flight");
         require(craft.cruise.move(FAR,640,0),"advance geographic route");
         startingTicks=craft.ticksExisted;
@@ -248,7 +248,7 @@ final class CruisePhysicalChecks {
         arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
             arrivalX+=24;
-            require(craft.cruise.move(24,255-craft.cruise.altitude(),0,18,-32,25),"dive through the build ceiling");
+            require(craft.cruise.move(24,511-craft.cruise.altitude(),0,18,-32,25),"dive through the cruise boundary");
         }else if("teleport".equals(EXIT)) {
             int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
                 "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);
@@ -259,7 +259,7 @@ final class CruisePhysicalChecks {
     }
 
     private static void verifyArrival(double clientY){
-        require(pilot.getRidingEntity()==craft&&craft.posY<256,"descent continues underneath the ceiling with pilot aboard");
+        require(pilot.getRidingEntity()==craft&&craft.posY<512,"descent continues underneath the ceiling with pilot aboard");
         require(Math.abs(clientY-craft.posY)<4,"server and visible aircraft continue through the same descent");
         require(world.getTotalWorldTime()-exitTick<120,"reentry keeps updating the client promptly");
         int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
@@ -280,7 +280,7 @@ final class CruisePhysicalChecks {
 
     private static boolean clientExitSettled(Minecraft mc){
         if("teleport".equals(EXIT))return !mc.player.isRiding()&&Math.abs(mc.player.posX-startX)<2&&mc.player.posY<120;
-        if(mc.player.posY>=300)return false;
+        if(mc.player.posY>=550)return false;
         require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"actual client kept the mounted craft at reentry");
         EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
         require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null,"client mount retains actual aircraft structure");
@@ -295,7 +295,7 @@ final class CruisePhysicalChecks {
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=18;
         }
-        return mountedArrivalTicks>=20&&local.posY<256&&local.posY<firstArrivalY-.5;
+        return mountedArrivalTicks>=20&&local.posY<512&&local.posY<firstArrivalY-.5;
     }
 
     private static boolean generated(double x,double z){

@@ -3,6 +3,7 @@ package com.vandorlabs.physics;
 /** Loader-independent, arcade flight envelope. Mass is measured in stone-block units. */
 public final class FlightEnvelope {
     public static final int WORLD_CEILING = 256;
+    public static final int CRUISE_ALTITUDE = 512;
     public static final int MAX_ALTITUDE = 10000;
     public static final int REENTRY_ALTITUDE = 200;
     public static final double TAKEOFF_SPEED = .32;
@@ -61,6 +62,21 @@ public final class FlightEnvelope {
         double blend = EARLY_CRUISE_SHARE * early + (1 - EARLY_CRUISE_SHARE) * fraction * fraction;
         double power = Math.min(1, takeoffMass(thrust) / (2 * mass));
         return LOW_SPEED + (MAX_CRUISE_SPEED - LOW_SPEED) * power * blend / blendAtLimit;
+    }
+
+    /** Opacity of the seed surface through the band where real terrain is still tracked. */
+    public static double seedOpacity(double altitude) {
+        double t = Math.max(0, Math.min(1, (altitude - WORLD_CEILING) / (CRUISE_ALTITUDE - WORLD_CEILING)));
+        return t * t * (3 - 2 * t);
+    }
+
+    /** Shed the fraction of excess airspeed corresponding to the descent through this band. */
+    public static double descentSpeed(double speed, double altitude, double drop) {
+        if (drop <= 0 || speed <= LOW_SPEED || altitude - drop >= CRUISE_ALTITUDE) return speed;
+        double remaining = Math.min(altitude, CRUISE_ALTITUDE) - WORLD_CEILING;
+        if (remaining <= 0) return LOW_SPEED;
+        double fraction = Math.max(0, altitude - drop - WORLD_CEILING) / remaining;
+        return LOW_SPEED + (speed - LOW_SPEED) * fraction;
     }
 
     public static double acceleration(double mass, double thrust) {

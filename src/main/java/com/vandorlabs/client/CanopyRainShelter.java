@@ -47,7 +47,8 @@ public final class CanopyRainShelter {
     }
     static boolean aboveWeather(Minecraft mc){
         return mc.player!=null && mc.player.getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle
-            && ((com.vandorlabs.vehicle.EntityGroundVehicle)mc.player.getRidingEntity()).cruise.active();
+            && mc.player.dimension==0 && ((com.vandorlabs.vehicle.EntityGroundVehicle)mc.player.getRidingEntity()).flying()
+            && ((com.vandorlabs.vehicle.EntityGroundVehicle)mc.player.getRidingEntity()).flightAltitude()>256;
     }
     private static void renderWeather(Minecraft mc,WorldClient view,float partial){
         if(aboveWeather(mc)){

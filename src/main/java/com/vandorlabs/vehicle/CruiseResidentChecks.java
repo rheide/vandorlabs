@@ -79,11 +79,11 @@ final class CruiseResidentChecks {
         }else if(stage==4&&REENTRY){
             work=client.getIntegratedServer().addScheduledTask(()->{
                 descendTick=world.getTotalWorldTime();
-                require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"request reentry from the last resident anchor");
+                require(craft.cruise.move(0,511-craft.cruise.altitude(),0),"request reentry from the last resident anchor");
             });
             advance(5);
         }else if(stage==5){
-            if(client.player.posY>=300)return false;
+            if(client.player.posY>=550)return false;
             require(client.player.getRidingEntity() instanceof EntityGroundVehicle,"resident reentry keeps the actual client mounted");
             EntityGroundVehicle local=(EntityGroundVehicle)client.player.getRidingEntity();
             if(local.cruise.active()||Math.abs(local.posX-wildernessX)>=1)return false;
@@ -93,10 +93,10 @@ final class CruiseResidentChecks {
             require(client.world.getChunkProvider().getLoadedChunk(chunk(wildernessX),chunk(originZ))!=null,
                 "resident destination terrain arrives before lower-altitude movement");
             if(arrivalTicks++==0)firstArrivalY=local.posY;
-            if(arrivalTicks<20||local.posY>=256||local.posY>=firstArrivalY-.5)return false;
+            if(arrivalTicks<20||local.posY>=512||local.posY>=firstArrivalY-.5)return false;
             double clientY=local.posY;
             work=client.getIntegratedServer().addScheduledTask(()->{
-                require(!craft.cruise.active()&&craft.posY<256&&pilot.getRidingEntity()==craft
+                require(!craft.cruise.active()&&craft.posY<512&&pilot.getRidingEntity()==craft
                     &&craft.chunkCoordX==chunk(wildernessX)&&!generated(residentX+FAR/2,originZ),
                     "resident reentry continues beneath the ceiling without generating the route midpoint");
                 int elapsed=(int)(world.getTotalWorldTime()-descendTick);
@@ -140,13 +140,13 @@ final class CruiseResidentChecks {
         craft=new EntityGroundVehicle(world);
         craft.install(new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null),
             new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null)),seat,EnumFacing.NORTH,1));
-        craft.setPosition(departure,255.9,originZ);
+        craft.setPosition(departure,511.9,originZ);
         world.spawnEntity(craft);
-        pilot.setPositionAndUpdate(departure,256,originZ);
+        pilot.setPositionAndUpdate(departure,512,originZ);
         craft.assignSeat(pilot,seat);
         require(pilot.startRiding(craft,true),"real local player boards the Pilot Seat");
         craft.hover=true;
-        craft.hoverTarget=255.9;
+        craft.hoverTarget=511.9;
     }
 
     private static void enter(){
@@ -155,7 +155,7 @@ final class CruiseResidentChecks {
         NBTTagCompound savedFlight=new NBTTagCompound();
         savedFlight.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(savedFlight);
-        craft.setPosition(departure,255.9,originZ);
+        craft.setPosition(departure,511.9,originZ);
         require(craft.cruise.move(0,1,0),"enter High Flight");
         require(craft.cruise.move(0,640,0),"raise enough to stay above the reentry path");
         // The guard must leave even the unload flag untouched. This direct check runs

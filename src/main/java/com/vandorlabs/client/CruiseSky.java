@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.navigation.CruiseAtlas;
+import com.vandorlabs.physics.FlightEnvelope;
 import com.vandorlabs.navigation.CruiseAtlas.Tile;
 import com.vandorlabs.network.MessageCruiseTerrain;
 import com.vandorlabs.vehicle.EntityGroundVehicle;
@@ -99,17 +100,32 @@ public final class CruiseSky {
     }
     @SubscribeEvent public static void render(RenderWorldLastEvent event){
         Minecraft mc=Minecraft.getMinecraft();
-        if(owner==null||mc.player==null||mc.player.getRidingEntity()!=owner||!owner.cruise.active())return;
+        if(owner==null||mc.player==null||mc.player.getRidingEntity()!=owner||!owner.flying()||owner.dimension!=0)return;
         float partial=event.getPartialTicks();
-        double x=owner.cruise.view(true,partial),z=owner.cruise.view(false,partial);
-        double altitude=owner.cruise.altitude()+(1-partial)*(owner.lastTickPosY-owner.posY);
+        boolean cruising=owner.cruise.active();
+        double physicalX=owner.lastTickPosX+partial*(owner.posX-owner.lastTickPosX);
+        double physicalZ=owner.lastTickPosZ+partial*(owner.posZ-owner.lastTickPosZ);
+        double physicalY=owner.lastTickPosY+partial*(owner.posY-owner.lastTickPosY);
+        double altitude=owner.cruise.altitude()+physicalY-owner.posY;
+        double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude);
+        if(opacity<=0)return;
+        net.minecraft.client.renderer.entity.RenderManager camera=mc.getRenderManager();
+        double x=camera.viewerPosX+(cruising?owner.cruise.view(true,partial)-physicalX:0);
+        double z=camera.viewerPosZ+(cruising?owner.cruise.view(false,partial)-physicalZ:0);
+        double y=63-altitude-(camera.viewerPosY-physicalY);
         int step=CruiseAtlas.nearStep(altitude);
         double horizon=step*16.0*MessageCruiseTerrain.SIZE;
         double scale=Math.max(32,mc.gameSettings.renderDistanceChunks*12)/horizon;
-        double y=-Math.max(.15,(altitude-63)*scale);
+        // Scale in eye space. Real and seed coastlines then share a sightline, including
+        // in third person or a banked seat, while the horizon fits the native far clip.
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
         GlStateManager.pushMatrix();
+        GlStateManager.scale(scale,scale,scale);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         GlStateManager.depthMask(false);
-        GL11.glDepthRange(1,1);
+        // In the transition band the seed surface must pass the depth of native terrain.
+        // Preserve the nearer aircraft geometry. In cruise the stars and sky are at depth one.
+        GL11.glDepthRange(cruising?1:Math.max(0,1-3*scale),1);
         boolean alphaTest=GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
         boolean lit=GL11.glIsEnabled(GL11.GL_LIGHTING);
         boolean blend=GL11.glIsEnabled(GL11.GL_BLEND);
@@ -134,31 +150,56 @@ public final class CruiseSky {
                 byte[] heights=elevations.get(t);
                 int divisions=heights==null?8:MessageCruiseTerrain.HEIGHT_GRID-1;
                 for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
-                    vertex(b,dx,dz,span,col,row,divisions,horizon,y,scale,fade,heights);
-                    vertex(b,dx,dz,span,col,row+1,divisions,horizon,y,scale,fade,heights);
-                    vertex(b,dx,dz,span,col+1,row+1,divisions,horizon,y,scale,fade,heights);
-                    vertex(b,dx,dz,span,col+1,row,divisions,horizon,y,scale,fade,heights);
+                    vertex(b,dx,dz,span,col,row,divisions,y,opacity,fade,heights);
+                    vertex(b,dx,dz,span,col,row+1,divisions,y,opacity,fade,heights);
+                    vertex(b,dx,dz,span,col+1,row+1,divisions,y,opacity,fade,heights);
+                    vertex(b,dx,dz,span,col+1,row,divisions,y,opacity,fade,heights);
                 }
                 Tessellator.getInstance().draw();
             }
+            haze(mc,partial,horizon,y,opacity);
         }finally{
+            GlStateManager.matrixMode(GL11.GL_PROJECTION);
+            GlStateManager.popMatrix();
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
             if(alphaTest)GlStateManager.enableAlpha();
             if(lit)GlStateManager.enableLighting();
             if(!blend)GlStateManager.disableBlend();
             GlStateManager.shadeModel(shading);
-            GL11.glDepthRange(0,1);GlStateManager.depthMask(true);GlStateManager.popMatrix();
+            GL11.glDepthRange(0,1);GlStateManager.depthMask(true);
         }
     }
-    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double horizon,double y,double scale,boolean fade,byte[] heights){
+    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double y,double opacity,boolean fade,byte[] heights){
         double u=col/(double)divisions,v=row/(double)divisions,x=dx+u*span,z=dz+v*span;
-        double distance=Math.sqrt(x*x+z*z)/horizon;
-        double haze=Math.max(0,Math.min(1,(distance-.06)/.94));
         // The next coarser tile extends underneath this entire tile. Feather the level
         // change around the aircraft so individual square tile boundaries stay invisible.
         double detail=fade?Math.max(0,Math.min(1,(1-Math.max(Math.abs(x),Math.abs(z))/span)*2.5)):1;
-        int opacity=(int)(255*(1-haze)*(1-haze)*detail);
+        int alpha=(int)Math.round(255*opacity*detail);
         double ground=heights==null?0:((heights[row*MessageCruiseTerrain.HEIGHT_GRID+col]&255)-63)*detail;
-        b.pos(x*scale,y+ground*scale,z*scale).tex(u,v).color(255,255,255,opacity).endVertex();
+        b.pos(x,y+ground,z).tex(u,v).color(255,255,255,alpha).endVertex();
+    }
+    /** Tint the distant surface after drawing opaque land and water. Fading the base
+     * texture itself reveals stars through the ocean whenever there is no coarser tile. */
+    private static void haze(Minecraft mc,float partial,double horizon,double y,double opacity){
+        net.minecraft.util.math.Vec3d fog=mc.world.getFogColor(partial);
+        int r=(int)(255*fog.x),g=(int)(255*fog.y),blue=(int)(255*fog.z);
+        BufferBuilder b=Tessellator.getInstance().getBuffer();
+        GlStateManager.disableTexture2D();
+        try{
+            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_COLOR);
+            for(int row=-12;row<12;row++)for(int col=-12;col<12;col++){
+                hazeVertex(b,col,row,horizon,y,opacity,r,g,blue);
+                hazeVertex(b,col,row+1,horizon,y,opacity,r,g,blue);
+                hazeVertex(b,col+1,row+1,horizon,y,opacity,r,g,blue);
+                hazeVertex(b,col+1,row,horizon,y,opacity,r,g,blue);
+            }
+            Tessellator.getInstance().draw();
+        }finally{GlStateManager.enableTexture2D();}
+    }
+    private static void hazeVertex(BufferBuilder b,int col,int row,double horizon,double y,double opacity,int r,int g,int blue){
+        double distance=Math.sqrt(col*col+row*row)/8;
+        double clear=Math.max(0,Math.min(1,(1-distance)/.94));
+        b.pos(col*horizon/8,y,row*horizon/8).color(r,g,blue,(int)(255*opacity*(1-clear*clear))).endVertex();
     }
     private CruiseSky(){}
 }

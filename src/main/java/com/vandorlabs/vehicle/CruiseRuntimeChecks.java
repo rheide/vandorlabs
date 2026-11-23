@@ -50,6 +50,39 @@ public final class CruiseRuntimeChecks {
             if (x>=startX+512 && x<=startX+4112 && Math.abs(z-craft.posZ)<256) loads++;
         }
     }
+    /** Render the same distant surface over two extreme sky colors in one frame. */
+    public static final class OpacityProbe {
+        boolean requested,passed;
+        @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
+        public void render(net.minecraftforge.client.event.RenderWorldLastEvent event){
+            if(!requested)return;
+            requested=false;
+            Minecraft mc=Minecraft.getMinecraft();
+            final int side=12, x=mc.displayWidth/4, y=mc.displayHeight*3/5;
+            java.nio.ByteBuffer dark=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
+            java.nio.ByteBuffer bright=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
+            org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_SCISSOR_BIT|org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
+            try{
+                org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+                org.lwjgl.opengl.GL11.glScissor(x,y,side,side);
+                for(int pass=0;pass<2;pass++){
+                    org.lwjgl.opengl.GL11.glClearColor(pass,0,pass,1);
+                    org.lwjgl.opengl.GL11.glClear(org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
+                    CruiseSky.render(event);
+                    org.lwjgl.opengl.GL11.glReadPixels(x,y,side,side,org.lwjgl.opengl.GL11.GL_RGBA,
+                            org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,pass==0?dark:bright);
+                }
+            }finally{org.lwjgl.opengl.GL11.glPopAttrib();}
+            int largest=0;
+            for(int i=0;i<dark.capacity();i++)if(i%4!=3)
+                largest=Math.max(largest,Math.abs((dark.get(i)&255)-(bright.get(i)&255)));
+            require(largest<=2,"opaque cruise surface leaks backdrop; greatest RGB change="+largest);
+            passed=true;
+            System.out.println("[vandorlabs] cruise surface backdrop PASS largest RGB delta="+largest);
+        }
+    }
+    private static final OpacityProbe opacityProbe=new OpacityProbe();
+
     private static final TransitChunks transitChunks=new TransitChunks();
 
     private static void observeRoute() {
@@ -83,10 +116,10 @@ public final class CruiseRuntimeChecks {
         // Set a recovery flight so the production physics levels the craft and descends on its own.
         NBTTagCompound state=new NBTTagCompound();state.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(state);
-        craft.setPosition(startX,255.9,craft.posZ);
-        verifyRelief((WorldServer)craft.world);
+        craft.setPosition(startX,511.9,craft.posZ);
+
         observeRoute();
-        require(craft.cruise.move(0,32,0),"cross build ceiling");
+        require(craft.cruise.move(0,32,0),"cross cruise boundary");
         routeSteps=64;
     }
     private static void finishLeg(){
@@ -165,6 +198,20 @@ public final class CruiseRuntimeChecks {
             });stage=9;
         }else if(stage==9 && CruiseSky.reliefAtCenter()){
             require(!CruiseSky.ready(),"preview arrived before crossing Y=256");
+            mc.gameSettings.thirdPersonView=1;
+            mc.player.rotationPitch=mc.player.prevRotationPitch=35;
+            mc.gameSettings.hideGUI=true;
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                verifyRelief((WorldServer)craft.world);
+                craft.setPosition(startX,386,craft.posZ);
+                VehicleNetwork.state(craft,true);
+            });
+            stage=13;ticks=0;
+        }else if(stage==13 && ticks>12 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
+            EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
+            require(!local.cruise.active()&&local.posY>345&&local.posY<405,"real coordinates during blended flight at "+local.posY);
+            require(mc.world.isBlockLoaded(new BlockPos(local.posX,64,local.posZ)),"real terrain remains available during transition");
+            ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"cruise-blend-mid.png"));
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=11;
         }else if(stage==11 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
@@ -192,8 +239,13 @@ public final class CruiseRuntimeChecks {
             mc.world.setRainStrength(1);
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=35;
-            mc.gameSettings.hideGUI=true;stage=3;ticks=0;
-        }else if(stage==3&&ticks>15){
+            mc.gameSettings.hideGUI=true;
+            MinecraftForge.EVENT_BUS.register(opacityProbe);
+            stage=3;ticks=0;
+        }else if(stage==3&&ticks==12){
+            opacityProbe.requested=true;
+        }else if(stage==3&&ticks>15&&opacityProbe.passed){
+            MinecraftForge.EVENT_BUS.unregister(opacityProbe);
             require(com.vandorlabs.client.CanopyRainShelter.suppressedDraws()>initialWeatherDraws,"rain pass suppressed over cruise");
             int pilotDraws=VehicleClient.cruisePilotDraws();
             require(pilotDraws==1,"third-person cruise draws the local pilot exactly once, draws="+pilotDraws);
@@ -205,9 +257,9 @@ public final class CruiseRuntimeChecks {
             work=mc.getIntegratedServer().addScheduledTask(()->{
                 checkRoute();
                 require(craft.cruise.active(),"craft still cruising");
-                require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"reenter");
+                require(craft.cruise.move(0,511-craft.cruise.altitude(),0),"reenter");
             });stage=4;
-        }else if(stage==4&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&Math.abs(mc.player.posX-destination)<4&&mc.player.posY<300){
+        }else if(stage==4&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&Math.abs(mc.player.posX-destination)<4&&mc.player.posY<550){
             work=mc.getIntegratedServer().addScheduledTask(()->{
                 require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01,"reentered at geographic destination");
                 require(craft.world.isBlockLoaded(new BlockPos(destination,64,craft.posZ)),"destination prepared");
@@ -219,7 +271,7 @@ public final class CruiseRuntimeChecks {
                 require(!craft.flying() && !craft.hover && !craft.cruise.active() && craft.onGround
                         && Math.abs(craft.posX-destination)<2 && craft.posY<255,"last pilot leaves craft landed at route");
             });stage=7;
-        }else if(stage==7 || stage==9) {
+        }else if(stage==7 || stage==12) {
             if (mc.player.isRiding() || Math.abs(mc.player.posX-startX)>=2 || Math.abs(mc.player.posZ)>=2) {
                 teleportSettled=0;
                 return false;
@@ -241,7 +293,7 @@ public final class CruiseRuntimeChecks {
             EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
             if(!mounted.getUniqueID().equals(craft.getUniqueID()) || !mounted.cruise.active())return false;
             work=mc.getIntegratedServer().addScheduledTask(()->journeyMapTeleport(mc));
-            stage=9;
+            stage=12;
         }else if(stage==10) {
             System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount settled-external-teleport");
             return true;
