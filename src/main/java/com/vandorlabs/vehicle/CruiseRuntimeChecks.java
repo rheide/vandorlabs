@@ -246,7 +246,11 @@ public final class CruiseRuntimeChecks {
         }else if(stage==13 && ticks>12 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
             require(!local.cruise.active()&&local.posY>345&&local.posY<405,"real coordinates during blended flight at "+local.posY);
-            require(VehicleClient.cruisePilotDraws()==1,"transition band draws the third-person pilot once");
+            int pilotDraws=VehicleClient.cruisePilotDraws();
+            // The shader pack compiles and can run catch-up simulation ticks before its
+            // first rendered transition frame. Wait for a draw, still reject double draws.
+            if(pilotDraws==0&&ticks<60)return false;
+            require(pilotDraws==1,"transition band draws the third-person pilot once, draws="+pilotDraws);
             require(mc.world.isBlockLoaded(new BlockPos(local.posX,64,local.posZ)),"real terrain remains available during transition");
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"cruise-blend-mid.png"));
             work=mc.getIntegratedServer().addScheduledTask(()->{
