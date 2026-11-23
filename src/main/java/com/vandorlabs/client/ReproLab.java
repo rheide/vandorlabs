@@ -671,13 +671,13 @@ public class ReproLab {
             System.out.println("[vandorlabs][reprolab] stair-settings-live PASS current saved edits, actual model/lighting and padded items");mc.shutdown();
         }catch(Exception failure){throw new IllegalStateException("Stair settings focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.controlMountSettingsChecksOnly")){if(++holdTicks>=40)try{
-            if(holdTicks==40){
-                mc.getIntegratedServer().addScheduledTask(()->BinaryControlRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
-                SignalControlMountChecks.checkModels(mc);MountedBinaryControlChecks.checkModels(mc);
-                System.out.println("[vandorlabs][reprolab] control-mount-settings-live PASS existing pick/place/copy/collision and mounted model/item matrices");
-            }
-            if(ThrusterLeverLiveChecks.tick(mc,outDir))mc.shutdown();
+            mc.getIntegratedServer().addScheduledTask(()->BinaryControlRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+            SignalControlMountChecks.checkModels(mc);MountedBinaryControlChecks.checkModels(mc);
+            System.out.println("[vandorlabs][reprolab] control-mount-settings-live PASS existing pick/place/copy/collision and mounted model/item matrices");mc.shutdown();
         }catch(Exception failure){throw new IllegalStateException("Control mount settings focus",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.thrusterLeverChecksOnly")){if(++holdTicks>=20)try{
+            if(ThrusterLeverLiveChecks.tick(mc,outDir))mc.shutdown();
+        }catch(Exception failure){throw new IllegalStateException("Thruster Lever focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.materialSpriteChecksOnly")){if(++holdTicks>=40)try{LegacyMaterialSpriteChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Material sprite assessment",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeReferenceExportOnly")){if(++holdTicks>=40)try{LegacyCubeReferenceExport.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Cube reference export",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeJoiningChecksOnly")){try{if(Boolean.getBoolean("vandorlabs.directionalJoinChecksOnly")){if(++holdTicks>=40&&DirectionalJoinPlayerChecks.tick(mc,outDir)){System.out.println("[vandorlabs][reprolab] cube-joining-live PASS");mc.shutdown();}return;}if(++holdTicks>=40&&CopifierJoinBatchRuntimeChecks.tick(mc)){JoinedHousingRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] cube-joining-live PASS");mc.shutdown();}}catch(Exception failure){throw new IllegalStateException("Copifier joined texture batch",failure);}return;}

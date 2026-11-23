@@ -61,6 +61,9 @@ case "${1:-}" in
         elif [ "$TARGET" = control-mount-settings ]; then
             PREFIX=control_mount_
             export VANDOR_LABS_CONTROL_MOUNT_SETTINGS_CHECKS_ONLY=true
+        elif [ "$TARGET" = thruster-lever ]; then
+            PREFIX=thruster_
+            export VANDOR_LABS_THRUSTER_LEVER_CHECKS_ONLY=true
         elif [ "$TARGET" = material-sprites ]; then
             PREFIX=material_sprites_
             export VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY=true
@@ -689,8 +692,13 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = control-mount-settings ]; then
-        for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts thruster-lever-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Control mount settings checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = thruster-lever ]; then
+        grep -q "thruster-lever-live PASS" "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/shot_thruster-pilot-low.png"
         exit 0
     fi
     if [ "$TARGET" = material-sprites ]; then
