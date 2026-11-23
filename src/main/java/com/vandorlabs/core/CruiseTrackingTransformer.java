@@ -74,15 +74,19 @@ public final class CruiseTrackingTransformer implements IClassTransformer {
                 if (WORLD.equals(transformedName) && !chunkRead(field) && !floor(field.getNext())) continue;
                 if (CHUNK.equals(transformedName) && !chunkRead(field)) continue;
                 if (TRACKER.equals(transformedName)) {
-                    String tracked="trackedEntity";
-                    for(FieldNode data:type.fields)if(name(data.name,"trackedEntity","field_73132_a")){tracked=data.name;break;}
+                    String tracked=fieldName(type,"trackedEntity","field_73132_a","Lnet/minecraft/entity/Entity;");
+                    String encoded=axis.equals("X")?fieldName(type,"encodedPosX","field_73128_d","J"):
+                        fieldName(type,"encodedPosZ","field_73126_f","J");
+                    if(tracked==null||encoded==null)continue;
                     InsnList context=new InsnList();
                     context.add(new VarInsnNode(Opcodes.ALOAD,0));
                     context.add(new FieldInsnNode(Opcodes.GETFIELD,type.name,tracked,"Lnet/minecraft/entity/Entity;"));
+                    context.add(new VarInsnNode(Opcodes.ALOAD,0));
+                    context.add(new FieldInsnNode(Opcodes.GETFIELD,type.name,encoded,"J"));
                     method.instructions.insertBefore(field,context);
                     method.maxStack=Math.max(method.maxStack,8);
                     method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"viewer"+axis,
-                        "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/Entity;)D",false));
+                        "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/Entity;J)D",false));
                 } else {
                     method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"tracking"+axis,
                         "(Lnet/minecraft/entity/Entity;)D",false));
@@ -100,6 +104,12 @@ public final class CruiseTrackingTransformer implements IClassTransformer {
         byte[] result=output.toByteArray();
         VERIFIED.add(transformedName);
         return result;
+    }
+
+    private static String fieldName(ClassNode owner,String mapped,String srg,String descriptor) {
+        for(FieldNode field:owner.fields)
+            if(descriptor.equals(field.desc)&&name(field.name,mapped,srg))return field.name;
+        return null;
     }
 
     private static boolean target(String owner,String method) {

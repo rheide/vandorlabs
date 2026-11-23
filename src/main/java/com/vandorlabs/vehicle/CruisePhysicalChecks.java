@@ -33,6 +33,7 @@ final class CruisePhysicalChecks {
     private static final int FAR=8192, SWEEP=768, STEP=12;
     private static final String RESTART=System.getenv("VANDOR_LABS_CRUISE_PHASE");
     private static final String EXIT=System.getenv("VANDOR_LABS_PHYSICAL_EXIT");
+    private static final String MODE=System.getenv().getOrDefault("VANDOR_LABS_REENTRY_MODE","physical");
     private static final String ANCHOR_FIXTURE="PhysicalCruiseFixture";
     private static final Audit AUDIT=new Audit();
     private static EntityGroundVehicle craft;
@@ -40,10 +41,13 @@ final class CruisePhysicalChecks {
     private static WorldServer world;
     private static Future<?> work;
     private static int stage, wait, steps, startingTicks;
-    private static double startX,startZ,remoteX;
+    private static double startX,startZ,remoteX,arrivalX;
+    private static double lastCraftX=Double.NaN;
+    private static int smoothSamples, mountedArrivalTicks;
 
     private CruisePhysicalChecks() {}
     static boolean enabled(){return ENABLED;}
+    private static boolean physical(){return "physical".equals(MODE);}
     private static void require(boolean valid,String reason){
         if(!valid)throw new IllegalStateException("Physical cruise stage="+stage+" step="+steps+": "+reason);
     }
@@ -60,11 +64,11 @@ final class CruisePhysicalChecks {
             File file=new File(mc.mcDataDir,"config/cruise-physical-fixture.cfg");
             net.minecraftforge.common.config.Configuration config=new net.minecraftforge.common.config.Configuration(file);
             config.load();
-            config.get("vehicles","cruiseCoordinates","anchored").set("physical");
+            config.get("vehicles","cruiseCoordinates","anchored").set(MODE);
             config.save();
             BlockAvailability.load(file);
-            require(BlockAvailability.cruiseCoordinates()==BlockAvailability.CruiseCoordinates.PHYSICAL,
-                    "effective server config selects physical coordinates");
+            require(BlockAvailability.cruiseCoordinates().name().equalsIgnoreCase(MODE),
+                    "effective server config selects "+MODE+" coordinates");
             mc.displayGuiScreen(null);
             if("read".equals(RESTART)){
                 work=mc.getIntegratedServer().addScheduledTask(()->resume(mc));
@@ -78,10 +82,11 @@ final class CruisePhysicalChecks {
             advance(2);
         }else if(stage==2&&wait>=5){
             if(steps<SWEEP/STEP){
+                if(physical()&&steps>12&&steps<60)samplePhysicalMotion(mc);
                 work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::step);
             }else{
                 require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"real client stayed mounted");
-                if(Math.abs(mc.player.posX-(remoteX+SWEEP))>=20){
+                if(physical()&&Math.abs(mc.player.posX-(remoteX+SWEEP))>=20){
                     if(wait%40==0){
                         EntityGroundVehicle clientCraft=(EntityGroundVehicle)mc.player.getRidingEntity();
                         BlockPos anchor=new BlockPos(clientCraft.cruise.anchorX(),64,clientCraft.cruise.anchorZ());
@@ -92,7 +97,9 @@ final class CruisePhysicalChecks {
                     }
                     return false;
                 }
-                if(!CruiseProjectionGameplayChecks.tick(mc,output,craft))return false;
+                if(physical()&&!CruiseProjectionGameplayChecks.tick(mc,output,craft))return false;
+                if(physical()&&"descend".equals(EXIT))require(smoothSamples>=8,
+                    "the mounted aircraft interpolated repeated high-flight snapshots, samples="+smoothSamples);
                 System.out.println("[vandorlabs][coordinate-probe] client playerX="+mc.player.posX+
                     " craftX="+mc.player.getRidingEntity().posX+" playerChunk="+mc.player.chunkCoordX);
                 work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::finish);
@@ -101,7 +108,10 @@ final class CruisePhysicalChecks {
         }else if(stage==3&&EXIT!=null){
             work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::exit);
             advance(4);
-        }else if(stage==3||stage==4&&clientExitSettled(mc)){
+        }else if(stage==4&&clientExitSettled(mc)){
+            if("descend".equals(EXIT))work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::verifyArrival);
+            advance(5);
+        }else if(stage==3||stage==5){
             System.out.println("[vandorlabs] cruise-physical PASS");
             return true;
         }
@@ -171,9 +181,9 @@ final class CruisePhysicalChecks {
         world.getMinecraftServer().getPlayerList().serverUpdateMovingPlayer(pilot);
         if(steps==16)world.getPlayerChunkMap().setPlayerViewRadius(8);
         if(steps==32)world.getPlayerChunkMap().setPlayerViewRadius(10);
-        require(craft.cruise.projected() && Math.abs(craft.posX-craft.cruise.x())<.001
+        require(craft.cruise.projected()==physical() && Math.abs(craft.posX-(physical()?craft.cruise.x():startX))<.001
             &&Math.abs(craft.chunkCoordX-(int)Math.floor(startX/16))<=1,"craft remains indexed at departure");
-        require(Math.abs(pilot.posX-craft.cruise.x())<3,"unexpected actual server player x="+pilot.posX);
+        require(Math.abs(pilot.posX-(physical()?craft.cruise.x():startX))<3,"unexpected actual server player x="+pilot.posX);
         require(Math.abs(pilot.managedPosX-startX)<3 && Math.abs(pilot.chunkCoordX-(int)Math.floor(startX/16))<=1,
             "server player remains in approved departure tracking");
     }
@@ -209,33 +219,59 @@ final class CruisePhysicalChecks {
             (AUDIT.firstLoad==null?"":" firstLoad="+AUDIT.firstLoad));
     }
 
+    private static void samplePhysicalMotion(Minecraft mc){
+        require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"the pilot stays mounted at speed");
+        EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
+        double delta=local.posX-lastCraftX;
+        if(delta>.25&&delta<STEP*1.6)smoothSamples++;
+        lastCraftX=local.posX;
+    }
+
     private static void exit(){
-        require(craft.cruise.projected()&&pilot.getRidingEntity()==craft,"exit begins in active physical cruise");
-        double destination=craft.cruise.x();
+        require(craft.cruise.active()&&craft.cruise.projected()==physical()&&pilot.getRidingEntity()==craft,
+            "exit begins in selected high flight");
+        arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
-            require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"descend through the build ceiling");
-            require(pilot.getRidingEntity()==craft,"descent preserves the mounted pilot");
-            int cx=(int)Math.floor(destination/16),cz=(int)Math.floor(startZ/16);
-            for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
-                require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,x,z),
-                    "the arrival footprint was delivered to the pilot before releasing high flight at "+x+","+z);
+            arrivalX+=24;
+            require(craft.cruise.move(24,255-craft.cruise.altitude(),0,18,-32,25),"dive through the build ceiling");
         }else if("teleport".equals(EXIT)) {
             int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
                 "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);
             require(result==1&&!pilot.isRiding()&&craft.onGround&&craft.posY<256,
                 "actual last-pilot /tp lands the aircraft below the geographic position");
-        }else throw new IllegalStateException("Unknown physical cruise exit: "+EXIT);
-        require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01
-            &&craft.chunkCoordX==(int)Math.floor(destination/16),"aircraft reindexes at the real arrival site");
-        require(generated(destination,startZ)&&!generated(startX+FAR/2,startZ),
-            "only the arrival area is loaded, with the route witness still absent");
-        System.out.println("[vandorlabs][physical-cruise] exit="+EXIT+" arrivalX="+destination+" midpointUnloaded=true");
+            verifyDestination();
+        }else throw new IllegalStateException("Unknown cruise exit: "+EXIT);
+    }
+
+    private static void verifyArrival(){
+        require(pilot.getRidingEntity()==craft&&craft.posY<256,"descent continues underneath the ceiling with pilot aboard");
+        int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
+        for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
+            require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,x,z),"arrival footprint delivered at "+x+","+z);
+        verifyDestination();
+    }
+
+    private static void verifyDestination(){
+        require(!craft.cruise.active()&&Math.abs(craft.posX-arrivalX)<.01
+            &&craft.chunkCoordX==(int)Math.floor(arrivalX/16),"aircraft reindexes at the real arrival site");
+        require(generated(arrivalX,startZ)&&!generated(startX+FAR/2,startZ),
+            "the destination is loaded and the route midpoint is still absent");
+        System.out.println("[vandorlabs][cruise-arrival] mode="+MODE+" exit="+EXIT+" arrivalX="+arrivalX+
+            " midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" smoothSamples="+smoothSamples);
     }
 
     private static boolean clientExitSettled(Minecraft mc){
         if("teleport".equals(EXIT))return !mc.player.isRiding()&&Math.abs(mc.player.posX-startX)<2&&mc.player.posY<120;
-        return mc.player.getRidingEntity() instanceof EntityGroundVehicle&&mc.player.posY<300
-                &&Math.abs(mc.player.posX-(remoteX+SWEEP))<4;
+        if(mc.player.posY>=300)return false;
+        require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"actual client kept the mounted craft at reentry");
+        EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
+        require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null,"client mount retains actual aircraft structure");
+        if(local.cruise.active()||Math.abs(mc.player.posX-arrivalX)>=4)return false;
+        int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
+        for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
+            require(mc.world.getChunkProvider().getLoadedChunk(x,z)!=null,"arrival terrain present on first client descent frame "+x+","+z);
+        require(local.addedToChunk&&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
+        return ++mountedArrivalTicks>=20&&local.posY<256;
     }
 
     private static boolean generated(double x,double z){

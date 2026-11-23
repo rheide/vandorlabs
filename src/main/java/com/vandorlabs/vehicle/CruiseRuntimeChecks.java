@@ -155,12 +155,12 @@ public final class CruiseRuntimeChecks {
                 checkRoute();
                 require(craft.cruise.active(),"craft still cruising");
                 require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"reenter");
-                require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01,"reentered at geographic destination");
-                require(craft.world.isBlockLoaded(new BlockPos(destination,64,craft.posZ)),"destination prepared");
-                require(!craft.world.isBlockLoaded(new BlockPos(startX+2048,64,craft.posZ)),"middle of route stayed unloaded");
             });stage=4;
         }else if(stage==4&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&Math.abs(mc.player.posX-destination)<4&&mc.player.posY<300){
             work=mc.getIntegratedServer().addScheduledTask(()->{
+                require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01,"reentered at geographic destination");
+                require(craft.world.isBlockLoaded(new BlockPos(destination,64,craft.posZ)),"destination prepared");
+                require(!craft.world.isBlockLoaded(new BlockPos(startX+2048,64,craft.posZ)),"middle of route stayed unloaded");
                 EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                 int result=mc.getIntegratedServer().getCommandManager().executeCommand(mc.getIntegratedServer(),
                         "tp "+pilot.getName()+" "+(int)startX+" 85 0");
