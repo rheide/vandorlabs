@@ -9,11 +9,10 @@ JAVA=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 FORGE_VERSION=${VANDOR_LABS_TEST_FORGE_VERSION:-14.23.5.2864}
 FORGE_JAR=${VANDOR_LABS_TEST_FORGE_JAR:-forge/forge-universal-$FORGE_VERSION.jar}
 if [[ ! -f "$FORGE_JAR" ]]; then echo "Forge $FORGE_VERSION JAR missing: $FORGE_JAR" >&2; exit 2; fi
-mapfile -t CLASSPATH_ENTRIES < cp.txt
-for i in "${!CLASSPATH_ENTRIES[@]}"; do
-    if [[ "${CLASSPATH_ENTRIES[$i]}" == forge/forge-universal-*.jar ]]; then CLASSPATH_ENTRIES[$i]=$FORGE_JAR; fi
-done
-CP=$(IFS=:; echo "${CLASSPATH_ENTRIES[*]}")
+# Resolve client classes before the universal JAR's manifest classpath. An
+# installed server's adjacent vanilla server JAR otherwise shadows client classes.
+CP=$(grep -v '^forge/forge-universal-.*\.jar$' cp.txt | paste -sd:)
+CP="$CP:$FORGE_JAR"
 # IE uses Forge's Trove 3 collection classes, absent from the minimal vanilla classpath.
 TROVE_JAR=$(find "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" -name trove4j-3.0.3.jar 2>/dev/null | head -n 1)
 # Thaumcraft uses Forge's Scala runtime during client model baking.
