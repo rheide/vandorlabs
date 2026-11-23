@@ -94,6 +94,9 @@ public final class CanopyDisplayRenderer {
             Display display=displays[side];
             if(display==null||display.frame==null||display.rendered!=display.requested)continue;
             boolean hud=display.rendered==VehicleInstrument.HUD;
+            boolean alphaEnabled=hud&&GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
+            int alphaFunc=hud?GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC):0;
+            float alphaRef=hud?GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF):0;
             if(hud){
                 GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
@@ -107,7 +110,11 @@ public final class CanopyDisplayRenderer {
                 emit(buffer,face,tile);
             }
             Tessellator.getInstance().draw();
-            if(hud)GlStateManager.disableBlend();
+            if(hud){
+                GlStateManager.disableBlend();
+                GlStateManager.alphaFunc(alphaFunc,alphaRef);
+                if(!alphaEnabled)GlStateManager.disableAlpha();
+            }
             drawn=true;
         }
         return drawn;

@@ -17,6 +17,7 @@ import java.nio.FloatBuffer;
 
 /** Authored OBJ rig plus individually configured animated and interactive surface planes. */
 public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit> {
+    private static final double[] FULL_UV={0,1,0,1};
     private static final double[][] UV_CORNERS={{0,0},{1,0},{1,1},{0,1}};
     private static final java.util.Map<CockpitData.Surface,PlaneCache> PLANES=new java.util.WeakHashMap<>();
     private static final class PlaneCache {
@@ -57,16 +58,32 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
     }
     private static void panel(TileEntityCockpit tile,CockpitData.Surface plane,TileEntityCockpit.Display screen,boolean bottom,float partial){
         int choice=screen.choice(bottom);
-        boolean blank=choice<0||!screen.active;double[] uv=blank?new double[]{0,1,0,1}:TEAnimatedScreenSelector.bindDisplay(tile,choice,screen.active,screen.animated,screen.speed);if(blank)GlStateManager.disableTexture2D();
-                BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-                PlaneCache cache=PLANES.computeIfAbsent(plane,PlaneCache::new);
-                for(int corner=0;corner<4;corner++){double[] p=UV_CORNERS[corner];Vec3d v=cache.corners[corner];float colorValue=blank?0:1;buffer.pos(v.x,v.y+("screen".equals(plane.role)?-.75*tile.screens(partial):0),v.z+(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard")?tile.seatSlide(partial):0)).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(colorValue,colorValue,colorValue,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
-                Tessellator.getInstance().draw();
-                if(blank)GlStateManager.enableTexture2D();
-                if(screen.active&&choice<=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE){GlStateManager.pushMatrix();if("screen".equals(plane.role))GlStateManager.translate(0,-.75*tile.screens(partial),0);else if(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard"))GlStateManager.translate(0,0,tile.seatSlide(partial));
-                if(screen.active&&choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane,screen,bottom);
-                VehicleInstrument instrument=VehicleInstrument.forChoice(choice);
-                if(instrument!=null)vehicle(tile,plane,instrument,screen.split);GlStateManager.popMatrix();}
+        boolean blank=choice<0||!screen.active;
+        double[] uv=blank?FULL_UV:TEAnimatedScreenSelector.bindDisplay(tile,choice,true,screen.animated,screen.speed);
+        if(blank)GlStateManager.disableTexture2D();
+        double lift="screen".equals(plane.role)?-.75*tile.screens(partial):0;
+        double slide=tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard")?tile.seatSlide(partial):0;
+        BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+        buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        PlaneCache cache=PLANES.computeIfAbsent(plane,PlaneCache::new);
+        float color=blank?0:1;
+        for(int corner=0;corner<4;corner++){
+            double[] p=UV_CORNERS[corner];
+            Vec3d v=cache.corners[corner];
+            buffer.pos(v.x,v.y+lift,v.z+slide)
+                .tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1]))
+                .color(color,color,color,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();
+        }
+        Tessellator.getInstance().draw();
+        if(blank)GlStateManager.enableTexture2D();
+        if(!screen.active||choice>com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return;
+        GlStateManager.pushMatrix();
+        try{
+            GlStateManager.translate(0,lift,slide);
+            if(choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane,screen,bottom);
+            VehicleInstrument instrument=VehicleInstrument.forChoice(choice);
+            if(instrument!=null)vehicle(tile,plane,instrument,screen.split);
+        }finally{GlStateManager.popMatrix();}
     }
     private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane,VehicleInstrument instrument,boolean split){
         int height=instrument==VehicleInstrument.STATUS?(split||"touch".equals(plane.role)?64:128)

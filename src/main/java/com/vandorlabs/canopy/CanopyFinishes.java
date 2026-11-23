@@ -96,6 +96,7 @@ public final class CanopyFinishes {
         private final Pane[] panes={new Pane(),new Pane(),new Pane()};
         private final Pane[] tallSide={new Pane(),new Pane(),new Pane()};
         private final boolean front;
+        private final Pane roof=new Pane();
         private final double centerX,centerY;
 
         DisplayProjection(List<CanopyMesh.Face> source,boolean front){
@@ -106,7 +107,7 @@ public final class CanopyFinishes {
             }
             centerX=(bounds.minU+bounds.maxU)*.5;centerY=(bounds.minV+bounds.maxV)*.5;
             for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")){
-                if(face.sideGlass)continue;
+                if(face.sideGlass){for(Vec3d point:face.vertices)roof.include(point.x,point.z);continue;}
                 boolean side=isSideGlass(face);
                 Pane pane=panes[paneIndex(face,side)];
                 for(Vec3d point:face.vertices)pane.include(u(point,side),v(point,side));
@@ -122,7 +123,15 @@ public final class CanopyFinishes {
         }
 
         double[][] coordinates(CanopyMesh.Face face,boolean side){
-            if(face.sideGlass)return surfaceUv(face,TextureLayoutMode.STRETCH,0,1);
+            if(face.sideGlass){
+                double[][] uv=new double[face.vertices.length][2];
+                for(int i=0;i<uv.length;i++){
+                    Vec3d point=face.vertices[i];
+                    uv[i][0]=(point.x-roof.minU)/(roof.maxU-roof.minU);
+                    uv[i][1]=(point.z-roof.minV)/(roof.maxV-roof.minV);
+                }
+                return uv;
+            }
             if(!side&&face.joinedStretchUv!=null){
                 double[][] uv=new double[face.vertices.length][2];
                 for(int i=0;i<uv.length;i++){
