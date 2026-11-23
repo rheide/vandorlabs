@@ -12,8 +12,14 @@ public final class CopyChannelFields {
     public static void shift(Tag tag,int delta){
         ChannelRange.requireIncrement(delta);if(delta==0)return;
         for(String key:SCALARS)if(tag.containsInt(key))tag.putInt(key,ChannelRange.shift(tag.getInt(key),delta));
-        for(String key:ARRAYS)if(tag.containsIntArray(key)){int[] values=tag.getIntArray(key).clone();for(int i=0;i<values.length;i++)values[i]=ChannelRange.shift(values[i],delta);tag.putIntArray(key,values);}
+        for(String key:ARRAYS)shiftBank(tag,key,delta);
         for(String key:STRINGS)if(tag.containsString(key)){ChannelList values=ChannelList.parse(tag.getString(key));if(values==null)throw new IllegalArgumentException("Cannot shift malformed "+key);int[] shifted=values.toArray();for(int i=0;i<shifted.length;i++)shifted[i]=ChannelRange.shift(shifted[i],delta);tag.putString(key,ChannelList.of(shifted).toString());}
+    }
+    public static void shiftBank(Tag tag,String key,int delta){
+        if(!tag.containsIntArray(key))return;
+        int[] values=tag.getIntArray(key).clone();
+        for(int i=0;i<values.length;i++)values[i]=ChannelRange.shift(values[i],delta);
+        tag.putIntArray(key,values);
     }
     private CopyChannelFields(){}
 }
