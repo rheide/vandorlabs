@@ -103,9 +103,9 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if (!maxwellAvailable()) return;
         long tick = world.getTotalWorldTime();
         if (maxwellTick == tick) return;
-        if (world instanceof VehicleWorld && settings.redstone
-                && (maxwellTick == Long.MIN_VALUE || (tick + pos.toLong()) % 10 == 0)) {
-            drivePhysicalLevel = carriedPhysicalLevel();
+        if (settings.redstone && (maxwellTick == Long.MIN_VALUE || (tick + pos.toLong()) % 10 == 0)) {
+            if (world instanceof VehicleWorld) drivePhysicalLevel = carriedPhysicalLevel();
+            else sampleInput();
         }
         maxwellTick = tick;
         int level = maxwellThrustLevel(flightDemand);
@@ -320,6 +320,11 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public void configureDrive(com.vandorlabs.drives.DriveSettings settings){if(!authoritative()||!isDrive()||settings==null)return;drive=settings;driveSettings();driveConfigPresent=true;refreshInputs();publish();}
     @Override protected boolean inputPowered(boolean aggregate){if(builder()){synthesisInput=aggregate;return synthesisEnabled();}if(!isDrive()||maxwell())return aggregate;int next=drive.activation(screenSettings().redstone,Math.max(driveChannelLevel,drivePhysicalLevel)==0&&aggregate?15:Math.max(driveChannelLevel,drivePhysicalLevel));if(driveLevel!=next){driveLevel=next;publish();}return next>0;}
     @Override public void setChannelLevel(int level){int next=com.vandorlabs.drives.DriveSettings.clamp(level);boolean changed=driveChannelLevel!=next;driveChannelLevel=next;setChannelSignal(next>0);if(isDrive()&&changed){refresh();publish();}}
+    @Override public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList channels){
+        boolean clearMaxwellInput=maxwell()&&channels.isEmpty()&&!getRedstoneChannels().isEmpty();
+        super.setRedstoneChannels(channels);
+        if(clearMaxwellInput)setChannelLevel(0);
+    }
     @Override public void update(){if(world!=null&&!world.isRemote&&formed()&&builder()){if(!com.vandorlabs.gear.ArmTransactions.locked(world,pos))synthesisRuntime.tick();if(synthesisSync&&world.getTotalWorldTime()%5==0){synthesisSync=false;publish();}}
         if (maxwell()) {
             if (world.isRemote && maxwellActiveLevel == 15) com.vandorlabs.drives.DriveParticles.emit(this);
@@ -458,12 +463,24 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                 ((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frames.get(p));
             }
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);renderAppearance=true;markDirty();
-            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refreshInputs();return true;
+            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
         }finally{changing=false;}
+        refreshInputs();
+        if(maxwell)notifyMaxwellPorts();
+        return true;
+    }
+    private void notifyMaxwellPorts(){
+        EnumFacing front=facing();
+        for(EnumFacing side:new EnumFacing[]{front,front.rotateYCCW(),front.rotateY()}){
+            BlockPos port=maxwellPort(side);if(port==null||!world.isBlockLoaded(port,false))continue;
+            BlockPos neighbor=port.offset(side);
+            if(world.isBlockLoaded(neighbor,false))world.neighborChanged(neighbor,world.getBlockState(port).getBlock(),port);
+        }
     }
     public void dismantle(IBlockState state){removedState=state;try{dismantle();}finally{removedState=null;}}
     public void dismantle(){
         if(world==null || world.isRemote || changing || !formed())return;
+        boolean maxwell=maxwell();
         changing=true;
         try{
             TokenSlotInteractions.drop(world,pos);if(builder())synthesisRuntime.drop();
@@ -471,9 +488,10 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);
                 if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))((TileEntityConstructorPart)part).restoreFrame(2);
             }
-            if(maxwell())maxwellActiveLevel=0;
+            if(maxwell)maxwellActiveLevel=0;
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}
+        if(maxwell)notifyMaxwellPorts();
     }
     @Override public boolean supportsSecurity(){return false;}
     private final java.util.Set<BlockPos> poweredInputs=new java.util.HashSet<>();
@@ -521,7 +539,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);
         // Recovery validates the tile before placing its block.
         if(maxwellWidth!=0&&maxwellWidth!=MaxwellEngine.BASE_WIDTH)tag.setInteger(MaxwellEngine.WIDTH_TAG,maxwellWidth);
-        if(maxwellActiveLevel!=0)tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);
+        if(maxwellActiveLevel!=0)tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);else tag.removeTag("MaxwellActiveLevel");
         maxwellTank.write(tag);
         if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}
         if(carriedObserverStatePresent){tag.setBoolean("CarriedObserverPowered",observerPowerVisual);tag.setBoolean("CarriedObserverScanning",observerScanningVisual);}

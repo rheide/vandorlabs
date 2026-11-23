@@ -3,12 +3,17 @@ package com.vandorlabs.client;
 import com.vandorlabs.container.ContainerMaxwellDrive;
 import com.vandorlabs.drives.MaxwellRuntimeChecks;
 import com.vandorlabs.items.ModItems;
+import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.tiles.TileEntityConstructor;
+import com.vandorlabs.tiles.TileEntityRedstoneChannel;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketHeldItemChange;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ScreenShotHelper;
@@ -28,14 +33,19 @@ final class MaxwellDriveLiveChecks {
     private static final BlockPos ROOT = new BlockPos(24, 100, 24);
     private static final BlockPos LARGE = ROOT.east(26);
     private static final BlockPos CONTACT = LARGE.east(8).up(7);
+    private static final BlockPos DUCT = LARGE.add(-1,4,5);
+    private static final BlockPos TRANSMITTER = ROOT.add(-3,0,3);
     private static final double X = CONTACT.getX() + .5, Z = CONTACT.getZ() - 2.5;
     private static final LiveGallery GALLERY = new LiveGallery("shot_maxwell", ROOT)
             .shot("afterburner-rear", 4.8, 2.7, 7.5, 149, 22)
             .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
             .shot("scaled-front", 30.5, 2.9, -15, 0, 0)
             .shot("scaled-inlets", 20, 7, -8, -37, 21);
+    private static final LiveGallery SHUTDOWN = new LiveGallery("shot_maxwell", ROOT)
+            .shot("inactive-nozzle",4.8,2.7,7.5,149,22);
     private static Future<?> setup;
     private static int stage, ticks;
+    private static int shutdownBurnUnits;
 
     private MaxwellDriveLiveChecks() {}
 
@@ -125,7 +135,35 @@ final class MaxwellDriveLiveChecks {
             if (engine.maxwellFuel() != 0 || !engine.screenSettings().redstone
                     || !engine.driveSettings().inverted || !engine.driveSettings().levels) return false;
             mc.player.closeScreen();
-            System.out.println("[vandorlabs][reprolab] maxwell-drive PASS ordinary/Configurator member clicks, activation and signal both directions, persisted polarity, purge, world captures");
+            mc.getIntegratedServer().addScheduledTask(()->setWirelessSource(mc)).get();
+            next(8);
+            return false;
+        }
+        if(stage==8&&ticks>12){
+            TileEntityConstructor engine=(TileEntityConstructor)mc.world.getTileEntity(ROOT);
+            if(engine.maxwellActiveLevel()!=15)return false;
+            mc.getIntegratedServer().addScheduledTask(()->{
+                WorldServer w=player(mc).getServerWorld();
+                ((TileEntityRedstoneChannel)w.getTileEntity(TRANSMITTER)).setLocalOn(false);
+            }).get();
+            next(9);
+            return false;
+        }
+        if(stage==9&&ticks>12){
+            TileEntityConstructor engine=(TileEntityConstructor)mc.world.getTileEntity(ROOT);
+            if(engine.maxwellActiveLevel()!=0)return false;
+            shutdownBurnUnits=mc.getIntegratedServer().callFromMainThread(()->inactiveBurnUnits(mc)).get();
+            next(10);
+            return false;
+        }
+        if(stage==10&&ticks>15){
+            require(mc.getIntegratedServer().callFromMainThread(()->inactiveBurnUnits(mc)).get()==shutdownBurnUnits,
+                    "wireless off stops fuel burn on the server");
+            next(11);
+            return false;
+        }
+        if(stage==11&&SHUTDOWN.tick(mc,output)){
+            System.out.println("[vandorlabs][reprolab] maxwell-drive PASS ordinary/Configurator member clicks, activation and signal both directions, persisted polarity, purge, wireless off stops active visuals and burn, world captures");
             return true;
         }
         return false;
@@ -145,7 +183,12 @@ final class MaxwellDriveLiveChecks {
         player.rotationYaw = EnumFacing.SOUTH.getHorizontalAngle();
         require(LiveGallery.place(world, player, core, ROOT.down(), EnumFacing.UP, .5F, .5F, .5F), "ordinary Core item placement");
         TileEntityConstructor base = MaxwellRuntimeChecks.assemble(world, ROOT, 3, EnumFacing.NORTH, 0, 0);
+        TileEntity duct=placeFluiduct(world);
         TileEntityConstructor large = MaxwellRuntimeChecks.assemble(world, LARGE, 9, EnumFacing.NORTH, 0, 0);
+        if(duct!=null){
+            require(world.getTileEntity(DUCT)==duct&&connected(duct),"already placed Thermal Fluiduct reconnects on formation");
+            System.out.println("[vandorlabs][reprolab] maxwell-fluiduct-formation PASS same existing duct connects to newly formed inlet");
+        }
         for (TileEntityConstructor engine : new TileEntityConstructor[]{base, large}) {
             require(MaxwellRuntimeChecks.inlet(engine, EnumFacing.NORTH).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(), 650), true) == 650,
                     "gallery fixture fills the formed front inlet");
@@ -153,6 +196,51 @@ final class MaxwellDriveLiveChecks {
         base.configureMachine(new com.vandorlabs.navigation.NavigationScreenSettings(-1, false, 1, true, false), new int[0],
                 false, 127, 0, com.vandorlabs.redstone.ChannelList.EMPTY);
         world.setBlockState(ROOT.down(), Blocks.REDSTONE_BLOCK.getDefaultState(), 3);
+    }
+
+    private static TileEntity placeFluiduct(WorldServer world){
+        if(!net.minecraftforge.fml.common.Loader.isModLoaded("thermaldynamics"))return null;
+        IBlockState state=null;
+        for(Block block:Block.REGISTRY){
+            if(!"thermaldynamics".equals(block.getRegistryName().getResourceDomain()))continue;
+            for(int meta=0;meta<16;meta++){
+                IBlockState candidate;
+                try{candidate=block.getStateFromMeta(meta);}catch(RuntimeException invalidMeta){continue;}
+                TileEntity tile=candidate.getBlock().hasTileEntity(candidate)?block.createTileEntity(world,candidate):null;
+                if(tile!=null&&tile.getClass().getName().contains("TileDuctFluid$Basic$")){state=candidate;break;}
+            }
+            if(state!=null)break;
+        }
+        require(state!=null,"Thermal Fluiduct registry entry");
+        world.setBlockState(DUCT,state,3);
+        TileEntity pipe=world.getTileEntity(DUCT);
+        require(pipe!=null&&pipe.getClass().getName().contains("TileDuctFluid")&&!connected(pipe),"preplaced Fluiduct begins disconnected");
+        return pipe;
+    }
+
+    private static boolean connected(TileEntity duct){
+        try{return !((Enum<?>)duct.getClass().getMethod("getVisualConnectionType",int.class)
+                .invoke(duct,EnumFacing.EAST.getIndex())).name().equals("NONE");}
+        catch(ReflectiveOperationException failed){throw new IllegalStateException("Cannot inspect the Thermal Fluiduct connection",failed);}
+    }
+
+    private static void setWirelessSource(Minecraft mc){
+        WorldServer world=player(mc).getServerWorld();
+        TileEntityConstructor engine=(TileEntityConstructor)world.getTileEntity(ROOT);
+        world.setBlockState(ROOT.down(),Blocks.STONE.getDefaultState(),3);
+        Block lever=Block.getBlockFromName("vandorlabs:small_power_lever");
+        world.setBlockState(TRANSMITTER,lever.getDefaultState(),3);
+        TileEntityRedstoneChannel transmitter=(TileEntityRedstoneChannel)world.getTileEntity(TRANSMITTER);
+        transmitter.setRedstoneChannel(513);
+        transmitter.setLocalOn(true);
+        engine.setRedstoneChannels(ChannelList.of(513));
+    }
+
+    private static int inactiveBurnUnits(Minecraft mc){
+        TileEntityConstructor engine=(TileEntityConstructor)player(mc).getServerWorld().getTileEntity(ROOT);
+        require(engine.maxwellFuel()>0&&engine.maxwellActiveLevel()==0&&engine.maxwellThrustLevel(false)==0,
+                "fuel remains with zero authoritative throttle and activity");
+        return engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger("MaxwellBurnUnits");
     }
 
     private static void prepareClick(Minecraft mc, ItemStack held) {
