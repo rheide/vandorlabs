@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Limit Flight to 300 m/s at maximum altitude. Align distant JourneyMap beacons to the interpolated client camera and send populated destination columns while the rest of the arrival footprint loads.
+
 - Fix the Forge Copy Controller channel increment for built-in transmitters including Tanks and Thruster Levers, cockpit channel banks, installed Autopilot modules, and stored Arm sections.
 - Render finer Forge seed terrain farther out, extend the clear-air range, and double the seed atlas cache. Keep the interpolated cockpit and terrain steady when the vanilla tracker reports a steep climb or dive.
 - Blend native Overworld terrain into the Forge seed view from Y=256 to Y=512. High-altitude descent sheds excess speed through this band. Seed-view water occludes the stars.
