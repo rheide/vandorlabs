@@ -53,7 +53,7 @@ public final class FrameAppearancePane {
             buttons.add(new DialogTabButton(3005,left+12,top+54,span-2,18,"Top"));buttons.add(new DialogTabButton(3006,left+12+span,top+54,span-2,18,"Bottom"));
             for(GuiButton b:buttons)if(b.id==3005||b.id==3006)b.enabled=b.id!=(page==2?3005:3006);
             textures=HousingTextureList.forCategory("Screens",left+12,top+78,controls-left-31,page==2?appearance.splitTop:appearance.splitBottom,8).visibleRows(Math.max(2,(host.getYSize()-110)/HousingTextureList.ROW_HEIGHT));
-            if(RedstoneScreenInteractions.supportsSplitStatus(owner.getBlockType()))textures.vehicleHalf(this::selectSplit);
+            if(RedstoneScreenInteractions.supportsSplitVehiclePanel(owner.getBlockType()))textures.vehicleHalf(this::selectSplit);
         }
     }
     private void selectSplit(int choice){if(page==2)appearance.splitTop=choice;else appearance.splitBottom=choice;send();}

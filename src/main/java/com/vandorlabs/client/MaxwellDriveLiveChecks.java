@@ -229,11 +229,14 @@ final class MaxwellDriveLiveChecks {
         TileEntityConstructor engine=(TileEntityConstructor)world.getTileEntity(ROOT);
         world.setBlockState(ROOT.down(),Blocks.STONE.getDefaultState(),3);
         Block lever=Block.getBlockFromName("vandorlabs:small_power_lever");
-        world.setBlockState(TRANSMITTER,lever.getDefaultState(),3);
+        world.setBlockState(TRANSMITTER.down(),Blocks.STONE.getDefaultState(),3);
+        world.setBlockState(TRANSMITTER,lever.getDefaultState().withProperty(com.vandorlabs.blocks.BlockIndustrialLever.FLOOR,true),3);
         TileEntityRedstoneChannel transmitter=(TileEntityRedstoneChannel)world.getTileEntity(TRANSMITTER);
         transmitter.setRedstoneChannel(513);
         transmitter.setLocalOn(true);
         engine.setRedstoneChannels(ChannelList.of(513));
+        require(com.vandorlabs.redstone.RedstoneChannels.level(world,ROOT,513)==15&&engine.maxwellThrustLevel(false)==15,
+                "placed power lever delivers full wireless throttle to the drive");
     }
 
     private static int inactiveBurnUnits(Minecraft mc){

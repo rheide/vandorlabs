@@ -775,15 +775,15 @@ public class TEAnimatedScreenSelector
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
         Tessellator.getInstance().draw();
         // Interactive halves stay on their host block so each has its own touch targets.
-        GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit&&!tile.hasSplitVehicleStatus(0)?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
+        GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit&&!tile.hasSplitVehiclePanel(0)?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
         int n=layout.rows;boolean middle=(n&1)!=0&&layout.row==n/2,input=tile.getBlockType() instanceof BlockProgrammableInput;
         for(int half=0;half<2;half++){
             boolean upper=layout.row>=n/2;if(!middle&&((half==0)!=upper))continue;
             double localTop=middle&&half==1?.5:0,localBottom=middle&&half==0?.5:1;
             ScreenSurface.Quad part=middle?ScreenSurface.half(quad,half==0):quad;
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
-            if(FrameAppearance.statusSplit(choice)&&tile.hasSplitVehicleStatus(0)){
-                RedstoneScreenRenderer.drawVehicle(tile,part,com.vandorlabs.screen.ScreenControlLayout.HALF_HEIGHT,com.vandorlabs.screen.VehicleInstrument.STATUS);
+            if(FrameAppearance.vehicleSplit(choice)&&tile.hasSplitVehiclePanel(0)){
+                RedstoneScreenRenderer.drawVehicle(tile,part,com.vandorlabs.screen.ScreenControlLayout.HALF_HEIGHT,com.vandorlabs.screen.VehicleInstrument.forChoice(choice));
                 continue;
             }
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");

@@ -57,7 +57,7 @@ public final class RedstoneScreenInteractions {
     public static boolean supportsSlot(net.minecraft.block.Block block,int slot){
         return supports(block) && (slot==0 || slot==1 && (block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableHalfConsole));
     }
-    public static boolean supportsSplitStatus(net.minecraft.block.Block block){return supports(block)&&!half(block,0);}
+    public static boolean supportsSplitVehiclePanel(net.minecraft.block.Block block){return supports(block)&&!half(block,0);}
     public static boolean half(net.minecraft.block.Block block,int slot){
         return block instanceof BlockProgrammableInput && !(block instanceof BlockProgrammableFullInput)
             || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
@@ -119,7 +119,7 @@ public final class RedstoneScreenInteractions {
         double x=(q.topRight.x-hit.x)/(q.topRight.x-q.topLeft.x)*128;
         double dy=q.bottomRight.y-q.topRight.y,dz=q.bottomRight.z-q.topRight.z;
         double v=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz);
-        if(tile.hasSplitVehicleStatus(slot)){
+        if(tile.hasSplitVehiclePanel(slot)){
             if(v<0||v>=1)return -1;
             boolean top=v<.5;
             if(!com.vandorlabs.tiles.FrameAppearance.statusSplit(top?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom))return -1;

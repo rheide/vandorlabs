@@ -20,9 +20,9 @@ public final class MessageFrameAppearance implements IMessage {
             player.getServerWorld().addScheduledTask(()->{
                 if(msg.pos==null||!FrameAppearance.valid(msg.front)||!FrameAppearance.validSurface(msg.interior)||!FrameAppearance.validSurface(msg.exterior)||!FrameAppearance.validSplit(msg.top)||!FrameAppearance.validSplit(msg.bottom)||!player.world.isBlockLoaded(msg.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
                 TileEntity owner=player.world.getTileEntity(msg.pos);net.minecraft.inventory.Container c=player.openContainer;
-                if((FrameAppearance.statusSplit(msg.top)||FrameAppearance.statusSplit(msg.bottom))
+                if((FrameAppearance.vehicleSplit(msg.top)||FrameAppearance.vehicleSplit(msg.bottom))
                         &&(!(owner instanceof TileEntityAnimatedScreenSelector)
-                        ||!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitStatus(owner.getBlockType())))return;
+                        ||!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitVehiclePanel(owner.getBlockType())))return;
                 boolean matches=c instanceof ContainerProgrammableGlass&&((ContainerProgrammableGlass)c).tile==owner
                     ||c instanceof ContainerAnimatedScreenSelector&&((ContainerAnimatedScreenSelector)c).getTileEntity()==owner
                     ||c instanceof ContainerRedstoneChannel&&((ContainerRedstoneChannel)c).member.channelTile()==owner;

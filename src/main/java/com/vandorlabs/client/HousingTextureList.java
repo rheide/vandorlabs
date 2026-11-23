@@ -27,7 +27,7 @@ final class HousingTextureList {
         vehicleAction=action;vehicleOpen=VehicleInstrument.includes(selected);setSelected(selected());return this;
     }
     HousingTextureList vehicleHalf(java.util.function.IntConsumer action){vehicleHalf=true;return vehicle(action);}
-    private String vehicleLabel(VehicleInstrument instrument){return vehicleHalf?"Status (Half)":instrument.label;}
+    private String vehicleLabel(VehicleInstrument instrument){return vehicleHalf?instrument.label+" (Half)":instrument.label;}
     private Runnable redstoneAction;
     HousingTextureList redstone(Runnable action){redstoneAction=action;setSelected(selected());return this;}
     private final Map<Integer,Option> options=new LinkedHashMap<>();
@@ -236,7 +236,6 @@ final class HousingTextureList {
         if(vehicleAction!=null){
             rows.add(VEHICLE_ROW);
             for(VehicleInstrument instrument:VehicleInstrument.values()){
-                if(vehicleHalf&&instrument!=VehicleInstrument.STATUS)continue;
                 if(query.isEmpty()?vehicleOpen:TextureListLayout.matches(query,vehicleLabel(instrument),"Vehicle Status",""))rows.add(instrument.choice);
             }
         }

@@ -47,11 +47,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
     public boolean hasVehiclePanel(int slot){return VehicleInstrument.includes(getSurfaceTexture(slot));}
-    public boolean hasSplitVehicleStatus(int slot){
-        return slot==0&&splitDisplay()&&com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitStatus(getBlockType())
-                &&(FrameAppearance.statusSplit(frameAppearance.splitTop)||FrameAppearance.statusSplit(frameAppearance.splitBottom));
+    public boolean hasSplitVehiclePanel(int slot){
+        return slot==0&&splitDisplay()&&com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitVehiclePanel(getBlockType())
+                &&(FrameAppearance.vehicleSplit(frameAppearance.splitTop)||FrameAppearance.vehicleSplit(frameAppearance.splitBottom));
     }
-    public boolean hasVehicleStatusControls(int slot){return hasSplitVehicleStatus(slot)||hasVehicleStatus(slot);}
+    public boolean hasVehicleStatusControls(int slot){
+        return hasSplitVehiclePanel(slot)?FrameAppearance.statusSplit(frameAppearance.splitTop)||FrameAppearance.statusSplit(frameAppearance.splitBottom):hasVehicleStatus(slot);
+    }
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
     public RedstoneScreenContents redstoneScreen(int slot){
@@ -257,7 +259,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if(hasSplitVehicleStatus(slot))return -1;if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&!VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(hasSplitVehiclePanel(slot))return -1;if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&!VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     private static int savedSurface(int choice){
         if(choice==NAVIGATION_SURFACE||choice==CHIP_SURFACE||VehicleInstrument.includes(choice))return choice;
         return choice<0?-1:ScreenHousingTextures.clamp(choice);
