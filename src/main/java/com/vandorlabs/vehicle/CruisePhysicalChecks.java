@@ -44,6 +44,7 @@ final class CruisePhysicalChecks {
     private static double startX,startZ,remoteX,arrivalX;
     private static double lastCraftX=Double.NaN;
     private static int smoothSamples, mountedArrivalTicks;
+    private static long exitTick;
 
     private CruisePhysicalChecks() {}
     static boolean enabled(){return ENABLED;}
@@ -108,9 +109,21 @@ final class CruisePhysicalChecks {
         }else if(stage==3&&EXIT!=null){
             work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::exit);
             advance(4);
-        }else if(stage==4&&clientExitSettled(mc)){
-            if("descend".equals(EXIT))work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::verifyArrival);
-            advance(5);
+        }else if(stage==4){
+            if(clientExitSettled(mc)) {
+                if("descend".equals(EXIT)) {
+                    javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(
+                        mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"cruise-arrival-"+MODE+".png"));
+                    work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::verifyArrival);
+                }
+                advance(5);
+            } else if(wait%40==0) {
+                double clientY=mc.player.posY;
+                work=mc.getIntegratedServer().addScheduledTask(()->System.out.println(
+                    "[vandorlabs][cruise-arrival] waiting serverTicks="+(world.getTotalWorldTime()-exitTick)
+                    +" serverY="+craft.posY+" clientY="+clientY+" active="+craft.cruise.active()
+                    +" pitch="+craft.flightPitch()+" bank="+craft.flightBank()+" motionY="+craft.motionY));
+            }
         }else if(stage==3||stage==5){
             System.out.println("[vandorlabs] cruise-physical PASS");
             return true;
@@ -230,6 +243,7 @@ final class CruisePhysicalChecks {
     private static void exit(){
         require(craft.cruise.active()&&craft.cruise.projected()==physical()&&pilot.getRidingEntity()==craft,
             "exit begins in selected high flight");
+        exitTick=world.getTotalWorldTime();
         arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
             arrivalX+=24;
@@ -257,7 +271,8 @@ final class CruisePhysicalChecks {
         require(generated(arrivalX,startZ)&&!generated(startX+FAR/2,startZ),
             "the destination is loaded and the route midpoint is still absent");
         System.out.println("[vandorlabs][cruise-arrival] mode="+MODE+" exit="+EXIT+" arrivalX="+arrivalX+
-            " midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" smoothSamples="+smoothSamples);
+            " midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" serverTicks="+(world.getTotalWorldTime()-exitTick)
+            +" smoothSamples="+smoothSamples);
     }
 
     private static boolean clientExitSettled(Minecraft mc){
@@ -271,7 +286,11 @@ final class CruisePhysicalChecks {
         for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
             require(mc.world.getChunkProvider().getLoadedChunk(x,z)!=null,"arrival terrain present on first client descent frame "+x+","+z);
         require(local.addedToChunk&&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
-        return ++mountedArrivalTicks>=20&&local.posY<256;
+        if(mountedArrivalTicks++==0){
+            mc.gameSettings.thirdPersonView=1;
+            mc.player.rotationPitch=mc.player.prevRotationPitch=18;
+        }
+        return mountedArrivalTicks>=20&&local.posY<256;
     }
 
     private static boolean generated(double x,double z){

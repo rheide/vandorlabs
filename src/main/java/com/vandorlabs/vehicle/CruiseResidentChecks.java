@@ -30,12 +30,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 final class CruiseResidentChecks {
     private static final int FAR=8192;
+    private static final boolean REENTRY=Boolean.getBoolean("vandorlabs.residentReentryChecks");
     private static final Audit AUDIT=new Audit();
     private static EntityGroundVehicle craft;
     private static EntityPlayerMP pilot;
     private static WorldServer world;
     private static Future<?> work;
-    private static int stage,ticks,idleSaves;
+    private static int stage,ticks,idleSaves,arrivalTicks;
     private static double departure, residentX, wildernessX, originZ;
 
     private CruiseResidentChecks() {}
@@ -70,7 +71,28 @@ final class CruiseResidentChecks {
                 "client and carried hull stay together at the last resident site over wilderness");
             work=client.getIntegratedServer().addScheduledTask(CruiseResidentChecks::verify);
             advance(4);
-        }else if(stage==4){
+        }else if(stage==4&&REENTRY){
+            work=client.getIntegratedServer().addScheduledTask(()->require(craft.cruise.move(0,255-craft.cruise.altitude(),0),
+                    "request reentry from the last resident anchor"));
+            advance(5);
+        }else if(stage==5){
+            if(client.player.posY>=300)return false;
+            require(client.player.getRidingEntity() instanceof EntityGroundVehicle,"resident reentry keeps the actual client mounted");
+            EntityGroundVehicle local=(EntityGroundVehicle)client.player.getRidingEntity();
+            if(local.cruise.active()||Math.abs(local.posX-wildernessX)>=1)return false;
+            require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null&&local.addedToChunk,
+                "resident reentry retains the exact mounted and indexed client aircraft");
+            require(client.world.getChunkProvider().getLoadedChunk(chunk(wildernessX),chunk(originZ))!=null,
+                "resident destination terrain arrives before lower-altitude movement");
+            if(++arrivalTicks<20||local.posY>=256)return false;
+            work=client.getIntegratedServer().addScheduledTask(()->{
+                require(!craft.cruise.active()&&craft.posY<256&&pilot.getRidingEntity()==craft
+                    &&craft.chunkCoordX==chunk(wildernessX)&&!generated(residentX+FAR/2,originZ),
+                    "resident reentry continues beneath the ceiling without generating the route midpoint");
+                System.out.println("[vandorlabs][cruise-resident] prepared descent after actual resident hop, mountedTicks="+arrivalTicks);
+            });
+            advance(6);
+        }else if(stage==4||stage==6){
             System.out.println("[vandorlabs] cruise-resident PASS real prepared footprint and mounted client, raw queued-unload refusal, no chunks requested over wilderness, saved latest anchor");
             return true;
         }
