@@ -8,6 +8,7 @@
 - Select Flight from Vehicle Status and build speed on a runway or accelerate from Hover. The Controller's Flight tab shows actual weight, the reduction from lift plates, and effective weight. Compare the current takeoff limit with the theoretical maximum from every installed drive.
 - On Forge, use A/D to roll through a full turn and release to hold the bank. W/S pitch in the aircraft's frame, and the cockpit view and attitude indicator follow the hull. Above 45 degrees nose-up, acceleration falls and pitch eases toward 45 degrees.
 - Keep flying forward as reduced Maxwell thrust lowers the altitude ceiling. Glide on total thrust loss and level out for landing or a return to Hover. Recover to a level pose after terrain contact.
+- Keep the Forge pilot’s view anchored to the cockpit through repeated rolls, and carry forward motion into Hover while slowing down.
 - Raise Forge Hover ascent and descent to 8.4 blocks per second.
 - On Forge, show cruise coordinates and waypoints in JourneyMap, start preparing the seed view at Y=200, and interpolate the ground view and geographic map position between route updates. Independently cached near and distant seed tiles show finer ground and a wider horizon. Rain and snow stop above the build ceiling. Selecting a manual Taxi or Hover transition above Y=256 displays a descent reminder.
 - Stretch a single texture across side-by-side Canopies or Long Canopies.
