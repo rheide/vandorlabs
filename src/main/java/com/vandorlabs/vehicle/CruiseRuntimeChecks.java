@@ -31,7 +31,7 @@ public final class CruiseRuntimeChecks {
     private static double startX,destination;
     private static volatile int routeSteps;
     private static long initialWeatherDraws;
-    private static int smoothSamples,groundSamples,transitTicks;
+    private static int smoothSamples,groundSamples,transitTicks,climbSamples,diveSamples;
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
 
     @SideOnly(Side.CLIENT)
@@ -40,7 +40,7 @@ public final class CruiseRuntimeChecks {
 
         @SubscribeEvent public void fly(net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent event){
             if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END||routeSteps<=0)return;
-            require(craft.cruise.move(64,16,0),"moving high-speed route");
+            require(craft.cruise.move(64,routeSteps>32?48:-16,0),"moving high-speed route");
             routeSteps--;
         }
 
@@ -262,11 +262,24 @@ public final class CruiseRuntimeChecks {
             EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
             if(mounted.cruise.active()){
                 transitTicks++;
+                double climb=mounted.visualPose(1).y-mounted.visualPose(0).y;
+                if(Math.abs(climb)>1){
+                    double before=mounted.visualPose(.25F).y;
+                    // Vanilla sends its absolute tracker teleport when the craft moves over eight
+                    // blocks between tracker samples. Re-enter its real client handler mid-pose.
+                    net.minecraft.network.play.server.SPacketEntityTeleport tracker=
+                            new net.minecraft.network.play.server.SPacketEntityTeleport(mounted);
+                    mc.getConnection().handleEntityTeleport(tracker);
+                    double jump=mounted.visualPose(.25F).y-before;
+                    require(Math.abs(jump)<1e-6,"vanilla tracker moved an in-flight camera between frames by "+jump+" blocks");
+                    if(climb>0)climbSamples++;else diveSamples++;
+                }
                 double early=mounted.cruise.view(true,.05F),late=mounted.cruise.view(true,.8F);
                 if(late>early&&late-early<192)smoothSamples++;
                 if(CruiseSky.ready())groundSamples++;
             }
             if(routeSteps==0){
+                require(climbSamples>=1&&diveSamples>=1,"interpolated both vertical directions: climb="+climbSamples+" dive="+diveSamples);
                 require(smoothSamples>=4,"geographic route updated between tick boundaries, samples="+smoothSamples);
                 require(groundSamples*5>=transitTicks*4,"seed ground coverage during high-speed movement "+groundSamples+"/"+transitTicks);
                 System.out.println("[vandorlabs] moving seed atlas ground="+groundSamples+"/"+transitTicks+" interpolated="+smoothSamples);
@@ -277,7 +290,7 @@ public final class CruiseRuntimeChecks {
             stage=6;ticks=0;
         }else if(stage==6&&ticks>10&&CruiseSky.covered()){
             require(mc.world.provider.getWeatherRenderer()!=null,"local cruise weather interceptor installed");
-            System.out.println("[vandorlabs] cruise atlas covers near, middle and far 3x3 tiles after "+ticks+" client ticks from first detail");
+            System.out.println("[vandorlabs] cruise atlas covers two 5x5 detail layers and two 3x3 horizon layers after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
             if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) verifyJourneyMap(mc);
             initialWeatherDraws=com.vandorlabs.client.CanopyRainShelter.suppressedDraws();

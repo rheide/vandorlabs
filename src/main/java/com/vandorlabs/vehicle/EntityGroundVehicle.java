@@ -645,7 +645,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public boolean attackEntityFrom(DamageSource source,float damage){return false;}
     @Override public void setPortal(BlockPos p){}
     @Override public void setPositionAndRotationDirect(double x,double y,double z,float yaw,float pitch,int steps,boolean teleport) {
-        if(world.isRemote&&clientProjectedMotion&&cruise.projected()&&lastServerTick!=Long.MIN_VALUE)return;
+        // Fast vertical movement makes the vanilla tracker send absolute teleports.
+        // STATE already interpolates the mounted camera and handles real handoffs via reindex.
+        if(world.isRemote&&cruise.active()&&lastServerTick!=Long.MIN_VALUE)return;
         if(teleport&&longPositionChange(x,y,z)){snapPosition(x,y,z,yaw);return;}
         if(localDriver)return;
         // Custom STATE is the single observer interpolation stream after its first packet.

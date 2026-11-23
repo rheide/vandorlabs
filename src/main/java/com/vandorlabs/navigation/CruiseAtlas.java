@@ -36,7 +36,13 @@ public final class CruiseAtlas {
     private int[] fallbackImage;
     private int fallbackPixel;
     private long fallbackTick=Long.MIN_VALUE;
-    public static int nearStep(double altitude){return Math.max(4,Integer.highestOneBit((int)altitude/64));}
+    public static final int RESIDENT_TILES=192;
+    // The outermost layer covers any camera position out to one full far tile.
+    // Its footprint doubles discretely while the atmospheric horizon moves continuously.
+    public static int nearStep(double altitude){return Math.max(4,Integer.highestOneBit((int)altitude/128));}
+    public static double horizon(double altitude){return Math.max(8192,altitude*16);}
+    public static int radius(int scale,int near){return scale<=near*4?2:1;}
+    public static int[] scales(int near){return new int[]{near,near*64,near*4,near*16};}
     public static final class Tile {
         public final int x,z,step;
         public Tile(int x,int z,int step){this.x=x;this.z=z;this.step=step;}
@@ -193,6 +199,6 @@ public final class CruiseAtlas {
     public boolean usesDetachedLayers(){return layer!=null&&!workerFailed;}
     private void retain(Tile tile,MessageCruiseTerrain pixels){
         cache.put(tile,pixels);
-        if(cache.size()>4000)cache.remove(cache.keySet().iterator().next()); // under 64 MiB of tile data per world
+        if(cache.size()>8000)cache.remove(cache.keySet().iterator().next()); // under 128 MiB of tile data per world
     }
 }

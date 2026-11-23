@@ -2,6 +2,7 @@
 
 ## 3.0.0 (in development)
 
+- Render finer Forge seed terrain farther out, extend the clear-air range, and double the seed atlas cache. Keep the interpolated cockpit and terrain steady when the vanilla tracker reports a steep climb or dive.
 - Blend native Overworld terrain into the Forge seed view from Y=256 to Y=512. High-altitude descent sheds excess speed through this band. Seed-view water occludes the stars.
 
 - Count upright wheels on settled side-mounted swing arms as landing supports. Taxi and ordinary Park use the same tire contact at the runway surface.

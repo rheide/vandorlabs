@@ -22,9 +22,11 @@ final class CruiseTiles {
         int tx=(int)Math.floor(x/size),tz=(int)Math.floor(z/size);
         if(tx!=lastX||tz!=lastZ||step!=lastStep){
             lastX=tx;lastZ=tz;lastStep=step;
-            footprint=new ArrayList<>(27);
-            for(int radius=0;radius<=1;radius++)
-                for(int scale:new int[]{step,step*16,step*4}){
+            footprint=new ArrayList<>(68);
+            int[] levels=CruiseAtlas.scales(step);
+            for(int radius=0;radius<=2;radius++)
+                for(int scale:levels){
+                    if(radius>CruiseAtlas.radius(scale,step))continue;
                     int span=CruiseAtlas.SIZE*scale;
                     int baseX=(int)Math.floor(x/span),baseZ=(int)Math.floor(z/span);
                     for(int i=-radius;i<=radius;i++)for(int j=-radius;j<=radius;j++){
@@ -46,7 +48,7 @@ final class CruiseTiles {
                 if(image==null)continue;
                 PacketHandler.INSTANCE.sendTo(new MessageCruiseTerrain(craft.getEntityId(),tile.x,tile.z,tile.step,image.pixels,image.heights),player);
                 known.add(tile);
-                if(known.size()>96)known.remove(known.iterator().next());
+                if(known.size()>CruiseAtlas.RESIDENT_TILES)known.remove(known.iterator().next());
                 if(--budget==0)break;
             }
         }
