@@ -65,6 +65,10 @@ Connect an onboard tank's output to a Maxwell inlet with a compatible fluid pipe
 
 Choose **Channel status** in the Redstone row editor to display the strongest received level as five battery bars. A level of zero leaves the battery empty. Each bar covers three signal levels. Use a Tank or Battery's transmitter channel to monitor its fullness on a screen or cockpit panel.
 
+## Split and diagonal displays
+
+On Forge, turn on **Split display** and choose **Redstone (Half)** for **Top** or **Bottom**. Each half has its own four-row editor and can share a display with artwork or a vehicle instrument. A Programmable Diagonal Screen also offers **Profile** on **Displays**. **Full** keeps the original wedge, and **Shallow** uses a half-block rise with the same display proportions. Both choices are saved with the configured screen. [Screen configuration guide](../frames-and-displays.md)
+
 ## Minecraft 1.21.1
 
 The experimental NeoForge build supports Taxi, Hover and Maxwell Flight, including a return to the same aircraft after a server restart in high cruise. Operate redstone controls from the assembled hull and feed engines or observers through native Ports and settled Arms. Finite Mekanism Fluid Tanks and Energy Cubes and unlinked RFTools Dimensional Cells retain their contents through parking.
