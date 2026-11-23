@@ -110,10 +110,12 @@ public final class CruiseSky {
         GlStateManager.pushMatrix();
         GlStateManager.depthMask(false);
         GL11.glDepthRange(1,1);
+        boolean alphaTest=GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
         boolean lit=GL11.glIsEnabled(GL11.GL_LIGHTING);
         boolean blend=GL11.glIsEnabled(GL11.GL_BLEND);
         int shading=GL11.glGetInteger(GL11.GL_SHADE_MODEL);
         try{
+            GlStateManager.disableAlpha();
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             GlStateManager.shadeModel(GL11.GL_SMOOTH);
@@ -121,24 +123,26 @@ public final class CruiseSky {
             GlStateManager.color(1,1,1,1);
             // Larger tiles cover the horizon while finer ones arrive and during altitude transitions.
             for(Tile t:renderOrder){
-                    int span=t.step*MessageCruiseTerrain.SIZE;
-                    double dx=t.x-x,dz=t.z-z;
-                    if(dx>horizon||dz>horizon||dx+span< -horizon||dz+span< -horizon)continue;
-                    mc.getTextureManager().bindTexture(tiles.get(t));
-                    BufferBuilder b=Tessellator.getInstance().getBuffer();
-                    b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
-                    byte[] heights=elevations.get(t);
-                    int divisions=heights==null?8:MessageCruiseTerrain.HEIGHT_GRID-1;
-                    boolean fade=backed.contains(t);
-                    for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
-                        vertex(b,dx,dz,span,col,row,divisions,horizon,y,scale,fade,heights);
-                        vertex(b,dx,dz,span,col,row+1,divisions,horizon,y,scale,fade,heights);
-                        vertex(b,dx,dz,span,col+1,row+1,divisions,horizon,y,scale,fade,heights);
-                        vertex(b,dx,dz,span,col+1,row,divisions,horizon,y,scale,fade,heights);
-                    }
-                    Tessellator.getInstance().draw();
+                int span=t.step*MessageCruiseTerrain.SIZE;
+                double dx=t.x-x,dz=t.z-z;
+                if(dx>horizon||dz>horizon||dx+span< -horizon||dz+span< -horizon)continue;
+                boolean fade=backed.contains(t);
+                if(fade&&(dx>=span||dz>=span||dx<=-2*span||dz<=-2*span))continue;
+                mc.getTextureManager().bindTexture(tiles.get(t));
+                BufferBuilder b=Tessellator.getInstance().getBuffer();
+                b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
+                byte[] heights=elevations.get(t);
+                int divisions=heights==null?8:MessageCruiseTerrain.HEIGHT_GRID-1;
+                for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
+                    vertex(b,dx,dz,span,col,row,divisions,horizon,y,scale,fade,heights);
+                    vertex(b,dx,dz,span,col,row+1,divisions,horizon,y,scale,fade,heights);
+                    vertex(b,dx,dz,span,col+1,row+1,divisions,horizon,y,scale,fade,heights);
+                    vertex(b,dx,dz,span,col+1,row,divisions,horizon,y,scale,fade,heights);
+                }
+                Tessellator.getInstance().draw();
             }
         }finally{
+            if(alphaTest)GlStateManager.enableAlpha();
             if(lit)GlStateManager.enableLighting();
             if(!blend)GlStateManager.disableBlend();
             GlStateManager.shadeModel(shading);

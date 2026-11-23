@@ -78,6 +78,7 @@ final class CruiseRelief {
             }else{
                 double slope=((ne-nw)*(1-fz)+(se-sw)*fz+(sw-nw)*(1-fx)+(se-ne)*fx)/(4*tile.step);
                 int color=pixels[p];
+                if(color==0xff28659b)color=h<settings.seaLevel+2?0xffc7b77c:0xff637e4f;
                 double light=Math.max(.64,Math.min(1.32,1+.6*slope));
                 pixels[p]=0xff000000|(Math.min(255,(int)((color>>16&255)*light))<<16)
                         |(Math.min(255,(int)((color>>8&255)*light))<<8)|Math.min(255,(int)((color&255)*light));

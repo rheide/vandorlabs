@@ -75,7 +75,16 @@ public final class CruiseAtlas {
         amplified=type==net.minecraft.world.WorldType.AMPLIFIED;
         vanillaRelief=amplified||type==net.minecraft.world.WorldType.DEFAULT||type==net.minecraft.world.WorldType.LARGE_BIOMES;
         relief=layer!=null?new CruiseRelief(world.getSeed()):null;
-        for(Biome biome:Biome.REGISTRY)colors.put(Biome.getIdForBiome(biome),NavigationService.biomeColor(biome));
+        for(Biome biome:Biome.REGISTRY)colors.put(Biome.getIdForBiome(biome),landColor(biome));
+    }
+    private static int landColor(Biome biome){
+        if(biome instanceof BiomeSwamp)return 0xff626a3e;
+        if(biome instanceof BiomeJungle)return 0xff357143;
+        if(biome instanceof BiomeForest)return 0xff456d43;
+        if(biome instanceof BiomeTaiga&&biome.getDefaultTemperature()>=.15)return 0xff4c6857;
+        if(biome instanceof BiomeSavanna)return 0xffa9a563;
+        if(biome instanceof BiomeMushroomIsland)return 0xff89798a;
+        return NavigationService.biomeColor(biome);
     }
     /** At the horizon one pixel can span many chunks. Query the land generator before its
      * final zoom passes instead of generating millions of fine cells only to discard them. */
@@ -132,7 +141,7 @@ public final class CruiseAtlas {
                 pixels[i]=0xff000000|(Math.min(255,(int)((color>>16&255)*light))<<16)
                         |(Math.min(255,(int)((color>>8&255)*light))<<8)|Math.min(255,(int)((color&255)*light));
             }
-            if(vanillaRelief&&tile.step<=32)heights=relief.shade(tile,layer,scratch,amplified,pixels);
+            if(vanillaRelief&&tile.step<=128)heights=relief.shade(tile,layer,scratch,amplified,pixels);
         }finally{scratch.release();}
         return image(tile,pixels,heights);
     }
