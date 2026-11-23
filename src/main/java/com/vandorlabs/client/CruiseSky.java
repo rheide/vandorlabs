@@ -114,6 +114,21 @@ public final class CruiseSky {
         }
         return true;
     }
+    public static String coverageDiagnostic(){
+        if(owner==null)return "no aircraft";
+        int near=CruiseAtlas.nearStep(owner.cruise.altitude());
+        updateLead(owner,near,owner.rotationYaw);
+        StringBuilder result=new StringBuilder("tiles=").append(tiles.size()).append(" pitch=").append(owner.visualPose(1).pitch);
+        for(int scale:CruiseAtlas.scales(near)){
+            int span=scale*MessageCruiseTerrain.SIZE,radius=CruiseAtlas.radius(scale,near),missing=0;
+            int x=(int)Math.floor((owner.cruise.x()+(radius==2?leadX:0))/span);
+            int z=(int)Math.floor((owner.cruise.z()+(radius==2?leadZ:0))/span);
+            for(int i=-radius;i<=radius;i++)for(int j=-radius;j<=radius;j++)
+                if(!tiles.containsKey(new Tile((x+i)*span,(z+j)*span,scale)))missing++;
+            result.append(" missing@").append(scale).append('=').append(missing);
+        }
+        return result.toString();
+    }
     public static boolean reliefAtCenter(){
         if(owner==null)return false;
         for(Tile t:elevations.keySet())if(t.step==4&&covers(t,owner.cruise.x(),owner.cruise.z()))return true;
@@ -135,7 +150,10 @@ public final class CruiseSky {
         if(craft.getEntityId()!=image.entity)return;
         if(owner!=craft){clear();owner=craft;}
         Tile tile=new Tile(image.x,image.z,image.step);
-        if(tiles.get(tile)!=null)return;
+        // A new transmission starts a new eviction age even when the texture already exists.
+        // On reentry the server starts a fresh sent history while the client can retain previews.
+        ResourceLocation known=tiles.remove(tile);
+        if(known!=null){tiles.put(tile,known);return;}
         DynamicTexture texture=new DynamicTexture(MessageCruiseTerrain.SIZE,MessageCruiseTerrain.SIZE);
         System.arraycopy(image.pixels,0,texture.getTextureData(),0,image.pixels.length);
         ResourceLocation location=mc.getTextureManager().getDynamicTextureLocation("flight_terrain",texture);
