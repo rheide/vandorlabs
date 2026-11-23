@@ -119,6 +119,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     boolean flightLandedState(){return landedFromFlight;}
     public double flightAltitude(){return cruise.altitude();}
     public int vehicleMode(){return flying()?3:hover?2:1;}
+    private double reportedGroundSpeed;
+    public double cruiseGroundSpeed(){return world.isRemote?reportedGroundSpeed:Math.hypot(motionX,motionZ);}
     double networkDriveSpeed(){return flying()?Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ):driveSpeed;}
     public VehicleFlightReadout flightReadout(){return flightReadout;}
     void flightPayloadChanged(){if(structure!=null&&!structure.maxwellCells.isEmpty())flightSampler.inventoryDirty(world.getTotalWorldTime());}
@@ -304,6 +306,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         int oldPhase=flightPhase;
         if(localPlayer!=null&&localPlayer.getRidingEntity()==this&&Float.isFinite(flightViewYaw)&&!Float.isFinite(p.flightViewYaw))
             releasePilotView(localPlayer,p.yaw);
+        // Flight reports total speed and signed vertical velocity. Store the horizontal
+        // component before vanilla's lower-precision velocity packets update the entity.
+        reportedGroundSpeed=Math.sqrt(Math.max(0,p.speed*p.speed-p.dy*p.dy));
         flightViewYaw=p.flightViewYaw;
         flightPhase=p.flightPhase;flightReadout=p.flightReadout;landedFromFlight=p.flightLanded;
         if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}

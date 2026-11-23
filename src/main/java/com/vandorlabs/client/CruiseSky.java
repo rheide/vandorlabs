@@ -36,7 +36,7 @@ public final class CruiseSky {
     private static double leadX,leadZ;
     private static void updateLead(EntityGroundVehicle craft,int step,float yaw){
         if(craft.structure==null){leadX=leadZ=0;return;}
-        double distance=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.driveSpeed,craft.flightPitch(),step):0;
+        double distance=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.cruiseGroundSpeed(),step):0;
         int fx=craft.structure.facing.getFrontOffsetX(),fz=craft.structure.facing.getFrontOffsetZ();
         double angle=Math.toRadians(yaw);
         leadX=distance*(fx*Math.cos(angle)-fz*Math.sin(angle));
