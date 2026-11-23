@@ -56,15 +56,17 @@ public final class CruiseRuntimeChecks {
     /** Render the same distant surface over two extreme sky colors in one frame. */
     @SideOnly(Side.CLIENT)
     public static final class OpacityProbe {
-        boolean requested,passed;
+        boolean requested,passed,transition;
         @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
         public void render(net.minecraftforge.client.event.RenderWorldLastEvent event){
             if(!requested)return;
             requested=false;
             Minecraft mc=Minecraft.getMinecraft();
-            final int side=12, x=mc.displayWidth/4, y=mc.displayHeight*3/5;
-            java.nio.ByteBuffer dark=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
-            java.nio.ByteBuffer bright=org.lwjgl.BufferUtils.createByteBuffer(side*side*4);
+            int x=transition?mc.displayWidth/8:mc.displayWidth/4,y=transition?mc.displayHeight/12:mc.displayHeight*3/5;
+            int width=transition?mc.displayWidth*3/4:12,height=transition?mc.displayHeight/2:12;
+            java.nio.ByteBuffer[] images=new java.nio.ByteBuffer[transition?4:2];
+            for(int i=0;i<images.length;i++)images[i]=org.lwjgl.BufferUtils.createByteBuffer(width*height*4);
+            int trimmed=0;
             java.nio.ByteBuffer background=org.lwjgl.BufferUtils.createByteBuffer(4);
             // Shader packs can draw to a different FBO from the current pixel read target.
             int previousRead=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER_BINDING);
@@ -74,29 +76,43 @@ public final class CruiseRuntimeChecks {
             org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_SCISSOR_BIT|org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
             try{
                 org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
-                org.lwjgl.opengl.GL11.glScissor(x,y,side,side);
+                org.lwjgl.opengl.GL11.glScissor(x,y,width,height);
                 org.lwjgl.opengl.GL11.glReadBuffer(org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL20.GL_DRAW_BUFFER0));
-                for(int pass=0;pass<2;pass++){
-                    org.lwjgl.opengl.GL11.glClearColor(pass,0,pass,1);
+                for(int pass=0;pass<images.length;pass++){
+                    int backdrop=pass&1;
+                    org.lwjgl.opengl.GL11.glClearColor(backdrop,0,backdrop,1);
                     org.lwjgl.opengl.GL11.glClear(org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
                     org.lwjgl.opengl.GL11.glReadPixels(x,y,1,1,org.lwjgl.opengl.GL11.GL_RGBA,
                             org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,background);
-                    require(Math.abs((background.get(0)&255)-255*pass)<=2,"cannot read the active cruise color buffer");
-                    CruiseSky.render(event);
-                    org.lwjgl.opengl.GL11.glReadPixels(x,y,side,side,org.lwjgl.opengl.GL11.GL_RGBA,
-                            org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,pass==0?dark:bright);
+                    require(Math.abs((background.get(0)&255)-255*backdrop)<=2,"cannot read the active cruise color buffer");
+                    if(transition)trimmed=CruiseSky.coverMask(event,pass>=2);else CruiseSky.render(event);
+                    org.lwjgl.opengl.GL11.glReadPixels(x,y,width,height,org.lwjgl.opengl.GL11.GL_RGBA,
+                            org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,images[pass]);
                 }
             }finally{
                 org.lwjgl.opengl.GL11.glPopAttrib();
                 org.lwjgl.opengl.GL11.glReadBuffer(previousBuffer);
                 org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER,previousRead);
             }
-            int largest=0;
-            for(int i=0;i<dark.capacity();i++)if(i%4!=3)
-                largest=Math.max(largest,Math.abs((dark.get(i)&255)-(bright.get(i)&255)));
-            require(largest<=2,"opaque cruise surface leaks backdrop; greatest RGB change="+largest);
+            int largest=0,covered=0;
+            for(int i=0;i<images[0].capacity();i+=4){
+                if(transition&&difference(images[0],images[1],i)>2)continue; // sky, hull or native depth
+                int pair=transition?2:0;
+                largest=Math.max(largest,difference(images[pair],images[pair+1],i));
+                covered++;
+            }
+            if(transition){
+                if(trimmed==0){requested=true;return;} // First fine ring is still streaming.
+                require(covered>width*height/4&&largest<=3,"LOD coverage lost pixels, opaque="+covered+" delta="+largest);
+                System.out.println("[vandorlabs] transition LOD coverage PASS trimmed="+trimmed+" opaquePixels="+covered+" largest delta="+largest);
+            }else require(largest<=2,"opaque cruise surface leaks backdrop; greatest RGB change="+largest);
             passed=true;
-            System.out.println("[vandorlabs] cruise surface backdrop PASS largest RGB delta="+largest);
+            if(!transition)System.out.println("[vandorlabs] cruise surface backdrop PASS largest RGB delta="+largest);
+        }
+        private int difference(java.nio.ByteBuffer a,java.nio.ByteBuffer b,int i){
+            int delta=0;
+            for(int c=0;c<3;c++)delta=Math.max(delta,Math.abs((a.get(i+c)&255)-(b.get(i+c)&255)));
+            return delta;
         }
     }
     private static final OpacityProbe opacityProbe=new OpacityProbe();
@@ -246,6 +262,8 @@ public final class CruiseRuntimeChecks {
         }else if(stage==13 && ticks>12 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
             require(!local.cruise.active()&&local.posY>345&&local.posY<405,"real coordinates during blended flight at "+local.posY);
+            if(com.vandorlabs.client.CruiseTransitionProfile.ENABLED
+                    && !com.vandorlabs.client.CruiseTransitionProfile.atPose(craft))return false;
             int pilotDraws=VehicleClient.cruisePilotDraws();
             // The shader pack compiles and can run catch-up simulation ticks before its
             // first rendered transition frame. Wait for a draw, still reject double draws.
@@ -253,6 +271,12 @@ public final class CruiseRuntimeChecks {
             require(pilotDraws==1,"transition band draws the third-person pilot once, draws="+pilotDraws);
             require(mc.world.isBlockLoaded(new BlockPos(local.posX,64,local.posZ)),"real terrain remains available during transition");
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"cruise-blend-mid.png"));
+            opacityProbe.transition=true;opacityProbe.requested=true;opacityProbe.passed=false;
+            MinecraftForge.EVENT_BUS.register(opacityProbe);
+            stage=15;ticks=0;
+        }else if(stage==15&&opacityProbe.passed){
+            MinecraftForge.EVENT_BUS.unregister(opacityProbe);
+            opacityProbe.transition=false;opacityProbe.passed=false;
             work=mc.getIntegratedServer().addScheduledTask(()->{
                 NBTTagCompound glide=new NBTTagCompound();
                 glide.setByte("MaxwellFlightPhase",(byte)EntityGroundVehicle.GLIDING_FLIGHT);
