@@ -77,8 +77,8 @@ public final class ScreenHousingMesh {
     private static final ScreenHousingMesh HALF_CONSOLE=buildHalfConsole();
     private static final ScreenHousingMesh DIAGONAL=buildDiagonal(false);
     private static final ScreenHousingMesh DIAGONAL_INVERTED=buildDiagonal(true);
-    private static final ScreenHousingMesh SHALLOW_DIAGONAL=shallow(DIAGONAL,false);
-    private static final ScreenHousingMesh SHALLOW_DIAGONAL_INVERTED=shallow(DIAGONAL_INVERTED,true);
+    private static final ScreenHousingMesh SHALLOW_DIAGONAL=buildShallowDiagonal();
+    private static final ScreenHousingMesh SHALLOW_DIAGONAL_INVERTED=mirrorVertical(SHALLOW_DIAGONAL);
 
     public static ScreenHousingMesh cube() { return CUBE; }
     private static final java.util.Map<String,ScreenHousingMesh> BOXES=new java.util.concurrent.ConcurrentHashMap<>();
@@ -119,13 +119,29 @@ public final class ScreenHousingMesh {
         return inverted?SHALLOW_DIAGONAL_INVERTED:SHALLOW_DIAGONAL;
     }
 
-    private static ScreenHousingMesh shallow(ScreenHousingMesh full,boolean upper) {
-        Face[] faces=new Face[full.quads.length];
-        for(int i=0;i<faces.length;i++) {
-            Vertex[] source=full.quads[i].vertices,vertices=new Vertex[source.length];
-            for(int j=0;j<vertices.length;j++) {
-                Vertex v=source[j];
-                vertices[j]=new Vertex(v.x,(upper?8:0)+v.y*.5,v.z,v.u,v.v*.5);
+    /** The full wedge translated down eight pixels and clipped at the floor. */
+    private static ScreenHousingMesh buildShallowDiagonal() {
+        return new ScreenHousingMesh(new Face[]{
+                quad(0,0,8,16,0,8,16,0,16,0,0,16,0,8,16,0),
+                quad(0,0,16,16,0,16,16,8,16,0,8,16,0,16,16,8),
+                quad(0,0,8,16,0,8,16,7,15,0,7,15,0,8,16,1),
+                quad(0,7,15,16,7,15,16,8,15,0,8,15,0,9,16,8),
+                quad(0,8,15,16,8,15,16,8,16,0,8,16,0,15,16,16),
+                // Split the triangular side's bottom edge so the mesh retains
+                // quad primitives in world, shadow, inventory and selection passes.
+                sideQuad(0,0,8,7,15,0,15,0,12),
+                sideQuad(16,0,12,0,15,7,15,0,8),
+                sideQuad(0,0,15,8,15,8,16,0,16),
+                sideQuad(16,0,15,0,16,8,16,8,15)},new Face[0]);
+    }
+
+    private static ScreenHousingMesh mirrorVertical(ScreenHousingMesh mesh) {
+        Face[] faces=new Face[mesh.quads.length];
+        for(int i=0;i<faces.length;i++){
+            Vertex[] source=mesh.quads[i].vertices,vertices=new Vertex[source.length];
+            for(int j=0;j<vertices.length;j++){
+                Vertex v=source[source.length-1-j];
+                vertices[j]=new Vertex(v.x,16-v.y,v.z,v.u,16-v.v);
             }
             faces[i]=new Face(vertices);
         }

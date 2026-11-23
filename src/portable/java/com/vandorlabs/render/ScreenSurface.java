@@ -38,11 +38,12 @@ public final class ScreenSurface {
     // The renderer gives the image a depth bias instead of a geometric gap.
     private static final Quad DIAGONAL=new Quad(0,16,4.25,4.25,14.85,14.85);
     private static final Quad DIAGONAL_INVERTED=new Quad(0,16,1.15,14.85,11.75,4.25);
-    // Preserve the original sloped image length and center it on the shallower face.
-    private static final double SHALLOW_HALF_SPAN=5.3*Math.sqrt(2/1.25);
-    private static final double SHALLOW_NEAR=8-SHALLOW_HALF_SPAN,SHALLOW_FAR=8+SHALLOW_HALF_SPAN;
-    private static final Quad SHALLOW_DIAGONAL=new Quad(0,16,SHALLOW_NEAR/2,SHALLOW_NEAR,SHALLOW_FAR/2,SHALLOW_FAR);
-    private static final Quad SHALLOW_DIAGONAL_INVERTED=new Quad(0,16,16-SHALLOW_FAR/2,SHALLOW_FAR,16-SHALLOW_NEAR/2,SHALLOW_NEAR);
+    // The lowered plane begins halfway into the cell. Fit the complete image on it
+    // at 5/8 of the full display's width and length, with the same rear clearance.
+    private static final double SHALLOW_FAR=DIAGONAL.topLeft.z;
+    private static final double SHALLOW_NEAR=SHALLOW_FAR-(DIAGONAL.topLeft.z-DIAGONAL.bottomLeft.z)*5/8;
+    private static final Quad SHALLOW_DIAGONAL=new Quad(3,13,SHALLOW_NEAR-8,SHALLOW_NEAR,SHALLOW_FAR-8,SHALLOW_FAR);
+    private static final Quad SHALLOW_DIAGONAL_INVERTED=new Quad(3,13,24-SHALLOW_FAR,SHALLOW_FAR,24-SHALLOW_NEAR,SHALLOW_NEAR);
 
     public static Quad diagonal(boolean inverted,boolean shallow) {
         if(shallow)return inverted?SHALLOW_DIAGONAL_INVERTED:SHALLOW_DIAGONAL;

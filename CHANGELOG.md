@@ -25,7 +25,7 @@
 - On Vehicle Status, select Park, Taxi, Hover or Flight from a two-row grid. Unavailable modes are gray and fuel stays within the screen.
 - On Forge, choose Status or four flight instruments in the Vehicle Status folder. The Controller projects maximum speed and altitude, and lighter Maxwell aircraft gain speed sooner above Y=256.
 - Choose **Status (Half)** or a compact flight instrument independently for the top and bottom of a split display. Park a stopped craft with a signaled Maxwell running. On formation, a Maxwell immediately connects to existing Fluiducts at its inlets. A drive at zero throttle stops burning fuel and its nozzle stops glowing.
-- On Forge, choose **Redstone (Half)** independently for each half of a split display, with up to four controls per half. Select **Full** or **Shallow** on a Programmable Diagonal Screen to choose its physical rise while keeping the display proportions.
+- On Forge, choose **Redstone (Half)** independently for each half of a split display, with up to four controls per half. Select **Full** or **Shallow** on a Programmable Diagonal Screen to choose the original wedge or a lowered, front-clipped 45° face with the same display proportions.
 - Configure Main and Side glazing independently on Forge Canopies and Front Canopies, with Vehicle Status and flight instruments selectable for each pane.
 - Copy Thermal Dynamics fluiducts and fluxducts with their attachments on Forge. Survival copies start with empty supported storage and require the matching duct and attachments. Creative copies preserve stored amounts.
 - Transmit Tank and Battery fullness over redstone channels.

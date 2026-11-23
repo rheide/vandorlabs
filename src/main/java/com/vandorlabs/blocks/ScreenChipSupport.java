@@ -40,9 +40,10 @@ public final class ScreenChipSupport {
         else{family=com.vandorlabs.screen.ScreenFamily.DIAGONAL;upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);}
         com.vandorlabs.screen.ScreenChipMount.Frame frame=com.vandorlabs.screen.ScreenChipMount.local(family,upper,tile.isCeilingMounted(),tile.getCeilingPosition(1));
         if(family==com.vandorlabs.screen.ScreenFamily.DIAGONAL&&tile.isShallowDiagonalScreen()) {
-            Vec3d center=new Vec3d(frame.center.x,(upper?.5:0)+frame.center.y*.5,frame.center.z);
-            Vec3d normal=new Vec3d(0,frame.normal.y*2,frame.normal.z).normalize(),v=vector(frame.v);
-            return new MachineMountSurface(center,normal.crossProduct(v),v,normal,frame.width,frame.height);
+            // The full profile's front chip shelf is clipped off. Mount the reader
+            // alongside the narrower artwork on the remaining 45-degree face.
+            Vec3d center=new Vec3d(1.5/16,upper?1-3.5/16:3.5/16,11.5/16);
+            return new MachineMountSurface(center,vector(frame.u),vector(frame.v),vector(frame.normal),2.5/16,2.5/16);
         }
         return new MachineMountSurface(vector(frame.center),vector(frame.u),vector(frame.v),vector(frame.normal),frame.width,frame.height);
     }

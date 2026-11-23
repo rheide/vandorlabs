@@ -30,7 +30,8 @@ final class SplitDiagonalScreenChecks {
     private static final int TOP=TileEntityAnimatedScreenSelector.SPLIT_TOP,BOTTOM=TileEntityAnimatedScreenSelector.SPLIT_BOTTOM;
     private static final int TOP_CHANNEL=870241,BOTTOM_CHANNEL=870242;
     private static final LiveGallery GALLERY=new LiveGallery("shot_split_diagonal",POS)
-            .shot("forms",1.55,.12,-2.7,0,17);
+            .shot("forms",1.55,.12,-2.7,0,17)
+            .shot("profile-comparison",-1.2,.3,.8,-42,15);
     private static Future<?> work;
     private static Future<Boolean> ready;
     private static int stage,wait;
@@ -56,6 +57,13 @@ final class SplitDiagonalScreenChecks {
             player.world.setBlockState(ceiling,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN.getDefaultState()
                 .withProperty(BlockProgrammableDiagonalScreen.INVERTED,true),3);
             ((TileEntityAnimatedScreenSelector)player.world.getTileEntity(ceiling)).setShallowDiagonalScreen(true);
+            // An unobstructed oblique view of matching artwork on both profiles.
+            for(int i=0;i<4;i++){
+                BlockPos at=POS.add(i*2,0,4);
+                player.world.setBlockState(at,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN.getDefaultState()
+                    .withProperty(BlockProgrammableDiagonalScreen.INVERTED,i>=2),3);
+                ((TileEntityAnimatedScreenSelector)player.world.getTileEntity(at)).setShallowDiagonalScreen(i%2==0);
+            }
             player.setPositionAndUpdate(POS.getX()+.5,POS.getY()+.4,POS.getZ()-2.1);
         });
     }
@@ -179,9 +187,26 @@ final class SplitDiagonalScreenChecks {
             AxisAlignedBB bounds=block.getBoundingBox(state,player.world,POS);
             need(bounds.maxY-bounds.minY==.5,"shallow collision height for "+facing);
             ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,screen,0),full=ScreenSurface.diagonal(upper,false);
-            need(Math.abs(Math.hypot(q.topLeft.y-q.bottomLeft.y,q.topLeft.z-q.bottomLeft.z)
-                -Math.hypot(full.topLeft.y-full.bottomLeft.y,full.topLeft.z-full.bottomLeft.z))<1e-7,"display keeps its physical aspect");
+            double length=Math.hypot(q.topLeft.y-q.bottomLeft.y,q.topLeft.z-q.bottomLeft.z);
+            double fullLength=Math.hypot(full.topLeft.y-full.bottomLeft.y,full.topLeft.z-full.bottomLeft.z);
+            need(q.ny==full.ny&&q.nz==full.nz&&Math.abs(length/fullLength
+                -(q.topRight.x-q.topLeft.x)/(full.topRight.x-full.topLeft.x))<1e-7,"angle and display proportions");
+            for(ScreenSurface.Vertex v:q.vertices)need(v.z>=8&&v.z<=15&&Math.abs(v.y-(upper?24-v.z:v.z-8))<1e-8,
+                "image lies on the translated, clipped plane");
+            com.vandorlabs.blocks.MachineMountSurface reader=com.vandorlabs.blocks.ScreenChipSupport.localMount(state,screen);
+            need(Math.abs(reader.center.y-(upper?1.5-reader.center.z:reader.center.z-.5))<1e-8
+                &&reader.center.x+reader.height/2<q.topLeft.x/16,"chip reader fits beside artwork");
             com.vandorlabs.blocks.DiagonalScreenShape shape=com.vandorlabs.blocks.DiagonalScreenShape.of(facing,upper,true);
+            need(shape.collision.length==8,"clipped wedge has eight occupied slices");
+            for(AxisAlignedBB slice:shape.collision)need(bounds.contains(new Vec3d(
+                (slice.minX+slice.maxX)/2,(slice.minY+slice.maxY)/2,(slice.minZ+slice.maxZ)/2)),"collision slice within selection bounds");
+            Vec3d front=com.vandorlabs.blocks.DiagonalScreenShape.world(.5,.25,.4,facing);
+            need(!bounds.contains(front)&&shape.trace(BlockPos.ORIGIN,front.addVector(0,1,0),front.addVector(0,-1,0))==null,
+                "front half has no selection or hidden pick face");
+            Vec3d slope=com.vandorlabs.blocks.DiagonalScreenShape.world(.5,.5,.75,facing);
+            Vec3d vertical=new Vec3d(0,upper?-1:1,0);
+            RayTraceResult hit=shape.trace(BlockPos.ORIGIN,slope.add(vertical),slope.subtract(vertical));
+            need(hit!=null&&Math.abs(hit.hitVec.y-(upper?.75:.25))<1e-7,"picked 45-degree incline");
             double y=upper?.9:.1,empty=upper?.4:.6;
             need(shape.trace(BlockPos.ORIGIN,com.vandorlabs.blocks.DiagonalScreenShape.world(-.2,y,.8,facing),com.vandorlabs.blocks.DiagonalScreenShape.world(1.2,y,.8,facing))!=null
                 &&shape.trace(BlockPos.ORIGIN,com.vandorlabs.blocks.DiagonalScreenShape.world(-.2,empty,.8,facing),com.vandorlabs.blocks.DiagonalScreenShape.world(1.2,empty,.8,facing))==null,

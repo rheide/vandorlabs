@@ -16,10 +16,11 @@ public final class DiagonalScreenShape {
     public static DiagonalScreenShape of(EnumFacing facing,boolean upper){return of(facing,upper,false);}
     public static DiagonalScreenShape of(EnumFacing facing,boolean upper,boolean shallow){return SHAPES[facing.getHorizontalIndex()][upper?1:0][shallow?1:0];}
     private DiagonalScreenShape(EnumFacing facing,boolean upper,boolean shallow){
-        collision=new AxisAlignedBB[16];
-        for(int z=0;z<16;z++){
-            double height=(z+1)/(shallow?32D:16D);
-            collision[z]=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?1-height:0,z/16D,1,upper?1:height,(z+1)/16D),facing);
+        int start=shallow?8:0;
+        collision=new AxisAlignedBB[16-start];
+        for(int z=start;z<16;z++){
+            double height=(z+1-start)/16D;
+            collision[z-start]=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?1-height:0,z/16D,1,upper?1:height,(z+1)/16D),facing);
         }
         List<Triangle> faces=new ArrayList<>();Map<String,List<Edge>> edges=new LinkedHashMap<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(upper,shallow).quads){
@@ -54,8 +55,8 @@ public final class DiagonalScreenShape {
             // including rays that leave the housing from inside it.
             Vec3d probe=RedstoneScreenInteractions.local(center.add(n.scale(.00001)),facing).scale(1D/16);
             double height=probe.z<1D/16?1D/16:probe.z>=15D/16?1:probe.z;
-            if(shallow)height*=.5;
-            boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=0 && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
+            if(shallow)height-=.5;
+            boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=(shallow?.5:0) && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
             normal=inside?n.scale(-1):n;
         }
         double hit(Vec3d start,Vec3d d){
