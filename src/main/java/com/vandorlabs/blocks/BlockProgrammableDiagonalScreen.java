@@ -71,6 +71,7 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
     }
 
     public static boolean shallow(net.minecraft.world.IBlockAccess world,BlockPos pos){
+        if(world==null)return false;
         net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
         return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
             &&((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isShallowDiagonalScreen();
