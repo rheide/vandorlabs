@@ -12,8 +12,10 @@ Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to choo
 
 1. Assemble a craft with a Vehicle Controller, Pilot Seat, Vehicle Status screen and at least one fueled Maxwell Drive. Open the Controller's **Flight** tab to compare the effective weight to the weight the available thrust can lift. Antigravity Plates and Repulsor Arrays reduce effective weight.
 2. Sit in the Pilot Seat and select **Flight** on Vehicle Status. Park and Taxi occupy the top row, Hover and Flight the bottom row. Gray buttons show modes the craft cannot currently select. From Hover, the craft starts accelerating forward. From Taxi, use a clear runway to build takeoff speed, then press **S** to lift the nose.
-3. Use **A/D** to bank up to 32 degrees and turn. Release the key to roll level. **W/S** lower and raise the nose. Above a 45-degree climb, the aircraft accelerates more slowly and tends to lower its nose toward 45 degrees. Below Y=256 the target flight speed is 1.5 times Hover sprint speed. The Vehicle Status screen shows speed, altitude and combined fuel.
-4. A collision or a loss of thrust starts recovery. A craft equipped for Hover can level out and hold altitude. A Maxwell-only aircraft descends toward the ground.
+3. Hold **A/D** to roll left or right on Forge. Release the key to hold the bank and turn, or use the opposite key to level the wings. With enough clearance, keep rolling through a full turn. **W/S** lower or raise the nose relative to the aircraft, and the pilot's view and attitude indicator follow the hull. Above 45 degrees nose-up, the aircraft accelerates more slowly and tends to level back toward 45 degrees.
+4. If the Maxwell output can no longer support your altitude, the nose lowers and the aircraft keeps moving in Flight while it descends. If the drives stop entirely, the aircraft glides, then levels out near the surface to land. A craft with Hover equipment can level and switch to Hover below the cruise band. Terrain contact starts a controlled recovery.
+
+In Forge Hover, hold **Space** to rise or **Sneak** to descend at up to **8.4 blocks per second**. Release the key to hold the selected altitude. Horizontal Hover speed is 16 blocks per second, or 20 while sprinting.
 
 For recovery below the cruise band, Creative players holding a Configurizer can select **Emergency Park** on Vehicle Status. It uses the Controller’s Safe Park search to find space for the craft.
 
@@ -23,7 +25,7 @@ In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and cho
 
 Canopy, Long Canopy, and Front Canopy glazing can also display these instruments. Use the canopy’s **Main** and **Side** tabs to choose each finish independently. The Side selection applies to both side panes. If framebuffers are disabled in your video settings, the pane displays ordinary glass until framebuffers are enabled.
 
-Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the thrust speed target stays at 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height.
+Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height.
 
 ## Overworld cruise
 
@@ -45,7 +47,7 @@ A vanilla or JourneyMap teleport releases the rider. When the last pilot telepor
 
 ![Seed-colored coastlines viewed from a Pilot Seat above the Overworld](../images/gallery/maxwell-overworld-cruise.png)
 
-Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 50 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling. The craft descends until its thrust can support flight again.
+Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 50 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling.
 
 One full 3 × 3 × 4 drive supports 512 effective weight units at takeoff. Larger drives scale by volume. Above Y=256, multiply the takeoff thrust requirement by `1 + 24 × (Y − 256) / (100,000 − Y)`. For example, twice the takeoff thrust reaches about **Y=4,246**. Reaching **Y=10,000** takes about **3.60 times** the takeoff thrust.
 

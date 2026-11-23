@@ -66,6 +66,8 @@ Right-click the formed drive or use the Configurizer to open its **Engine** and 
 
 A redstone command can burn fuel when the drive is parked, for example to test the exhaust before flight. Vehicles can use several drives. Their weight contributes to takeoff and altitude limits.
 
+On Forge, reducing an analog signal in flight lowers the supported altitude. The aircraft retains forward speed and lowers its nose until the remaining thrust can support its altitude. If every drive stops, it glides before landing or returning to Hover where equipped. See [Flight controls and recovery](../../versions/version-3.0.md#taking-off).
+
 ## Removal
 
 Sneak-right-click to dismantle, keeping the tank in its Core. Breaking the Core restores the remaining frame blocks. Mining a reserved cell dismantles the machine and removes that cell.
