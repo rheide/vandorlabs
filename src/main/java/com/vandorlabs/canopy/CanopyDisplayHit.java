@@ -27,7 +27,7 @@ public final class CanopyDisplayHit {
         if(!root.large.hasDisplay())return false;
         double reach=Math.min(8,player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d start=com.vandorlabs.vehicle.VehicleInteraction.eyes(player);
-        Vec3d end=start.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
+        Vec3d end=start.add(com.vandorlabs.vehicle.VehicleInteraction.look(player).scale(reach));
         if(root.getWorld() instanceof VehicleWorld){
             EntityGroundVehicle craft=((VehicleWorld)root.getWorld()).craft;
             if(craft==null)return false;

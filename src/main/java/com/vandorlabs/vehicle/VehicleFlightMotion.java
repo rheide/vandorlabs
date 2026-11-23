@@ -66,7 +66,7 @@ final class VehicleFlightMotion {
         VehiclePose to = new VehiclePose(from.x + dx, from.y + dy, from.z + dz, yaw, pitch, bank, from.facing);
         AxisAlignedBB envelope = bounds(from).union(bounds(to)).grow(.2);
         if (!loaded(envelope)) return Result.UNLOADED;
-        double angular = Math.abs(MathHelper.wrapDegrees(yaw - from.yaw)) + Math.abs(pitch - from.pitch) + Math.abs(bank - from.bank);
+        double angular = Math.abs(MathHelper.wrapDegrees(yaw - from.yaw)) + Math.abs(pitch - from.pitch) + Math.abs(MathHelper.wrapDegrees(bank - from.bank));
         int steps = Math.max(1, (int) Math.ceil(Math.toRadians(angular) * radius / .12));
         VehiclePose accepted = from;
         double ceiling = craft.world.provider.getDimension()==0?Double.POSITIVE_INFINITY:craft.world.getActualHeight();

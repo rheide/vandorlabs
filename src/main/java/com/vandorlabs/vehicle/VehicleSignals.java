@@ -208,7 +208,7 @@ public final class VehicleSignals {
         craft.articulation.tickCapturedControls();
         resources.tick();
         resources.flushChanges(dirty,false);
-        for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.poweredFlight());
+        for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.maxwellFlightDemand());
         for(StorageChannelOutput storage:storageOutputs){Link link=links.get(storage);if(link!=null)RedstoneChannels.inputChanged(link);}
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
@@ -237,13 +237,13 @@ public final class VehicleSignals {
     }
     private boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player,boolean emergencyOnly){
         if(emergencyOnly&&!(craft.view.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector))return false;
-        if(craft.view.getTileEntity(pos) instanceof TileEntityNavigationTable){TileEntityNavigationTable table=(TileEntityNavigationTable)craft.view.getTileEntity(pos);double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());Vec3d eye=VehicleInteraction.eyes(player);Vec3d start=craft.toLocal(eye,pos),end=craft.toLocal(eye.add(player.getLook(1).scale(reach)),pos);if(com.vandorlabs.navigation.NavigationVehicle.tableUse(table,player,start,end)){flush();return true;}return false;}
+        if(craft.view.getTileEntity(pos) instanceof TileEntityNavigationTable){TileEntityNavigationTable table=(TileEntityNavigationTable)craft.view.getTileEntity(pos);double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());Vec3d eye=VehicleInteraction.eyes(player);Vec3d start=craft.toLocal(eye,pos),end=craft.toLocal(eye.add(VehicleInteraction.look(player).scale(reach)),pos);if(com.vandorlabs.navigation.NavigationVehicle.tableUse(table,player,start,end)){flush();return true;}return false;}
         if(player.isSneaking() || craft.view.getTileEntity(pos) instanceof TileEntityTokenSlot)return false;
         if(craft.view.getTileEntity(pos) instanceof TileEntityRedstoneChannel)return clickControl(pos);
         if(!(craft.view.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(pos);IBlockState state=craft.view.getBlockState(pos);
         double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());
-        Vec3d eye=VehicleInteraction.eyes(player),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));eye=craft.toLocal(eye,pos).subtract(new Vec3d(pos));end=craft.toLocal(end,pos).subtract(new Vec3d(pos));
+        Vec3d eye=VehicleInteraction.eyes(player),end=eye.add(VehicleInteraction.look(player).scale(reach));eye=craft.toLocal(eye,pos).subtract(new Vec3d(pos));end=craft.toLocal(end,pos).subtract(new Vec3d(pos));
         if(!emergencyOnly){
             tick();
             if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){flush();return true;}
