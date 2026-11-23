@@ -75,14 +75,22 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     }
     public double seatHeight(){
         double height=data().riderY+.725;
-        if(world==null||!design.equals("cockpit"))return height;
+        if(world==null||data().seat==null||design.equals("chair_siderests"))return height;
+        // The seat straddles the seam of a two-wide cockpit. Either canopy column can cover the head.
         Vec3d seat=CockpitData.rotate(seatLocation(),facing());
-        TileEntityCanopy glass=TileEntityCanopy.at(world,pos.add(seat.x,1,seat.z));
-        if(glass!=null && glass.block()!=null && "long_canopy".equals(glass.block().kind)){
-            TileEntityCanopy roof=glass.owner();
-            if(roof.large.angle==2)return height-(1-roof.progress)*2/16D;
+        int y=pos.getY()+1;
+        int left=net.minecraft.util.math.MathHelper.floor(pos.getX()+seat.x-.25);
+        int right=net.minecraft.util.math.MathHelper.floor(pos.getX()+seat.x+.25);
+        int front=net.minecraft.util.math.MathHelper.floor(pos.getZ()+seat.z-.25);
+        int back=net.minecraft.util.math.MathHelper.floor(pos.getZ()+seat.z+.25);
+        double closed=0;
+        for(int x=left;x<=right;x++)for(int z=front;z<=back;z++){
+            TileEntityCanopy glass=TileEntityCanopy.at(world,new BlockPos(x,y,z));
+            if(glass==null||glass.block()==null||!"long_canopy".equals(glass.block().kind))continue;
+            TileEntityCanopy owner=glass.owner();
+            if(owner.large.angle==2)closed=Math.max(closed,1-owner.progress);
         }
-        return height;
+        return height-closed*2/16D;
     }
     private void prepare(){
         if(!displays.isEmpty())return;

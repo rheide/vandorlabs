@@ -106,6 +106,7 @@ final class CockpitMechanismRuntimeChecks {
             require(CockpitAssembly.boxes(tile.getWorld(),anchor).equals(body),"shared raised cockpit collision retained");
             require(CockpitAssembly.root(tile.getWorld(),anchor)==tile,"shared cell resolves cockpit controls");
             TileEntityCanopy shell=TileEntityCanopy.at(tile.getWorld(),anchor);
+            if(id.equals("long_canopy"))headroom(tile,shell,player);
             CockpitCanopyInteractionChecks.configuration(tile,shell,player);
             if(shell.opening()){
                 shell.targetOpen=true;shell.progress=shell.previous=1;
@@ -117,6 +118,30 @@ final class CockpitMechanismRuntimeChecks {
             tile.getWorld().destroyBlock(anchor,false);
             require(tile.getWorld().getTileEntity(anchor) instanceof TileEntityCockpitPart,"removing canopy restores upper reservation");require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy removal retains cockpit");
         }}finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;}
+    }
+    private static void headroom(TileEntityCockpit tile,TileEntityCanopy shell,EntityPlayerMP player){
+        TileEntityCanopy roof=shell.owner();
+        int before=roof.large.angle;
+        try{
+            roof.large.angle=2;
+            com.vandorlabs.entity.EntityChairSeat mount=new com.vandorlabs.entity.EntityChairSeat(
+                    tile.getWorld(),tile.getPos(),tile.seatHeight());
+            Vec3d feet=mount.cockpitRiderPosition(player,0);
+            int samples=0;
+            double nearest=Double.POSITIVE_INFINITY;
+            for(double x:new double[]{-.24,0,.24})for(double z:new double[]{-.24,0,.24}){
+                Vec3d base=feet.addVector(x,.8,z);
+                RayTraceResult glass=roof.trace(base,base.addVector(0,2,0));
+                if(glass!=null){
+                    nearest=Math.min(nearest,glass.hitVec.y-feet.y-player.height);
+                    samples++;
+                }
+            }
+            if(samples>0){
+                require(nearest>=0,"head penetrates Long Angled canopy by "+(-nearest)+" at "+roof.getPos()+" facing "+tile.facing());
+                System.out.println("[vandorlabs] cockpit headroom PASS "+tile.facing()+" samples="+samples+" clearance="+nearest);
+            }
+        }finally{roof.large.angle=before;}
     }
     private static void sliders(TileEntityCockpit tile,EntityPlayerMP player){
         Vec3d eye=new Vec3d(tile.data().seat.x,tile.data().riderY+player.getEyeHeight(),tile.data().seat.z);
