@@ -172,7 +172,7 @@ public final class VehicleSignals {
                 add(wanted,(RedstoneChannelMember)tile);
             if(tile instanceof TileEntityAnimatedScreenSelector && RedstoneScreenInteractions.supports(tile.getBlockType())){
                 TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
-                for(int slot=0;slot<2;slot++)if(screen.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))for(RedstoneScreenContents.Row row:screen.redstoneScreen(slot).rows())add(wanted,row);
+                for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++)if(screen.publishesRedstoneRows(slot) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))for(RedstoneScreenContents.Row row:screen.redstoneScreen(slot).rows())add(wanted,row);
             }
         }
         for(RedstoneChannelMember source:new ArrayList<>(links.keySet()))if(!wanted.contains(source)){Link old=links.remove(source);RedstoneChannels.unregister(old);screenPulses.remove(source);}
@@ -226,7 +226,7 @@ public final class VehicleSignals {
         TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel)return true;
         if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;
-        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatusControls(slot) || tile.hasChipSurface(slot) || tile.hasNavigation(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
+        for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++)if((tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || tile.hasVehicleStatusControls(slot) || tile.hasChipSurface(slot) || tile.hasNavigation(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
@@ -255,7 +255,7 @@ public final class VehicleSignals {
             VehicleStatus.activate(craft.view,pos,player,action);return true;
         }
         if(emergencyOnly)return false;
-        for(int slot=0;slot<2;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);int index=RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,contents.rows().size());if(index<0)continue;
             RedstoneScreenContents.Row row=contents.rows().get(index);Link link=links.get(row);if(!(link instanceof LatchLink))return false;
             if(row.status)return true;

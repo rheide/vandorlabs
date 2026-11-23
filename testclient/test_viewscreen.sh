@@ -282,6 +282,9 @@ case "${1:-}" in
         elif [ "$TARGET" = programmable-lights ]; then
             PREFIX=light_
             export VANDOR_LABS_LIGHT_CHECKS_ONLY=true
+        elif [ "$TARGET" = split-diagonal-screens ]; then
+            PREFIX=shot_split_diagonal_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.splitDiagonalChecksOnly=true"
         elif [ "$TARGET" = screen-modes ]; then
             PREFIX=shot_screen_status_to_redstone_
             export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
@@ -1096,6 +1099,10 @@ PYIMAGE
         grep -q "light-hidden-faces PASS" "$RUN_OUT/client.log"
         echo "Programmable Light focused client checks passed: $RUN_OUT"
         exit 0
+    fi
+    if [ "$TARGET" = split-diagonal-screens ]; then
+        grep -q "split-diagonal-screens PASS" "$RUN_OUT/client.log"
+        exit $?
     fi
     if [ "$TARGET" = screen-modes ]; then
         grep -q "screen-mode-world PASS" "$RUN_OUT/client.log"

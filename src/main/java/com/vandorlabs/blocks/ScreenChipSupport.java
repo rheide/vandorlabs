@@ -39,12 +39,17 @@ public final class ScreenChipSupport {
         else if(block instanceof BlockProgrammableConsole)family=com.vandorlabs.screen.ScreenFamily.CONSOLE;
         else{family=com.vandorlabs.screen.ScreenFamily.DIAGONAL;upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);}
         com.vandorlabs.screen.ScreenChipMount.Frame frame=com.vandorlabs.screen.ScreenChipMount.local(family,upper,tile.isCeilingMounted(),tile.getCeilingPosition(1));
+        if(family==com.vandorlabs.screen.ScreenFamily.DIAGONAL&&tile.isShallowDiagonalScreen()) {
+            Vec3d center=new Vec3d(frame.center.x,(upper?.5:0)+frame.center.y*.5,frame.center.z);
+            Vec3d normal=new Vec3d(0,frame.normal.y*2,frame.normal.z).normalize(),v=vector(frame.v);
+            return new MachineMountSurface(center,normal.crossProduct(v),v,normal,frame.width,frame.height);
+        }
         return new MachineMountSurface(vector(frame.center),vector(frame.u),vector(frame.v),vector(frame.normal),frame.width,frame.height);
     }
     private static Vec3d vector(com.vandorlabs.screen.ScreenChipMount.Point point){return new Vec3d(point.x,point.y,point.z);}
 
     private static final java.util.Map<IBlockState,MachineMountSurface[]> FRAMES=new java.util.HashMap<>();
-    public static synchronized MachineMountSurface mount(IBlockState state,TileEntityAnimatedScreenSelector tile){int slot=state.getBlock() instanceof BlockProgrammableHalfConsole&&tile.isCeilingMounted()?tile.getCeilingPosition(1):1;MachineMountSurface[] frames=FRAMES.computeIfAbsent(state,key->new MachineMountSurface[3]);if(frames[slot]==null){MachineMountSurface local=localMount(state,tile);EnumFacing facing=RedstoneScreenInteractions.facing(state);frames[slot]=new MachineMountSurface(rotate(local.center,facing),direction(local.u,facing),direction(local.v,facing),direction(local.normal,facing),local.width,local.height);}return frames[slot];}
+    public static synchronized MachineMountSurface mount(IBlockState state,TileEntityAnimatedScreenSelector tile){int slot=state.getBlock() instanceof BlockProgrammableHalfConsole&&tile.isCeilingMounted()?tile.getCeilingPosition(1):1;MachineMountSurface[] frames=FRAMES.computeIfAbsent(state,key->new MachineMountSurface[4]);if(state.getBlock() instanceof BlockProgrammableDiagonalScreen&&tile.isShallowDiagonalScreen())slot=3;if(frames[slot]==null){MachineMountSurface local=localMount(state,tile);EnumFacing facing=RedstoneScreenInteractions.facing(state);frames[slot]=new MachineMountSurface(rotate(local.center,facing),direction(local.u,facing),direction(local.v,facing),direction(local.normal,facing),local.width,local.height);}return frames[slot];}
     private static Vec3d direction(Vec3d v,EnumFacing f){return rotate(v.addVector(.5,.5,.5),f).subtract(.5,.5,.5);}
     private static Vec3d rotate(Vec3d p,EnumFacing f){double x=p.x-.5,y=p.y-.5,z=p.z-.5;switch(f){case EAST:return new Vec3d(.5-z,p.y,.5+x);case SOUTH:return new Vec3d(.5-x,p.y,.5-z);case WEST:return new Vec3d(.5+z,p.y,.5-x);case UP:return new Vec3d(.5-x,.5-z,.5-y);case DOWN:return new Vec3d(p.x,.5+z,.5-y);default:return p;}}
     public static AxisAlignedBB tray(IBlockState state){boolean upper=state.getValue(BlockDiagonalHalfConsole.UPPER);return PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?15D/16:0,0,1,upper?1:1D/16,.5),RedstoneScreenInteractions.facing(state));}

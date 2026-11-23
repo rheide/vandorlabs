@@ -4,6 +4,13 @@ Choose the Redstone display on a Programmable Screen, Diagonal Screen, Input,
 Full Input, Console, Half Console or Diagonal Half Console. Configure each row's
 label, channel list and control type. Console surfaces have separate row lists.
 
+On a full-size display, enable **Split display** on **Displays**, choose **Top**
+or **Bottom**, and select **Redstone (Half)**. Each half can store four rows.
+Choose different channels on the two halves to control them independently, or
+pair one Redstone half with artwork or a vehicle instrument. Turning Split off
+retains both row lists and stops their selected halves from transmitting until
+Split is enabled again.
+
 - Toggle changes the linked channel bank between off and on.
 - Slider selects one of four configured output levels.
 - Pulse sends level 15 to every listed channel for 20 game ticks, normally one

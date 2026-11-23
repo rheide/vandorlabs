@@ -39,7 +39,9 @@ public final class CopyChannels {
         fields(tag,delta);
         for(String key:new String[]{"VehicleModeChannels0","VehicleModeChannels1","VehicleModeChannels2","DoorKeyReader","DoorRearKeyReader"})
             if(tag.hasKey(key,10))tile(tag.getCompoundTag(key),delta,depth+1);
-        for(String key:new String[]{"RedstonePrimary","RedstoneSecondary"})if(tag.hasKey(key,10)){
+        for(int slot=0;slot<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++){
+            String key=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.redstoneTag(slot);
+            if(!tag.hasKey(key,10))continue;
             NBTTagList rows=tag.getCompoundTag(key).getTagList("Rows",10);
             for(int i=0;i<rows.tagCount();i++)fields(rows.getCompoundTagAt(i),delta);
         }

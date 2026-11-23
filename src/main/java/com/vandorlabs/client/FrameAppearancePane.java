@@ -12,6 +12,7 @@ import java.util.function.BooleanSupplier;
 /** Inline frame settings; the owning dialog retains its tabs, container and Done action. */
 public final class FrameAppearancePane {
     private final GuiContainer host;private final TileEntity owner;private final FrameAppearance appearance;private final Runnable bareToggle;private final BooleanSupplier framed;
+    private java.util.function.IntConsumer splitRedstone;
     private boolean displayPage,standalone;private HousingTextureList textures;private int page,contentTop;private List<GuiButton> buttons;
     public FrameAppearancePane(GuiContainer host,TileEntity owner){this(host,owner,null,null);}
     public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();FrameAppearance.of(owner).write(draft);appearance.read(draft);appearance.exterior=appearance.exteriorChoice();if(FrameAppearance.usesMainFront(owner.getBlockType()))appearance.front=-1;if(appearance.splitTop==-1)appearance.splitTop=defaultScreen();if(appearance.splitBottom==-1)appearance.splitBottom=defaultScreen();if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
@@ -41,6 +42,7 @@ public final class FrameAppearancePane {
     }
     public void initGlassFace(int face,int relativeContentTop,List<GuiButton> hostButtons){standalone=true;page=face==2?4:face;init(relativeContentTop,hostButtons);}
     public boolean splitDisplay(){return appearance.split;}
+    FrameAppearancePane splitRedstone(java.util.function.IntConsumer action){splitRedstone=action;return this;}
     public void initDisplay(List<GuiButton> hostButtons){
         displayPage=true;buttons=hostButtons;contentTop=54;if(page<2)page=2;
         buttons.removeIf(b->b.id>=3000&&b.id<=3008);
@@ -53,7 +55,13 @@ public final class FrameAppearancePane {
             buttons.add(new DialogTabButton(3005,left+12,top+54,span-2,18,"Top"));buttons.add(new DialogTabButton(3006,left+12+span,top+54,span-2,18,"Bottom"));
             for(GuiButton b:buttons)if(b.id==3005||b.id==3006)b.enabled=b.id!=(page==2?3005:3006);
             textures=HousingTextureList.forCategory("Screens",left+12,top+78,controls-left-31,page==2?appearance.splitTop:appearance.splitBottom,8).visibleRows(Math.max(2,(host.getYSize()-110)/HousingTextureList.ROW_HEIGHT));
-            if(RedstoneScreenInteractions.supportsSplitVehiclePanel(owner.getBlockType()))textures.vehicleHalf(this::selectSplit);
+            if(RedstoneScreenInteractions.supportsSplitVehiclePanel(owner.getBlockType())){
+                textures.vehicleHalf(this::selectSplit);
+                if(splitRedstone!=null)textures.redstoneHalf(()->{
+                    selectSplit(TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);
+                    splitRedstone.accept(page==2?TileEntityAnimatedScreenSelector.SPLIT_TOP:TileEntityAnimatedScreenSelector.SPLIT_BOTTOM);
+                });
+            }
         }
     }
     private void selectSplit(int choice){if(page==2)appearance.splitTop=choice;else appearance.splitBottom=choice;send();}

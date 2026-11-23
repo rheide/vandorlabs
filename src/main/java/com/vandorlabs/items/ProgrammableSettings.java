@@ -250,6 +250,7 @@ public final class ProgrammableSettings {
                 out.setString(INPUT_PANEL, screen.getInputPanel());
                 out.setString(SECONDARY_INPUT_PANEL, screen.getSecondaryInputPanel());
                 out.setBoolean(SMALL_INPUT, screen.isSmallInput());
+                if(block==ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN)out.setBoolean(TileEntityAnimatedScreenSelector.SHALLOW_DIAGONAL,screen.isShallowDiagonalScreen());
                 out.setInteger(WALL_POSITION, screen.getWallPosition(1));
             }
             if (block instanceof BlockProgrammableBlock || block instanceof BlockProgrammableWall || block instanceof BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs || isDisplay(block)){
@@ -614,6 +615,9 @@ public final class ProgrammableSettings {
                 if (values.hasKey(SECONDARY_INPUT_PANEL, 8)) {
                     screen.setSecondaryInputPanel(values.getString(SECONDARY_INPUT_PANEL)); applicable = true;
                 }
+                if(block==ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN&&values.hasKey(TileEntityAnimatedScreenSelector.SHALLOW_DIAGONAL,1)){
+                    screen.setShallowDiagonalScreen(values.getBoolean(TileEntityAnimatedScreenSelector.SHALLOW_DIAGONAL));applicable=true;
+                }
                 if (values.hasKey(SMALL_INPUT, 1)) {
                     screen.setSmallInput(values.getBoolean(SMALL_INPUT)); applicable = true;
                 }
@@ -796,7 +800,7 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.FrameAppearance desired=new com.vandorlabs.tiles.FrameAppearance();desired.read(values.getCompoundTag("FrameAppearance"));
             if(com.vandorlabs.tiles.FrameAppearance.displayBlock(block))desired.artworkVersion=1;
             NBTTagCompound before=new NBTTagCompound(),after=new NBTTagCompound();appearance.write(before);desired.write(after);applicable=true;
-            if(!before.equals(after)){appearance.read(after);com.vandorlabs.tiles.GlassMaterials.changed();tile.markDirty();
+            if(!before.equals(after)){appearance.read(after);if(tile instanceof TileEntityAnimatedScreenSelector)((TileEntityAnimatedScreenSelector)tile).refreshSplitRows();com.vandorlabs.tiles.GlassMaterials.changed();tile.markDirty();
                 if(world!=null){net.minecraft.block.state.IBlockState actual=world.getBlockState(pos);world.notifyBlockUpdate(pos,actual,actual,3);world.checkLight(pos);}}
 
         }

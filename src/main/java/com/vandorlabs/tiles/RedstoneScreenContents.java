@@ -14,7 +14,7 @@ public final class RedstoneScreenContents implements com.vandorlabs.screen.Scree
     public TileEntityAnimatedScreenSelector tile(){return owner;}
     public int slot(){return slot;}
     public boolean enabled(){return enabled;}
-    public void setEnabled(boolean value){if(enabled==value)return;enabled=value;if(value){refreshRows();if(hasPulses())com.vandorlabs.redstone.ScreenPulseActivity.activate(this);}else unregisterRows();changed();}
+    public void setEnabled(boolean value){if(enabled==value)return;enabled=value;if(value)refreshPublication();else unregisterRows();changed();}
     public net.minecraft.block.Block getBlockType(){return owner.getBlockType();}
     public net.minecraft.util.math.BlockPos getPos(){return owner.getPos();}
     public int getHousingTexture(){return owner.getHousingTexture();}
@@ -57,7 +57,7 @@ public final class RedstoneScreenContents implements com.vandorlabs.screen.Scree
             if(options!=null)row.readOptions(options.getCompoundTagAt(i));
             next.add(row);
         }
-        enabled=enable;this.title=title.trim();rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);if(enabled)refreshRows();else unregisterRows();changed();return true;
+        enabled=enable;this.title=title.trim();rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);refreshPublication();changed();return true;
     }
     public NBTTagList rowConfiguration(){
         NBTTagList list=new NBTTagList();
@@ -114,7 +114,16 @@ public final class RedstoneScreenContents implements com.vandorlabs.screen.Scree
     private net.minecraft.world.World serverWorld(){return owner.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)owner.getWorld()).parent:owner.getWorld();}
     public boolean expirePulses(long now){boolean active=false;for(Row row:rows)if(row.pulseUntil>0){if(now>=row.pulseUntil){row.pulseUntil=0;changed();RedstoneChannels.inputChanged(row);}else active=true;}return active;}
     public boolean hasPulses(){for(Row row:rows)if(row.pulse&&row.pulseUntil>0)return true;return false;}
-    public void finishLoading(){limitRows();if(enabled)refreshRows();else unregisterRows();if(hasPulses())com.vandorlabs.redstone.ScreenPulseActivity.activate(this);}
+    public void finishLoading(){limitRows();refreshPublication();}
+    void refreshPublication(){
+        if(owner.publishesRedstoneRows(slot)){
+            refreshRows();
+            if(hasPulses())com.vandorlabs.redstone.ScreenPulseActivity.activate(this);
+        } else {
+            unregisterRows();
+            com.vandorlabs.redstone.ScreenPulseActivity.remove(this);
+        }
+    }
     private void refreshRows(){
         if(owner.getWorld()==null || owner.getWorld().isRemote || !enabled)return;
         // Register replacements before removing old members so an unchanged bank

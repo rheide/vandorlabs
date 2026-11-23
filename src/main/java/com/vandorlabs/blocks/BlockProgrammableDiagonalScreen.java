@@ -70,11 +70,23 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
                 | (state.getValue(INVERTED) ? 4 : 0);
     }
 
+    public static boolean shallow(net.minecraft.world.IBlockAccess world,BlockPos pos){
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+            &&((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).isShallowDiagonalScreen();
+    }
+
+    @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos){
+        if(!shallow(world,pos))return FULL_BLOCK_AABB;
+        boolean upper=state.getValue(INVERTED);
+        return new net.minecraft.util.math.AxisAlignedBB(0,upper?.5:0,0,1,upper?1:.5,1);
+    }
+
     @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end){
-        net.minecraft.util.math.RayTraceResult hit=DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED)).trace(pos,start,end);net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector&&ScreenChipSupport.selected((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw)){net.minecraft.util.math.RayTraceResult reader=rayTrace(pos,start,end,ScreenChipSupport.bounds(state,(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw));if(reader!=null&&(hit==null||start.squareDistanceTo(reader.hitVec)<start.squareDistanceTo(hit.hitVec)))return reader;}return hit;
+        net.minecraft.util.math.RayTraceResult hit=DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED),shallow(world,pos)).trace(pos,start,end);net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector&&ScreenChipSupport.selected((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw)){net.minecraft.util.math.RayTraceResult reader=rayTrace(pos,start,end,ScreenChipSupport.bounds(state,(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw));if(reader!=null&&(hit==null||start.squareDistanceTo(reader.hitVec)<start.squareDistanceTo(hit.hitVec)))return reader;}return hit;
     }
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB entityBox,java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes,net.minecraft.entity.Entity entity,boolean actual){
-        for(net.minecraft.util.math.AxisAlignedBB box:DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED)).collision)addCollisionBoxToList(pos,entityBox,boxes,box);
+        for(net.minecraft.util.math.AxisAlignedBB box:DiagonalScreenShape.of(state.getValue(FACING),state.getValue(INVERTED),shallow(world,pos)).collision)addCollisionBoxToList(pos,entityBox,boxes,box);
     }
     @Override
     public boolean isOpaqueCube(IBlockState state) {

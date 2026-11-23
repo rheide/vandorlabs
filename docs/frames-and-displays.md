@@ -35,6 +35,12 @@ lower half. Different split selections form separate display groups.
 The outer frame continues to surround the complete display. Turning splitting
 off retains the selections for later reuse.
 
+For a Programmable Diagonal Screen, choose **Profile** on **Displays**. **Full**
+uses the original full-block wedge. **Shallow** uses a half-block rise and keeps
+the same display proportions on the gentler slope. A Shallow floor screen fills
+the lower half of the block, and an inverted Shallow screen hangs from the upper
+half. The profile is saved with the placed screen and its configured item.
+
 Display artwork and playback controls stay on the **Display** or **Controls**
 page. Programmable Glass and Portholes, including diagonal variants, show playback and speed directly on **Glass** when Display artwork is selected; plain glass hides these controls. Housing artwork and its layout controls are on **Sides**. Channel trigger
 controls are on **Redstone**. Transmitter slots appear only on transmitting controls; passive blocks, lights, doors and ordinary displays do not need them. Door access-card filtering

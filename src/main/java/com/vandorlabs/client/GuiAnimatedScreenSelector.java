@@ -173,10 +173,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         return framed ? selectedOption.framedId : selectedOption.bareId;
     }
 
-    private NativeRedstoneRowsPane[] rowEditors=new NativeRedstoneRowsPane[2];private int rowSlot=-1;
-    private boolean rowsPage(){return rowSlot>=0&&textureTab==rowSlot;}
+    private NativeRedstoneRowsPane[] rowEditors=new NativeRedstoneRowsPane[TileEntityAnimatedScreenSelector.REDSTONE_SLOTS];private int rowSlot=-1;
+    private boolean rowsPage(){return rowSlot>=0&&textureTab==(rowSlot>=TileEntityAnimatedScreenSelector.SPLIT_TOP?0:rowSlot);}
     int inlineTransmitterSelector(){return rowsPage()?rowEditors[rowSlot].selector():0;}
-    private void openRows(int slot){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
+    private void openRows(int slot){if(slot<TileEntityAnimatedScreenSelector.SPLIT_TOP){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));}rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
     private FrameAppearancePane framePane;
     private boolean splitPage(){return textureTab==0&&!rowsPage()&&framePane!=null&&framePane.splitDisplay();}
     private boolean framePage(){return textureTab==10;}
@@ -210,20 +210,23 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         java.util.Collections.addAll(buttonList,modeOffButton,modeStaticButton,modeAnimatedButton,slowButton,normalButton,fastButton,frameButton,redstoneButton);
         buttonList.add(layout.control(32,142,sidesLabel()));
         if(fullInput)buttonList.add(layout.control(30,172,""));
+        if(diagonalScreen)buttonList.add(layout.control(33,172,diagonalShapeLabel()));
         channelField=receiver.field();
         ChannelFields.configure(channelField);
         channelField.setText(receiverDraft);
-        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
-        if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.initDisplay(buttonList);}
+        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
+        if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.initDisplay(buttonList);}
         if(activationPane==null)activationPane=new DisplayActivationPane(this,te,false);activationPane.init(layout,buttonList,textureTab,console?3:2);
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
 
+    private String diagonalShapeLabel(){return "Profile: "+(te.isShallowDiagonalScreen()?"Shallow":"Full");}
     private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==(console?3:2)&&(te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));
         int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone&&(option.id!=198||te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
 
+        for(GuiButton button:buttonList)if(button.id==33)button.visible=textureTab==0;
         for(GuiButton button:buttonList)if(button.id==30){button.visible=textureTab==0;button.displayString="Size: "+(smallInput?"Small":"Full");}
         receiver.setMode(RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
@@ -241,7 +244,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(channel()<0)return;
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(pos,
                 activeId(), redstoneEnabled, displayMode, framed, speedIndex,
-                inputPanel, inputPanel, smallInput, channel(), housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
+                inputPanel, inputPanel, diagonalScreen?te.isShallowDiagonalScreen():smallInput, channel(), housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -265,6 +268,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(button.id==197){textureTab=10;initGui();return;}
 
         if(button.id>=90 && button.id<=(console?93:92)){textureTab=button.id-90;initGui();return;}
+        if(button.id==33){te.setShallowDiagonalScreen(!te.isShallowDiagonalScreen());button.displayString=diagonalShapeLabel();sendUpdate();return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.getSurfaceTextureLayout()));return;}
         switch (button.id) {
             case 30:
@@ -347,7 +351,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,640,641))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,33,640,641))return;
         if(mouseButton==0)for(GuiButton option:new java.util.ArrayList<>(buttonList))if((option.id==640||option.id==641)&&option.visible&&option.mousePressed(mc,mouseX,mouseY)){option.playPressSound(mc.getSoundHandler());actionPerformed(option);return;}
         if(activationPane.active()){activationPane.click(mouseX,mouseY,mouseButton);super.mouseClicked(mouseX,mouseY,mouseButton);return;}
 

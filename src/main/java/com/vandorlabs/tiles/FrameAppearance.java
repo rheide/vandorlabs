@@ -29,7 +29,9 @@ public final class FrameAppearance {
 
     public void read(NBTTagCompound tag){bare=tag.getBoolean("FrameBare");artworkVersion=tag.getInteger("DisplayArtworkVersion")==1?1:0;front=com.vandorlabs.persistence.FrameSettings.choice(tag.hasKey("FrameFront",3),tag.getInteger("FrameFront"),-1,FrameAppearance::valid);interior=com.vandorlabs.persistence.FrameSettings.choice(tag.hasKey("FrameInterior",3),tag.getInteger("FrameInterior"),-1,FrameAppearance::validSurface);exterior=com.vandorlabs.persistence.FrameSettings.choice(tag.hasKey("FrameExterior",3),tag.getInteger("FrameExterior"),-2,FrameAppearance::validSurface);tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=com.vandorlabs.persistence.FrameSettings.choice(tag.hasKey("DisplaySplitTop",3),tag.getInteger("DisplaySplitTop"),-1,FrameAppearance::validSplit);splitBottom=com.vandorlabs.persistence.FrameSettings.choice(tag.hasKey("DisplaySplitBottom",3),tag.getInteger("DisplaySplitBottom"),-1,FrameAppearance::validSplit);}
     private static void writeSplit(NBTTagCompound tag,String key,int choice){if(choice==-1)tag.removeTag(key);else tag.setInteger(key,choice);}
-    public static boolean validSplit(int choice){return choice==-1||vehicleSplit(choice)||ScreenHousingTextures.validChoice(choice);}
+    public static boolean validSplit(int choice){return choice==-1||interactiveSplit(choice)||ScreenHousingTextures.validChoice(choice);}
+    public static boolean redstoneSplit(int choice){return choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;}
+    public static boolean interactiveSplit(int choice){return redstoneSplit(choice)||vehicleSplit(choice);}
     public static boolean vehicleSplit(int choice){return com.vandorlabs.screen.VehicleInstrument.includes(choice);}
     public static boolean statusSplit(int choice){return choice==com.vandorlabs.screen.VehicleInstrument.STATUS.choice;}
     public static boolean displayBlock(net.minecraft.block.Block block){

@@ -51,26 +51,56 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return slot==0&&splitDisplay()&&com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitVehiclePanel(getBlockType())
                 &&(FrameAppearance.vehicleSplit(frameAppearance.splitTop)||FrameAppearance.vehicleSplit(frameAppearance.splitBottom));
     }
+    public static final int SPLIT_TOP=2,SPLIT_BOTTOM=3,REDSTONE_SLOTS=4;
+    private static final String[] ROW_TAGS={"RedstonePrimary","RedstoneSecondary","RedstoneSplitTop","RedstoneSplitBottom"};
+    private static final String[] ROW_SETTINGS={"Primary","Secondary","SplitTop","SplitBottom"};
+    public static String redstoneTag(int slot){return ROW_TAGS[slot];}
+    public int splitChoice(int slot){return slot==SPLIT_TOP?frameAppearance.splitTop:frameAppearance.splitBottom;}
+    private boolean redstoneSplitConfigured(){return frameAppearance.split
+        &&com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSplitVehiclePanel(getBlockType())
+        &&(FrameAppearance.redstoneSplit(frameAppearance.splitTop)||FrameAppearance.redstoneSplit(frameAppearance.splitBottom));}
+    public boolean hasSplitRedstone(){return splitDisplay()&&redstoneSplitConfigured();}
+    public boolean hasInteractiveSplit(){return hasSplitVehiclePanel(0)||hasSplitRedstone();}
+    public boolean splitRedstoneSelected(int slot){return slot>=SPLIT_TOP&&slot<REDSTONE_SLOTS
+        &&redstoneSplitConfigured()&&FrameAppearance.redstoneSplit(splitChoice(slot));}
     public boolean hasVehicleStatusControls(int slot){
         return hasSplitVehiclePanel(slot)?FrameAppearance.statusSplit(frameAppearance.splitTop)||FrameAppearance.statusSplit(frameAppearance.splitBottom):hasVehicleStatus(slot);
     }
-    private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
+    private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[REDSTONE_SLOTS];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
     public RedstoneScreenContents redstoneScreen(int slot){
-        if(slot<0 || slot>1)throw new IllegalArgumentException("surface slot");
-        if(controls==NO_CONTROLS)controls=new RedstoneScreenContents[2];
+        if(slot<0||slot>=REDSTONE_SLOTS)throw new IllegalArgumentException("surface slot");
+        if(controls==NO_CONTROLS)controls=new RedstoneScreenContents[REDSTONE_SLOTS];
         if(controls[slot]==null)controls[slot]=new RedstoneScreenContents(this,slot);
         return controls[slot];
     }
     public boolean hasRedstoneScreen(int slot){return controls[slot]!=null && controls[slot].enabled();}
+    public boolean publishesRedstoneRows(int slot){
+        if(slot>=SPLIT_TOP&&!redstoneSplitConfigured())return false;
+        if(slot==0&&redstoneSplitConfigured())return false;
+        return hasRedstoneScreen(slot)&&(slot<SPLIT_TOP||FrameAppearance.redstoneSplit(splitChoice(slot)));
+    }
+    public void refreshSplitRows(){
+        if(world==null||world.isRemote)return;
+        for(RedstoneScreenContents contents:controls)if(contents!=null&&contents.slot()!=1)contents.refreshPublication();
+        if(com.vandorlabs.redstone.TransmitterSlots.localRedstone(this))com.vandorlabs.redstone.TransmitterSlots.notifyLocalOutput(this);
+    }
     public NBTTagCompound redstoneConfiguration(){
         NBTTagCompound tag=new NBTTagCompound();
-        for(int i=0;i<2;i++)tag.setTag(i==0?"Primary":"Secondary",redstoneScreen(i).configuration());
+        for(int slot=0;slot<REDSTONE_SLOTS;slot++)if(slot<SPLIT_TOP||controls[slot]!=null)
+            tag.setTag(ROW_SETTINGS[slot],redstoneScreen(slot).configuration());
         return tag;
     }
     public boolean applyRedstoneConfiguration(NBTTagCompound tag){
-        for(String key:new String[]{"Primary","Secondary"})if(!tag.hasKey(key,10) || !RedstoneScreenContents.validConfiguration(tag.getCompoundTag(key)))return false;
-        for(int i=0;i<2;i++)redstoneScreen(i).applyConfiguration(tag.getCompoundTag(i==0?"Primary":"Secondary"));return true;
+        for(int slot=0;slot<REDSTONE_SLOTS;slot++){
+            String key=ROW_SETTINGS[slot];
+            if(slot>=SPLIT_TOP&&!tag.hasKey(key))continue;
+            if(!tag.hasKey(key,10)||!RedstoneScreenContents.validConfiguration(tag.getCompoundTag(key)))return false;
+        }
+        for(int slot=0;slot<REDSTONE_SLOTS;slot++)if(tag.hasKey(ROW_SETTINGS[slot],10)
+            &&com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(getBlockType(),slot))
+            redstoneScreen(slot).applyConfiguration(tag.getCompoundTag(ROW_SETTINGS[slot]));
+        return true;
     }
     private ChannelList channels=ChannelList.EMPTY;
     @Override public ChannelList getRedstoneChannels(){return channels;}
@@ -220,6 +250,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     private boolean smallInput = false;
+    public static final String SHALLOW_DIAGONAL="ShallowDiagonalScreen";
+    private boolean shallowDiagonalScreen;
+    public boolean isShallowDiagonalScreen(){return shallowDiagonalScreen;}
+    public void setShallowDiagonalScreen(boolean shallow){
+        if(shallowDiagonalScreen==shallow)return;
+        shallowDiagonalScreen=shallow;
+        layoutChanged();
+    }
     public final DisplayActivation activation=new DisplayActivation();
     public static boolean supportsActivation(net.minecraft.block.Block block){return block==com.vandorlabs.blocks.ModBlocks.ANIMATED_SCREEN_SELECTOR||block instanceof com.vandorlabs.blocks.BlockProgrammableInput||block instanceof com.vandorlabs.blocks.BlockProgrammableConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole||block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;}
     public int activationMode(){return activation.mode<0?(redstoneEnabled?1:0):activation.mode;}
@@ -259,7 +297,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if(hasSplitVehiclePanel(slot))return -1;if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&!VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(slot>=SPLIT_TOP)return hasSplitRedstone()&&splitRedstoneSelected(slot)?REDSTONE_SURFACE:-1;if(slot==0&&hasInteractiveSplit())return -1;if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&!VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     private static int savedSurface(int choice){
         if(choice==NAVIGATION_SURFACE||choice==CHIP_SURFACE||VehicleInstrument.includes(choice))return choice;
         return choice<0?-1:ScreenHousingTextures.clamp(choice);
@@ -666,7 +704,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         com.vandorlabs.persistence.WallSettings.write(primitiveData,diagonalFullWidth,diagonalHalfHeight,
                 diagonalFill,diagonalJoin,joinPortholes,portholeShape);
-        for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
+        if(shallowDiagonalScreen)compound.setBoolean(SHALLOW_DIAGONAL,true);
+        else compound.removeTag(SHALLOW_DIAGONAL);
+        for(int i=0;i<REDSTONE_SLOTS;i++)if(controls[i]!=null)compound.setTag(redstoneTag(i),controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
     }
 
@@ -696,8 +736,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
         super.readFromNBT(compound);if(compound.hasKey("ScreenChipReader",10)||chipReader!=null)ownedChipReader().readEmbedded(compound.getCompoundTag("ScreenChipReader"));chipView=null;chipViewStack=null;pendingChipPage=Math.max(0,Math.min(256,compound.getInteger("ChipDisplayPage")));chipPage=pendingChipPage;activation.read(compound);frameAppearance.read(compound);glassPlayback.read(compound);
-        for(int i=0;i<2;i++){
-            String key=i==0?"RedstonePrimary":"RedstoneSecondary";
+        for(int i=0;i<REDSTONE_SLOTS;i++){
+            String key=redstoneTag(i);
             if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));
             else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
         }
@@ -723,6 +763,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         secondaryInputPanel = data.secondaryInputPanel;
         wallPosition = data.wallPosition;
         smallInput = data.smallInput;
+        shallowDiagonalScreen=compound.getBoolean(SHALLOW_DIAGONAL);
         redstoneChannel = data.redstoneChannel;
         channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;
