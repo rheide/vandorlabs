@@ -46,7 +46,7 @@ final class VehicleFlightClientChecks {
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
     private static float steepPitch,rollTravel,previousBank,heldBank;
     private static double limitedCeiling,limitedX,limitedZ,glideZ,landingX,landingZ;
-    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel;
+    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel,divePressed;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -192,7 +192,8 @@ final class VehicleFlightClientChecks {
         if(stage==4&&frame>=23){
             if(craft.posY<=climbY+1&&frame<60)return false;
             need(craft.posY>climbY+1&&craft.driveSpeed>FlightEnvelope.TAKEOFF_SPEED,"released keys preserve forward flight and climb");
-            turnYaw=craft.rotationYaw;turnX=craft.posX;turnZ=craft.posZ;
+            mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),runwayY+25,12,0)).get();
+            turnYaw=0;turnX=ORIGIN.getX();turnZ=ORIGIN.getZ()-5;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),true);
             next();return false;
         }
@@ -204,19 +205,29 @@ final class VehicleFlightClientChecks {
             Vec3d right=banked.world(new Vec3d(px+1,1,pz),px,pz),left=banked.world(new Vec3d(px-1,1,pz),px,pz);
             need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2&&banked.bank>10&&right.y<left.y-.2,
                     "D lowers the right wing while turning forward; bank="+banked.bank);
-            VehicleStatusRenderChecks.airborneInstruments(mc,output,craft,SCREEN);
             mc.gameSettings.thirdPersonView=1;
             mc.player.prevRotationYaw=mc.player.rotationYaw=craft.rotationYaw+204;
             mc.player.prevRotationPitch=mc.player.rotationPitch=17;
-            priorPitch=craft.flightPitch();
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
             next();return false;
         }
-        if(stage==6&&frame==2)shot(mc,output,"shot_vehicle_flight_bank.png");
-        if(stage==6&&frame>=7){
+        if(stage==6){
+            if(!divePressed){
+                if(frame==2)shot(mc,output,"shot_vehicle_flight_bank.png");
+                if(frame==4){
+                    VehicleStatusRenderChecks.airborneInstruments(mc,output,craft,SCREEN);
+                    mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),runwayY+24,14,0)).get();
+                }
+                if(frame<7||Math.abs(craft.flightBank())>.5||craft.flightPitch()<13){
+                    need(frame<50,"plane settles into the upright pitch fixture; "+flightState(craft));return false;
+                }
+                priorPitch=craft.flightPitch();
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
+                divePressed=true;frame=0;
+                return false;
+            }
             if(craft.flightPitch()>=priorPitch-4&&frame<45)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-            need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the nose");
+            need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the upright nose; "+flightState(craft));
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"shot_vehicle_status_maxwell_flight.png"));
             mc.getIntegratedServer().addScheduledTask(()->{
