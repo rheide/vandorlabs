@@ -143,7 +143,9 @@ public final class CanopyDisplayRenderer {
             GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,display.requested==VehicleInstrument.HUD?0:1);
             GlStateManager.depthMask(true);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);
             GlStateManager.enableDepth();
-            RedstoneScreenRenderer.drawVehicleSelection(display.requested,tile.getWorld(),tile.getPos(),height);
+            if(display.requested==VehicleInstrument.HUD&&tile.resizable()&&height==128)
+                VehicleInstrumentRenderer.draw(VehicleInstrument.HUD,tile.getWorld(),tile.getPos(),height,true);
+            else RedstoneScreenRenderer.drawVehicleSelection(display.requested,tile.getWorld(),tile.getPos(),height);
             display.rendered=display.requested;display.updated=tick;
         }finally{
             OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,target);
