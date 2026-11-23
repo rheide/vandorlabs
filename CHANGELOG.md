@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Walk on a moving Forge aircraft’s deck with Sprint + Sneak in powered Flight. The aircraft levels out while the pilot walks. Press the same keys to take the controls again.
+
 - Recover completed parking after a drive burns fuel or controls change. A conflicting hull edit protects the affected area while nearby independent vehicles can still enter Taxi or Hover.
 
 - Limit Flight to 300 m/s at maximum altitude. Align distant JourneyMap beacons to the interpolated client camera and send populated destination columns while the rest of the arrival footprint loads.
