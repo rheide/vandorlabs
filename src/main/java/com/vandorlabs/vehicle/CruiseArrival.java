@@ -55,12 +55,14 @@ final class CruiseArrival {
         while(next<prepare.size()) {
             ChunkPos column=prepare.get(next);
             if(world.getChunkProvider().getLoadedChunk(column.x,column.z)==null) {
-                if(!budget.take())return false;
+                if(!budget.take())break;
                 world.getChunkProvider().provideChunk(column.x,column.z);
             }
             next++;
         }
-        boolean ready=true;
+        // Start sending populated columns while the outer lighting perimeter is still loading.
+        // A large footprint or a slow generator can span many server ticks.
+        boolean ready=next==prepare.size();
         List<Entity> riders=craft.getPassengers();
         added.entrySet().removeIf(entry->{
             if(riders.contains(entry.getKey()))return false;
@@ -70,8 +72,12 @@ final class CruiseArrival {
         for(ChunkPos column:footprint) {
             Chunk chunk=generate?world.getChunkProvider().getLoadedChunk(column.x,column.z):
                 CruiseResidentReanchor.loaded(world,column.x,column.z);
-            if(chunk==null) {next=0;return false;}
-            if(!chunk.isTerrainPopulated())ready=false;
+            if(chunk==null) {
+                if(generate && next==prepare.size())next=0;
+                ready=false;
+                continue;
+            }
+            if(!chunk.isTerrainPopulated()){ready=false;continue;}
             for(Entity rider:riders)if(rider instanceof EntityPlayerMP) {
                 EntityPlayerMP player=(EntityPlayerMP)rider;
                 if(player.isDead||player.world!=world||player.connection==null)continue;

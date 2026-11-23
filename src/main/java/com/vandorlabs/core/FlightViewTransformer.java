@@ -35,7 +35,7 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                         if ((beacon && method.equals("doRender") && owner.equals("net/minecraft/entity/Entity")
                                 || distances && method.equals("getDistanceTo") && owner.equals("net/minecraft/entity/player/EntityPlayer"))
                                 && (id.equals("func_174791_d") || id.equals("getPositionVector")))
-                            super.visitMethodInsn(INVOKESTATIC,GEO,"viewPosition","(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",false);
+                            super.visitMethodInsn(INVOKESTATIC,GEO,beacon?"beaconOrigin":"viewPosition","(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",false);
                     }
                     @Override public void visitFieldInsn(int op,String owner,String id,String desc) {
                         super.visitFieldInsn(op,owner,id,desc);

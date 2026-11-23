@@ -22,6 +22,13 @@ public final class CruiseMapView {
     public static double x(double value,EntityPlayer subject) { return subject==Minecraft.getMinecraft().player ? x(value) : value; }
     public static double y(double value,EntityPlayer subject) { return subject==Minecraft.getMinecraft().player ? y(value) : value; }
     public static double z(double value,EntityPlayer subject) { return subject==Minecraft.getMinecraft().player ? z(value) : value; }
+    /** JourneyMap clamps distant beacons to the view radius before subtracting the render origin.
+     * Both operations must start from the same interpolated camera position. */
+    public static Vec3d beaconOrigin(Vec3d tickPosition) {
+        if(mounted()==null)return tickPosition;
+        net.minecraft.client.renderer.entity.RenderManager camera=Minecraft.getMinecraft().getRenderManager();
+        return new Vec3d(x(camera.viewerPosX),y(camera.viewerPosY),z(camera.viewerPosZ));
+    }
     public static Vec3d viewPosition(Vec3d value) {
         EntityGroundVehicle c=mounted();
         return c==null?value:value.addVector(c.cruise.projected()?0:c.cruise.view(true,Minecraft.getMinecraft().getRenderPartialTicks())-c.posX,c.flightAltitude()-c.posY,
