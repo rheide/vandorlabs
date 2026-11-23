@@ -497,28 +497,36 @@ final class VehicleFlightClientChecks {
             if(!craft.flying()||craft.driveSpeed<1)return false;
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
-                // Start a small nose-down final over the same runway as the original departure.
-                actual.rotationYaw=0;
-                actual.setPosition(ORIGIN.getX(),ORIGIN.getY()+1.5,ORIGIN.getZ()-8);
+                // Keep the pilot and aircraft in the same watched chunk. Lay fresh concrete
+                // just beneath their current height, clear of the earlier impact obstacle.
+                BlockPos here=actual.getPosition();
+                runwayY=here.getY()-2;
+                for(BlockPos p:BlockPos.getAllInBox(here.add(-3,-3,-80),here.add(15,-3,8))){
+                    world(mc).getChunkFromBlockCoords(p);
+                    world(mc).setBlockState(p,Blocks.CONCRETE.getDefaultState(),2);
+                }
+                stageAttitude(actual,-5,0);
             }).get();
-            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
             next();return false;
         }
         if(stage==23){
             need(frame<75,"powered touchdown over runway: "+flightState(craft));
             if(!craft.flying()){
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-                need(craft.vehicleMode()==1&&Math.abs(craft.posY-ORIGIN.getY())<.15&&craft.driveSpeed>.45,
+                need(craft.vehicleMode()==1&&Math.abs(craft.posY-runwayY)<.15&&craft.driveSpeed>.45,
                     "wheel touchdown keeps forward airspeed in Taxi: "+flightState(craft));
                 landingZ=craft.posZ;
                 next();return false;
             }
-            if(craft.flightPitch()<-6)KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
+            if(frame==40){
+                String state=mc.getIntegratedServer().callFromMainThread(()->{EntityGroundVehicle actual=server(mc);return flightState(actual)+" motion="+actual.motionX+","+actual.motionY+","+actual.motionZ+" runway="+runwayY;}).get();
+                System.out.println("[vandorlabs] powered landing progress "+state);
+            }
             return false;
         }
         if(stage==24){
             if(frame<9)return false;
-            need(craft.posZ<landingZ-2&&Math.abs(craft.posY-ORIGIN.getY())<.15,
+            need(craft.posZ<landingZ-2&&Math.abs(craft.posY-runwayY)<.15,
                     "forward rollout settles on runway with no embeds");
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
             return true;
