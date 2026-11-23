@@ -294,7 +294,7 @@ final class VehicleFlightClientChecks {
                 need(reduced<15,"real fixture can support lower thrust");
                 limitedCeiling=FlightEnvelope.maximumAltitude(readout.effectiveMass,readout.ratedThrust*reduced/15);
                 need(limitedCeiling>256&&limitedCeiling+22<readout.maximumAltitude(),"positive lower thrust gives a lower cruise ceiling");
-                actual.cruise.move(0,limitedCeiling+22-actual.flightAltitude(),0);
+                moveCruise(actual,0,limitedCeiling+22-actual.flightAltitude(),0);
                 configureAnalog((TileEntityConstructor)actual.view.getTileEntity(DRIVE),true,reduced);
                 limitedX=actual.cruise.x();limitedZ=actual.cruise.z();
             }).get();
@@ -310,7 +310,7 @@ final class VehicleFlightClientChecks {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
-                actual.cruise.move(ORIGIN.getX()-actual.cruise.x(),259-actual.flightAltitude(),ORIGIN.getZ()-actual.cruise.z());
+                moveCruise(actual,ORIGIN.getX()-actual.cruise.x(),259-actual.flightAltitude(),ORIGIN.getZ()-actual.cruise.z());
                 actual.driveSpeed=1.5;glideZ=actual.cruise.z();
                 need(((TileEntityConstructor)actual.view.getTileEntity(DRIVE)).purgeMaxwell(),"empty Maxwell tank during cruise");
             }).get();
@@ -406,6 +406,16 @@ final class VehicleFlightClientChecks {
         ReflectionHelper.setPrivateValue(EntityGroundVehicle.class,craft,bank,"flightBank");
         ReflectionHelper.setPrivateValue(EntityGroundVehicle.class,craft,0F,"flightRollRate");
         craft.setPosition(ORIGIN.getX(),altitude,ORIGIN.getZ()-5);
+    }
+
+    private static void moveCruise(EntityGroundVehicle craft,double dx,double dy,double dz){
+        try{
+            Object moved=ReflectionHelper.findMethod(VehicleCruise.class,"move","move",double.class,double.class,double.class)
+                    .invoke(craft.cruise,dx,dy,dz);
+            need(Boolean.TRUE.equals(moved),"fixture travels in the high flight band");
+        }catch(ReflectiveOperationException failure){
+            throw new IllegalStateException("Vehicle Flight could not position the cruise fixture",failure);
+        }
     }
 
     private static void configureAnalog(TileEntityConstructor engine,boolean enabled,int level){
