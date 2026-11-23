@@ -585,6 +585,9 @@ fi
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$RUN_OUT" --lease "$ARTIFACT_LEASE" -- \
     timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
+if [ -n "${VANDOR_LABS_TEST_FORGE_VERSION:-}" ]; then
+    grep -Fq "Forge Mod Loader version $VANDOR_LABS_TEST_FORGE_VERSION for Minecraft 1.12.2 loading" "$RUN_OUT/client.log"
+fi
 if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/client.log"; then
     echo "FAIL: missing or invalid baked model; see $RUN_OUT/client.log"
     exit 1

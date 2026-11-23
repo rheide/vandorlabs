@@ -25,6 +25,18 @@ public final class VehicleWorldRuntimeChecks {
         }
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
+    /** A playerless flat server can defer loading the classes used on login or Overworld generation. */
+    public static void verifyForgeHooks() {
+        Class<?>[] targets = {
+                net.minecraft.server.management.PlayerChunkMap.class, net.minecraft.entity.EntityTrackerEntry.class,
+                World.class, Chunk.class, net.minecraft.network.NetHandlerPlayServer.class,
+                net.minecraft.entity.player.EntityPlayerMP.class, net.minecraft.world.gen.layer.IntCache.class
+        };
+        require(com.vandorlabs.core.CruiseTrackingTransformer.serverReady(), "Missing physical cruise server hooks");
+        require(com.vandorlabs.core.CruiseLayerTransformer.installed, "Missing seed layer hook");
+        System.out.println("[vandorlabs] forge-cruise-hooks PASS transformed classes=" + targets.length);
+    }
+
     public static void run(World parent){
         ChunkObserver observer=new ChunkObserver();boolean live=parent instanceof net.minecraft.world.WorldServer;
         if(live)MinecraftForge.EVENT_BUS.register(observer);

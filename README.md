@@ -24,7 +24,7 @@ Block availability can be configured by category in the generated `config/vandor
 > It is provided as-is, with no warranty of any kind and no guarantee of
 > correctness, compatibility, maintenance, future updates, or support.
 
-A Minecraft Forge 1.12.2 mod (Forge `1.12.2-14.23.5.2860`) adding
+A Minecraft Forge 1.12.2 mod, built against Forge 14.23.5.2860 and tested on builds 2860 through 2864, adding
 science-fiction ship blocks: hull and wall panels, animated bridge/engineering
 displays, planet and ship viewscreens, consoles, toggleable lamps, hinged and
 sliding doors, wall switches and throw levers, plus a few hand-built 3D

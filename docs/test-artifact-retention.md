@@ -33,3 +33,9 @@ bash -n testclient/test_viewscreen.sh
 ```
 
 The physical server startup runner accepts `--run-root` for its fresh generated server directory. An outer suite can place that directory and a reconstructed cached Forge toolchain beneath one registered disposable `game` path, then finalize the lease only after server shutdown and diagnostic extraction. Direct startup runs now create their own retained suite under `build/test-artifacts/`. All server phases share one disposable `game` directory, and the lease finalizes after their server processes exit. Successful runs remove generated worlds, mods and libraries while retaining bounded logs and the exact artifact hash; failed payloads use the shared retention limits. An explicit `--run-root` leaves finalization with the outer suite.
+
+### Forge 1.12.2 version matrix
+
+Run `python tools/test_forge_versions.py --jar build/libs/vandorlabs-3.0.0.jar --server-base PATH_TO_INSTALLED_SERVER --java PATH_TO_JAVA_8` to check every published 1.12.2 build from Forge 14.23.5.2860 onwards. The runner discovers versions from Forge's Maven index, freezes the mod JAR, and verifies the published SHA-1 of each Forge universal JAR. The installed server supplies its vanilla server JAR and libraries. Worlds, configurations and mods in that installation are never opened. Each version uses a fresh world and the ordinary physical-server retention policy. The checks cover the running FML version, cruise tracking and terrain-generation hooks, carried tiles, legacy controller data, block placement and world reload.
+
+For Linux client focuses select `VANDOR_LABS_TEST_FORGE_VERSION` and set `VANDOR_LABS_TEST_FORGE_JAR` to the absolute path of its universal JAR. For the Windows runner use `--forge-profile` with the installed version profile.
