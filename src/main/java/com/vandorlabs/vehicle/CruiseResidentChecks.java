@@ -125,7 +125,8 @@ final class CruiseResidentChecks {
         require(BlockAvailability.reanchorResidentCruise(),"real config selects resident-only reanchoring");
         pilot=client.getIntegratedServer().getPlayerList().getPlayers().get(0);
         world=pilot.getServerWorld();
-        departure=pilot.posX;
+        // The seat center crosses a chunk boundary while the aircraft origin stays on this side.
+        departure=Math.floor(pilot.posX/16)*16+15.5;
         residentX=departure+FAR;
         wildernessX=residentX+FAR;
         originZ=pilot.posZ;
@@ -172,8 +173,11 @@ final class CruiseResidentChecks {
 
     private static void crossWilderness(){
         require(craft.cruise.active()&&Math.abs(craft.posX-residentX)<.01
-            && craft.chunkCoordX==chunk(residentX) && pilot.chunkCoordX==chunk(residentX)
-            && Math.abs(pilot.managedPosX-residentX)<4,"actual mounted craft and watcher reindexed at the resident site");
+            && craft.chunkCoordX==chunk(residentX) && pilot.chunkCoordX==chunk(pilot.posX)
+            && pilot.chunkCoordZ==chunk(pilot.posZ) && pilot.getRidingEntity()==craft
+            && Math.abs(pilot.posX-residentX)<4 && Math.abs(pilot.managedPosX-pilot.posX)<4,
+            "resident craft="+craft.posX+" chunk="+craft.chunkCoordX+" seat="+pilot.posX
+                +" chunk="+pilot.chunkCoordX+" watcher="+pilot.managedPosX+" site="+residentX);
         require(AUDIT.loads.isEmpty(),"resident hop loaded new terrain "+AUDIT.loads);
         AUDIT.hopped=true;
         require(craft.cruise.move(FAR,0,0),"continue logical route to fresh terrain");
