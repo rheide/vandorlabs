@@ -151,9 +151,9 @@ public final class CruiseRuntimeChecks {
     private static void checkForecast(){
         int fine=8,span=CruiseAtlas.SIZE*fine;
         double x=-1,z=1;
-        double atSpeed=CruiseAtlas.forecastDistance(15,0,fine);
-        require(atSpeed==span&&CruiseAtlas.forecastDistance(0,0,fine)==0
-                &&CruiseAtlas.forecastDistance(2,60,fine)<121,"bounded horizontal flight forecast");
+        double atSpeed=CruiseAtlas.forecastDistance(15,fine);
+        require(atSpeed==span&&CruiseAtlas.forecastDistance(0,fine)==0
+                &&CruiseAtlas.forecastDistance(1,fine)==120,"bounded horizontal flight forecast");
         java.util.List<CruiseAtlas.Tile> ahead=CruiseTiles.footprint(x,z,fine,x+atSpeed,z);
         require(ahead.size()==68&&new java.util.HashSet<>(ahead).size()==68,"fixed unique seed tile budget");
         require(ahead.contains(new CruiseAtlas.Tile(2*span,0,fine))&&!ahead.contains(new CruiseAtlas.Tile(-3*span,0,fine))
@@ -172,9 +172,12 @@ public final class CruiseRuntimeChecks {
                 new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null)),seat,EnumFacing.NORTH,1));
         require(com.vandorlabs.navigation.CruiseAtlas.forWorld(world).usesDetachedLayers(),"default biome provider has a detached seed worker");
         startX=pilot.posX;
-        craft.setPosition(startX,255.9,pilot.posZ);
+        // A level north-facing craft descending vertically beside a tile boundary must
+        // keep its fine layer under the pilot. Counting descent as forward travel shifted
+        // the client across z=0 while the server kept sending the stationary footprint.
+        craft.setPosition(startX,255.9,.5);
         world.spawnEntity(craft);
-        pilot.setPositionAndUpdate(startX,256,pilot.posZ);
+        pilot.setPositionAndUpdate(startX,256,.5);
         craft.assignSeat(pilot,seat);
         require(pilot.startRiding(craft,true),"pilot boards");
         craft.hover=true;craft.hoverTarget=255.9;
@@ -343,6 +346,9 @@ public final class CruiseRuntimeChecks {
         }else if(stage==6&&ticks>10&&CruiseSky.covered()&&mc.player.getRidingEntity() instanceof EntityGroundVehicle
                 && Math.abs(((EntityGroundVehicle)mc.player.getRidingEntity()).visualPose(1).pitch)<.01){
             // Let the aircraft level after the steep dive before sampling a fixed ground pixel.
+            EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
+            require(mounted.cruiseGroundSpeed()<.001 && mounted.driveSpeed>.1,
+                    "pure descent has zero lead despite measured vertical speed "+mounted.driveSpeed);
             require(mc.world.provider.getWeatherRenderer()!=null,"local cruise weather interceptor installed");
             System.out.println("[vandorlabs] cruise atlas covers two 5x5 detail layers and two 3x3 horizon layers after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");

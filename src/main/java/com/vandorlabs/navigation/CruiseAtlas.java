@@ -42,8 +42,8 @@ public final class CruiseAtlas {
     public static int nearStep(double altitude){return Math.max(4,Integer.highestOneBit((int)altitude/128));}
     public static double horizon(double altitude){return Math.max(8192,altitude*16);}
     /** Six seconds of travel, bounded to one fine tile to keep the ground beneath a turning aircraft covered. */
-    public static double forecastDistance(double speed,float pitch,int near){
-        return Math.min(near*SIZE,Math.max(0,speed)*120*Math.max(0,Math.cos(Math.toRadians(pitch))));
+    public static double forecastDistance(double groundSpeed,int near){
+        return Math.min(near*SIZE,Math.max(0,groundSpeed)*120);
     }
     public static int radius(int scale,int near){return scale<=near*4?2:1;}
     public static int[] scales(int near){return new int[]{near,near*64,near*4,near*16};}

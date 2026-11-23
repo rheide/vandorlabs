@@ -21,7 +21,7 @@ final class CruiseTiles {
         int size=CruiseAtlas.SIZE*step;
         int tx=(int)Math.floor(x/size),tz=(int)Math.floor(z/size);
         double yaw=Math.toRadians(craft.rotationYaw);
-        double forecast=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.driveSpeed,craft.flightPitch(),step):0;
+        double forecast=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.cruiseGroundSpeed(),step):0;
         int fx=craft.structure.facing.getFrontOffsetX(),fz=craft.structure.facing.getFrontOffsetZ();
         double aheadX=x+forecast*(fx*Math.cos(yaw)-fz*Math.sin(yaw));
         double aheadZ=z+forecast*(fx*Math.sin(yaw)+fz*Math.cos(yaw));
