@@ -29,11 +29,19 @@ public final class CruiseRuntimeChecks {
     private static Future<?> work;
     private static EntityGroundVehicle craft;
     private static double startX,destination;
+    private static volatile int routeSteps;
+    private static int smoothSamples,groundSamples,transitTicks;
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
 
     @SideOnly(Side.CLIENT)
     public static final class TransitChunks {
         private int loads;
+
+        @SubscribeEvent public void fly(net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent event){
+            if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END||routeSteps<=0)return;
+            require(craft.cruise.move(64,16,0),"moving high-speed route");
+            routeSteps--;
+        }
 
         @SubscribeEvent public void loaded(ChunkEvent.Load event) {
             if (event.getWorld()!=craft.world) return;
@@ -76,8 +84,10 @@ public final class CruiseRuntimeChecks {
         craft.readFlightMode(state);
         craft.setPosition(startX,255.9,craft.posZ);
         observeRoute();
-        require(craft.cruise.move(0,1,0),"cross build ceiling");
-        for(int i=0;i<64;i++)require(craft.cruise.move(64,16,0),"route step "+i);
+        require(craft.cruise.move(0,32,0),"cross build ceiling");
+        routeSteps=64;
+    }
+    private static void finishLeg(){
         destination=craft.cruise.x();
         require(Math.abs(craft.posX-startX)<.001&&destination-startX==4096,"horizontal route keeps physical anchor");
         require(craft.cruise.altitude()>1200&&Double.isInfinite(craft.groundClearance()),"logical altitude without a clearance query");
@@ -134,7 +144,21 @@ public final class CruiseRuntimeChecks {
             });stage=9;
         }else if(stage==9 && CruiseSky.buffered()){
             require(!CruiseSky.ready(),"preview arrived before crossing Y=256");
-            work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
+            work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=11;
+        }else if(stage==11 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
+            EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
+            if(mounted.cruise.active()){
+                transitTicks++;
+                double early=mounted.cruise.view(true,.05F),late=mounted.cruise.view(true,.8F);
+                if(late>early&&late-early<192)smoothSamples++;
+                if(CruiseSky.ready())groundSamples++;
+            }
+            if(routeSteps==0){
+                require(smoothSamples>=4,"geographic route updated between tick boundaries, samples="+smoothSamples);
+                require(groundSamples>0,"streamed ground followed moving aircraft");
+                System.out.println("[vandorlabs] moving seed atlas ground="+groundSamples+"/"+transitTicks+" interpolated="+smoothSamples);
+                work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::finishLeg);stage=2;
+            }
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.detailed()){
             mc.gameSettings.thirdPersonView=0;
             stage=6;ticks=0;
@@ -143,6 +167,7 @@ public final class CruiseRuntimeChecks {
             System.out.println("[vandorlabs] cruise atlas covers near, middle and far 3x3 tiles after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
             if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) verifyJourneyMap(mc);
+            mc.world.setRainStrength(1);
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=35;
             mc.gameSettings.hideGUI=true;stage=3;ticks=0;

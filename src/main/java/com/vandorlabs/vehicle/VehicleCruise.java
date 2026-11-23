@@ -2,6 +2,7 @@ package com.vandorlabs.vehicle;
 
 import com.vandorlabs.config.BlockAvailability;
 import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.physics.CruiseGeography;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -27,40 +28,24 @@ public final class VehicleCruise {
     private double routeX, routeZ, anchorX, anchorZ;
     private CruiseArrival arrival;
     private final CruiseTiles tiles=new CruiseTiles();
-    private BlockPos viewSample;
-    private double previousX,previousZ;
-    private float sampleTime,duration;
+    private final CruiseGeography geography=new CruiseGeography();
     private static final DataParameter<Integer> FRACTION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
-    private int viewFraction;
 
-    /** Render a continuous path between authoritative geographic samples. */
     public double view(boolean east,float partial){
-        if(!active()){viewSample=null;return east?craft.posX:craft.posZ;}
-        BlockPos packet=craft.getDataManager().get(ROUTE);
-        int fraction=craft.getDataManager().get(FRACTION);
-        float now=craft.ticksExisted+partial;
-        if(!packet.equals(viewSample)||fraction!=viewFraction){
-            double x=packet.getX()+(fraction&255)/256.0,z=packet.getZ()+(fraction>>>8)/256.0;
-            if(viewSample==null || Math.abs(viewSample.getX()-x)>512 || Math.abs(viewSample.getZ()-z)>512){
-                previousX=x;previousZ=z;duration=1;
-            }else{
-                previousX=interpolate(true,now);previousZ=interpolate(false,now);
-                duration=MathHelper.clamp(now-sampleTime,1,4);
-            }
-            viewSample=packet;viewFraction=fraction;sampleTime=now;
+        if(!active()){geography.clear();return east?craft.posX:craft.posZ;}
+        if(projected()){
+            double last=east?craft.lastTickPosX:craft.lastTickPosZ,now=east?craft.posX:craft.posZ;
+            return last+(now-last)*partial;
         }
-        return interpolate(east,now);
-    }
-    private double interpolate(boolean east,float now){
-        double from=east?previousX:previousZ;
-        double to=east?viewSample.getX()+(viewFraction&255)/256.0:viewSample.getZ()+(viewFraction>>>8)/256.0;
-        return from+(to-from)*MathHelper.clamp((now-sampleTime)/duration,0,1);
+        BlockPos route=craft.getDataManager().get(ROUTE);
+        double tick=(double)craft.ticksExisted+partial;
+        geography.accept(route.getX(),route.getZ(),craft.getDataManager().get(FRACTION),tick);
+        return geography.at(east,tick);
     }
     private void publishRoute(){
         craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
-        craft.getDataManager().set(FRACTION,((int)(long)Math.floor(routeX*256)&255)|(((int)(long)Math.floor(routeZ*256)&255)<<8));
+        craft.getDataManager().set(FRACTION,CruiseGeography.fractions(routeX,routeZ));
     }
-
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
