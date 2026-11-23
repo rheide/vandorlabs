@@ -26,6 +26,8 @@ public final class CanopyRainShelter {
     private static final FloatBuffer VALUE=org.lwjgl.BufferUtils.createFloatBuffer(1);
     private static final ShaderHooks SHADERS=ShaderHooks.find();
     private static WorldClient world;
+    private static long suppressedDraws;
+    public static long suppressedDraws(){return suppressedDraws;}
     private static final IRenderHandler WEATHER=new IRenderHandler(){@Override public void render(float partial,WorldClient view,Minecraft mc){renderWeather(mc,view,partial);}};
     static boolean sheltered(WorldClient view,BlockPos player){if(!view.isBlockLoaded(player))return false;BlockPos roof=view.getPrecipitationHeight(player);return roof.getY()>player.getY()&&view.getBlockState(roof.down()).getBlock() instanceof BlockFixedCanopyGlass;}
     private static void clear(){if(world!=null&&world.provider.getWeatherRenderer()==WEATHER)world.provider.setWeatherRenderer(null);world=null;}
@@ -48,7 +50,13 @@ public final class CanopyRainShelter {
             && ((com.vandorlabs.vehicle.EntityGroundVehicle)mc.player.getRidingEntity()).cruise.active();
     }
     private static void renderWeather(Minecraft mc,WorldClient view,float partial){
-        Entity camera=mc.getRenderViewEntity();if(aboveWeather(mc)||camera==null||view.getRainStrength(partial)<=0)return;
+        if(aboveWeather(mc)){
+            if(view.getRainStrength(partial)>0)suppressedDraws++;
+            return;
+        }
+        // A landing packet can arrive between weather-handler selection and drawing.
+        Entity camera=mc.getRenderViewEntity();
+        if(SHADERS==null||!SHADERS.active()||camera==null||view.getRainStrength(partial)<=0)return;
         try(TurntableRenderState saved=new TurntableRenderState()){
             mc.entityRenderer.enableLightmap();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.depthMask(false);GlStateManager.disableLighting();
             SHADERS.begin();try{withoutWind(()->columns(mc,view,camera,partial));}finally{SHADERS.end();mc.entityRenderer.disableLightmap();}

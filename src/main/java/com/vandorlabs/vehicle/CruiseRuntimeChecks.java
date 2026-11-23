@@ -30,6 +30,7 @@ public final class CruiseRuntimeChecks {
     private static EntityGroundVehicle craft;
     private static double startX,destination;
     private static volatile int routeSteps;
+    private static long initialWeatherDraws;
     private static int smoothSamples,groundSamples,transitTicks;
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
 
@@ -175,7 +176,7 @@ public final class CruiseRuntimeChecks {
             }
             if(routeSteps==0){
                 require(smoothSamples>=4,"geographic route updated between tick boundaries, samples="+smoothSamples);
-                require(groundSamples>0,"streamed ground followed moving aircraft");
+                require(groundSamples*5>=transitTicks*4,"seed ground coverage during high-speed movement "+groundSamples+"/"+transitTicks);
                 System.out.println("[vandorlabs] moving seed atlas ground="+groundSamples+"/"+transitTicks+" interpolated="+smoothSamples);
                 work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::finishLeg);stage=2;
             }
@@ -187,11 +188,13 @@ public final class CruiseRuntimeChecks {
             System.out.println("[vandorlabs] cruise atlas covers near, middle and far 3x3 tiles after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
             if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) verifyJourneyMap(mc);
+            initialWeatherDraws=com.vandorlabs.client.CanopyRainShelter.suppressedDraws();
             mc.world.setRainStrength(1);
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=35;
             mc.gameSettings.hideGUI=true;stage=3;ticks=0;
         }else if(stage==3&&ticks>15){
+            require(com.vandorlabs.client.CanopyRainShelter.suppressedDraws()>initialWeatherDraws,"rain pass suppressed over cruise");
             int pilotDraws=VehicleClient.cruisePilotDraws();
             require(pilotDraws==1,"third-person cruise draws the local pilot exactly once, draws="+pilotDraws);
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
