@@ -42,6 +42,7 @@ public final class BlockAvailability {
                 new String[]{"anchored","physical"});
         cruiseCoordinates="physical".equalsIgnoreCase(selected)?CruiseCoordinates.PHYSICAL:CruiseCoordinates.ANCHORED;
         if("resident".equalsIgnoreCase(selected))config.get("vehicles","cruiseCoordinates","anchored").set("anchored");
+        if(config.hasKey("vehicles","reanchorResidentCruise"))config.getCategory("vehicles").remove("reanchorResidentCruise");
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)

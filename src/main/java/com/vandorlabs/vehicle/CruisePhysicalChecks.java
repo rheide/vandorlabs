@@ -70,6 +70,16 @@ final class CruisePhysicalChecks {
             File file=new File(mc.mcDataDir,"config/cruise-physical-fixture.cfg");
             net.minecraftforge.common.config.Configuration config=new net.minecraftforge.common.config.Configuration(file);
             config.load();
+            config.get("vehicles","cruiseCoordinates","anchored").set("resident");
+            config.get("vehicles","reanchorResidentCruise",false).set(true);
+            config.save();
+            BlockAvailability.load(file);
+            require(BlockAvailability.cruiseCoordinates()==BlockAvailability.CruiseCoordinates.ANCHORED,
+                    "retired Resident config uses anchored cruise");
+            config=new net.minecraftforge.common.config.Configuration(file);
+            config.load();
+            require("anchored".equals(config.get("vehicles","cruiseCoordinates","anchored").getString())
+                    &&!config.hasKey("vehicles","reanchorResidentCruise"),"retired selection rewritten on disk");
             config.get("vehicles","cruiseCoordinates","anchored").set(MODE);
             if(BAND_HANDOFF!=0)config.get("vehicles","cruiseHandoffAltitude",512).set(BAND_HANDOFF);
             config.save();
