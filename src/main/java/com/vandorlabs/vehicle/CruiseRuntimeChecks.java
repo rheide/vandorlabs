@@ -297,7 +297,9 @@ public final class CruiseRuntimeChecks {
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.detailed()){
             mc.gameSettings.thirdPersonView=0;
             stage=6;ticks=0;
-        }else if(stage==6&&ticks>10&&CruiseSky.covered()){
+        }else if(stage==6&&ticks>10&&CruiseSky.covered()&&mc.player.getRidingEntity() instanceof EntityGroundVehicle
+                && Math.abs(((EntityGroundVehicle)mc.player.getRidingEntity()).visualPose(1).pitch)<.01){
+            // Let the aircraft level after the steep dive before sampling a fixed ground pixel.
             require(mc.world.provider.getWeatherRenderer()!=null,"local cruise weather interceptor installed");
             System.out.println("[vandorlabs] cruise atlas covers two 5x5 detail layers and two 3x3 horizon layers after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
