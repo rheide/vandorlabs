@@ -482,7 +482,45 @@ final class VehicleFlightClientChecks {
             }).get();
             need(sawHoverCoast&&craft.hover&&carryingSpeed,
                     "actual Hover click coasts through an intermediate speed and hands forward movement into Hover");
-            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast");
+            aim(mc,craft,3);
+            next();return false;
+        }
+        if(stage==21){
+            need(frame<120,"seated pilot has Flight target before runway approach");
+            aim(mc,craft,3);
+            if(!alignedServer(mc))return false;
+            useStatus(mc);
+            next();return false;
+        }
+        if(stage==22){
+            need(frame<100,"pilot returns to powered Flight for runway approach");
+            if(!craft.flying()||craft.driveSpeed<1)return false;
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=server(mc);
+                // Start a small nose-down final over the same runway as the original departure.
+                actual.rotationYaw=0;
+                actual.setPosition(ORIGIN.getX(),ORIGIN.getY()+1.5,ORIGIN.getZ()-8);
+            }).get();
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
+            next();return false;
+        }
+        if(stage==23){
+            need(frame<75,"powered touchdown over runway: "+flightState(craft));
+            if(!craft.flying()){
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
+                need(craft.vehicleMode()==1&&Math.abs(craft.posY-ORIGIN.getY())<.15&&craft.driveSpeed>.45,
+                    "wheel touchdown keeps forward airspeed in Taxi: "+flightState(craft));
+                landingZ=craft.posZ;
+                next();return false;
+            }
+            if(craft.flightPitch()<-6)KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
+            return false;
+        }
+        if(stage==24){
+            if(frame<9)return false;
+            need(craft.posZ<landingZ-2&&Math.abs(craft.posY-ORIGIN.getY())<.15,
+                    "forward rollout settles on runway with no embeds");
+            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
             return true;
         }
         return false;

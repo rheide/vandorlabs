@@ -20,7 +20,8 @@ final class VehicleFlightMotion {
     private final EntityGroundVehicle craft;
     private VehicleCollision previousCollision;
     private VehicleWorld previousView;
-    private Map<Integer,VehicleCollision> hull;
+    private final java.util.List<Map.Entry<Integer,VehicleCollision>> hull=new java.util.ArrayList<>();
+    private Map<Integer,VehicleCollision> wheels;
     private double radius;
 
     VehicleFlightMotion(EntityGroundVehicle craft) { this.craft = craft; }
@@ -38,7 +39,10 @@ final class VehicleFlightMotion {
 
     private void prepare() {
         if (previousCollision == craft.collision && previousView == craft.view) return;
-        hull = VehicleCollision.flightHull(craft);
+        wheels=VehicleCollision.flightHull(craft,true);
+        hull.clear();
+        hull.addAll(VehicleCollision.flightHull(craft,false).entrySet());
+        hull.addAll(wheels.entrySet());
         previousCollision = craft.collision;
         previousView = craft.view;
         AxisAlignedBB box = craft.collision.bounds;
@@ -53,7 +57,7 @@ final class VehicleFlightMotion {
         if (!craft.articulation.active()) return pose.world(craft.collision.bounds,px,pz);
         AxisAlignedBB combined = null;
         RigidTransform root = pose.transform(px,pz);
-        for (Map.Entry<Integer,VehicleCollision> body : hull.entrySet()) {
+        for (Map.Entry<Integer,VehicleCollision> body : hull) {
             AxisAlignedBB box = bounds(body.getValue().bounds,root.then(craft.articulation.physicalBody(body.getKey())));
             combined = combined == null ? box : combined.union(box);
         }
@@ -71,7 +75,7 @@ final class VehicleFlightMotion {
         VehiclePose accepted = from;
         double ceiling = craft.world.provider.getDimension()==0?Double.POSITIVE_INFINITY:craft.world.getActualHeight();
         try {
-            for (VehicleCollision geometry : hull.values()) geometry.begin(craft.world,craft);
+            for (Map.Entry<Integer,VehicleCollision> body : hull) body.getValue().begin(craft.world,craft);
             for (int step = 1; step <= steps; step++) {
                 VehiclePose next = from.interpolate(to,(float) step / steps);
                 AxisAlignedBB occupied = bounds(next);
@@ -83,7 +87,7 @@ final class VehicleFlightMotion {
                 accepted = next;
             }
         } finally {
-            for (VehicleCollision geometry : hull.values()) geometry.end();
+            for (Map.Entry<Integer,VehicleCollision> body : hull) body.getValue().end();
         }
         craft.applyFlightPose(to);
         return Result.MOVED;
@@ -109,12 +113,33 @@ final class VehicleFlightMotion {
     }
 
     private boolean sweeps(VehiclePose pose,double dx,double dy,double dz){
+        return sweeps(hull,pose,dx,dy,dz);
+    }
+
+    private boolean sweeps(Iterable<Map.Entry<Integer,VehicleCollision>> bodies,VehiclePose pose,double dx,double dy,double dz){
         RigidTransform root = pose.transform(craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
-        for (Map.Entry<Integer,VehicleCollision> body : hull.entrySet()) {
+        for (Map.Entry<Integer,VehicleCollision> body : bodies) {
             RigidTransform transform = root.then(craft.articulation.physicalBody(body.getKey()));
             if (body.getValue().overlapsFlight(craft.world,craft,transform,dx,dy,dz)) return true;
         }
         return false;
+    }
+
+    /** Settle a shallow wheels-first approach, while requiring clearance for the whole leveled hull. */
+    boolean touchdown(double dx,double dy,double dz) {
+        VehiclePose from=craft.flightPose();
+        if(dy>=0||Math.abs(from.pitch)>18||Math.abs(from.bank)>12||wheels.isEmpty()||
+                !VehicleLandingGear.extended(craft)||!VehicleSkiTraction.allowed(craft))return false;
+        VehiclePose level=new VehiclePose(from.x,from.y,from.z,from.yaw,0,0,from.facing);
+        double reach=Math.min(3,.12-dy+Math.toRadians(Math.abs(from.pitch)+Math.abs(from.bank))*radius);
+        if(!loaded(bounds(from).union(bounds(level).expand(dx,-reach,dz)).grow(.2)))return false;
+        if(sweeps(hull,level,dx,0,dz))return false; // A wall ahead cannot become runway contact.
+        double drop=craft.collision.clip(craft.world,craft,level.x,level.y,level.z,-reach,1,level.yaw);
+        if(drop<=-reach+1e-6||!sweeps(wheels.entrySet(),level,0,drop-.002,0))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.toRadians(Math.abs(from.pitch)+Math.abs(from.bank))*radius/.12));
+        for(int i=1;i<=steps;i++)if(sweeps(from.interpolate(level,(float)i/steps),0,0,0))return false;
+        craft.applyFlightPose(new VehiclePose(level.x,level.y+drop,level.z,level.yaw,0,0,level.facing));
+        return true;
     }
 
     private boolean loaded(AxisAlignedBB area) {
