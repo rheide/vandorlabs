@@ -69,6 +69,11 @@ final class CopyThermalLiveChecks {
     private static void require(boolean condition,String description){if(!condition)throw new IllegalStateException("copy-thermal scenario="+scenario+" stage="+stage+": "+description);}
 
     static boolean tick(Minecraft mc)throws Exception{
+        if(stage==4){
+            if(!MaxwellServoChecks.tick(mc))return false;
+            System.out.println("[vandorlabs] copy-thermal PASS Creative and Survival copies, native servo/retriever, storage and Maxwell fuel conservation");
+            return true;
+        }
         require(++wait<650,"timeout mode="+mc.playerController.getCurrentGameType()+" hotbar="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPosition()+" screen="+mc.currentScreen);
         if(stage==0){
             server(mc,()->setup(mc.getIntegratedServer().getWorld(0),actor(mc)));
@@ -93,7 +98,7 @@ final class CopyThermalLiveChecks {
             if(!complete)return false;
             if(scenario==1){stage=2;wait=0;scenario++;return false;}
             mc.player.closeScreen();
-            if(scenario==3){System.out.println("[vandorlabs] copy-thermal PASS connected Copy button Creative surface, Survival material refusal and exact withdrawal, Survival Vehicle Chip, native servo/retriever faces and tiers, Vandor and Mekanism storage, formed Maxwell fuel");return true;}
+            if(scenario==3){stage=4;return false;}
             scenario++;
             stage=0;wait=0;
         }
@@ -225,7 +230,7 @@ final class CopyThermalLiveChecks {
         }
     }
 
-    private static Object ductUnit(TileEntity duct,String family)throws Exception{
+    static Object ductUnit(TileEntity duct,String family)throws Exception{
         for(Object unit:(Iterable<?>)duct.getClass().getMethod("getDuctUnits").invoke(duct))
             if(unit.getClass().getName().startsWith("cofh.thermaldynamics.duct."+family+"."))return unit;
         throw new IllegalStateException("Missing real Thermal "+family+" unit");

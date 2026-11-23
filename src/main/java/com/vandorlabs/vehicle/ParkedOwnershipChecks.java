@@ -49,6 +49,10 @@ public final class ParkedOwnershipChecks {
         need(world.getTileEntity(lever) instanceof TileEntitySignalControl
                 &&!world.getBlockState(lever).getValue(com.vandorlabs.blocks.BlockVandorSwitch.ON),"saved lever Off");
         need(!Files.exists(primary)&&world.getEntityFromUuid(journal.getUniqueId("Entity"))==null,"single parked native owner");
+        if("fluid".equals(System.getProperty("vandorlabs.parkedOwnershipPhase"))){
+            fuelRoundTrip(world,actor,shape,origin,controller,drive);
+            return;
+        }
         VehicleStructure.Cell stone=shape.cells.stream().filter(cell->cell.state.getBlock()==Blocks.STONE).findFirst().get();
         BlockPos marker=origin.add(stone.pos);
         if("write".equals(System.getProperty("vandorlabs.parkedOwnershipPhase"))){
@@ -77,5 +81,50 @@ public final class ParkedOwnershipChecks {
         System.out.println("[vandorlabs] parked-ownership PASS "+System.getProperty("vandorlabs.parkedOwnershipPhase")
                 +" fuel=361 lever=Off nativeCells="+shape.cells.size()+" wheels="+shape.gearCount);
     }
+    private static void fuelRoundTrip(WorldServer world,EntityPlayerMP actor,VehicleStructure source,BlockPos origin,
+                                      BlockPos controller,TileEntityConstructor drive)throws Exception{
+        net.minecraftforge.fluids.FluidStack fuel=drive.maxwellFuelContents();
+        drive.purgeMaxwell();
+        for(VehicleStructure.Cell cell:source.cells) {
+            net.minecraft.tileentity.TileEntity tile=world.getTileEntity(origin.add(cell.pos));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityHexTank)((com.vandorlabs.tiles.TileEntityHexTank)tile).tank.setFluid(null);
+        }
+        BlockPos sourceTank=new BlockPos(-114,76,71);
+        com.vandorlabs.tiles.TileEntityHexTank tank=(com.vandorlabs.tiles.TileEntityHexTank)world.getTileEntity(sourceTank);
+        fuel.amount=16000;
+        need(tank.fill(fuel,true)==16000,"real joined tank filled with 16,000 mB");
+        // Give the existing network a known, nonzero share before freezing all native tiles.
+        net.minecraft.tileentity.TileEntity duct=world.getTileEntity(new BlockPos(-113,76,71));
+        for(Object unit:(Iterable<?>)duct.getClass().getMethod("getDuctUnits").invoke(duct)){
+            if(!unit.getClass().getName().startsWith("cofh.thermaldynamics.duct.fluid."))continue;
+            Object grid=unit.getClass().getMethod("getGrid").invoke(unit);
+            net.minecraftforge.fluids.IFluidTank buffer=(net.minecraftforge.fluids.IFluidTank)grid.getClass().getField("myTank").get(grid);
+            need(buffer.getFluidAmount()==0&&buffer.fill(tank.drain(1000,true),true)==1000,"native duct precharge");
+        }
+        EntityGroundVehicle craft=SavedTaxiFollowupChecks.assemble(world,actor,controller,null,1);
+        long time=world.getTotalWorldTime();
+        try{
+            for(int tick=0;tick<24;tick++){world.getWorldInfo().setWorldTotalTime(time+tick+1);craft.signals.resources.tick();}
+        }finally{world.getWorldInfo().setWorldTotalTime(time);}
+        need(fuelAmounts(craft.view,source,BlockPos.ORIGIN).equals("15000/1000/0"),"carried tank, frozen duct and inlet: "+fuelAmounts(craft.view,source,BlockPos.ORIGIN));
+        actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));
+        VehicleSafePark.submit(actor,craft,craft.structure.controller().pos);
+        VehicleTransferRuntimeChecks.drain(world);
+        need(craft.isDead,"actual Safe Park publishes saved machine");
+        String restored=fuelAmounts(world,source,origin);
+        need(restored.equals("15000/1000/0"),"Safe Park preserves each owner: "+restored);
+        System.out.println("[vandorlabs] parked-ownership PASS fluid saved Star II 16000 mB before assembly, carried and Safe Park tank/duct/drive="+restored);
+    }
+    private static String fuelAmounts(net.minecraft.world.World world,VehicleStructure shape,BlockPos origin) {
+        int stored=0,duct=0,engine=0;
+        for(VehicleStructure.Cell cell:shape.cells){
+            net.minecraft.tileentity.TileEntity tile=world.getTileEntity(origin.add(cell.pos));
+            if(tile instanceof com.vandorlabs.tiles.TileEntityHexTank)stored+=((com.vandorlabs.tiles.TileEntityHexTank)tile).tank.getFluidAmount();
+            else if(tile instanceof TileEntityConstructor)engine+=((TileEntityConstructor)tile).maxwellFuel();
+            else if(TransferNetworkCompat.component(tile))duct+=TransferNetworkCompat.write(tile).getCompoundTag("Fluid").getInteger("Amount");
+        }
+        return stored+"/"+duct+"/"+engine;
+    }
+
     private ParkedOwnershipChecks(){}
 }
