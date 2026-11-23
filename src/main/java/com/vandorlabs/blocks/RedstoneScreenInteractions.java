@@ -77,6 +77,8 @@ public final class RedstoneScreenInteractions {
         if(block instanceof BlockDiagonalHalfConsole)return ScreenSurface.halfDiagonal(state.getValue(BlockDiagonalHalfConsole.UPPER));
         if(block instanceof BlockProgrammableConsole)return slot==1?ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()):ScreenSurface.quad(ScreenSurface.Kind.CONSOLE,false);
         if(block instanceof BlockProgrammableHalfConsole)return slot==0&&tile!=null&&ScreenChipSupport.selected(tile)?ScreenChipSupport.deck():ScreenSurface.input(slot==1?InputSurfaceLayout.halfConsoleRear():InputSurfaceLayout.halfConsoleFront());
+        if(block instanceof BlockProgrammableDiagonalScreen)return ScreenSurface.diagonal(
+            state.getValue(BlockProgrammableDiagonalScreen.INVERTED),tile!=null&&tile.isShallowDiagonalScreen());
         return ScreenChipSupport.display(state,tile,surface(state));
     }
     public static ScreenSurface.Quad surface(IBlockState state){

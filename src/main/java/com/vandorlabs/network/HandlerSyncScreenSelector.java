@@ -51,7 +51,8 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             te.setSecondaryInputPanel(message.getSecondaryInputPanel());
             te.setRedstoneChannels(message.getRedstoneChannels());
             te.setHousingTexture(message.getHousingTexture());
-            if (player.world.getBlockState(message.getPos()).getBlock()
+            if(te.getBlockType()==ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN)te.setShallowDiagonalScreen(message.isSmallInput());
+            else if (player.world.getBlockState(message.getPos()).getBlock()
                     == ModBlocks.PROGRAMMABLE_INPUT || player.world.getBlockState(message.getPos()).getBlock()==ModBlocks.PROGRAMMABLE_FULL_INPUT) {
                 te.setSmallInput(message.isSmallInput());
             }

@@ -220,6 +220,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     private boolean smallInput = false;
+    public static final String SHALLOW_DIAGONAL="ShallowDiagonalScreen";
+    private boolean shallowDiagonalScreen;
+    public boolean isShallowDiagonalScreen(){return shallowDiagonalScreen;}
+    public void setShallowDiagonalScreen(boolean shallow){
+        if(shallowDiagonalScreen==shallow)return;
+        shallowDiagonalScreen=shallow;
+        layoutChanged();
+    }
     public final DisplayActivation activation=new DisplayActivation();
     public static boolean supportsActivation(net.minecraft.block.Block block){return block==com.vandorlabs.blocks.ModBlocks.ANIMATED_SCREEN_SELECTOR||block instanceof com.vandorlabs.blocks.BlockProgrammableInput||block instanceof com.vandorlabs.blocks.BlockProgrammableConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole||block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;}
     public int activationMode(){return activation.mode<0?(redstoneEnabled?1:0):activation.mode;}
@@ -666,6 +674,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         com.vandorlabs.persistence.WallSettings.write(primitiveData,diagonalFullWidth,diagonalHalfHeight,
                 diagonalFill,diagonalJoin,joinPortholes,portholeShape);
+        if(shallowDiagonalScreen)compound.setBoolean(SHALLOW_DIAGONAL,true);
+        else compound.removeTag(SHALLOW_DIAGONAL);
         for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
     }
@@ -723,6 +733,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         secondaryInputPanel = data.secondaryInputPanel;
         wallPosition = data.wallPosition;
         smallInput = data.smallInput;
+        shallowDiagonalScreen=compound.getBoolean(SHALLOW_DIAGONAL);
         redstoneChannel = data.redstoneChannel;
         channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;

@@ -14,17 +14,17 @@ import net.minecraft.util.EnumFacing;
 public final class DiagonalScreenItemModel implements IBakedModel {
     private final IBakedModel delegate;
     private final List<BakedQuad> quads;
-    private final boolean redstone;
-    private DiagonalScreenItemModel controlsModel;
+    private final DiagonalScreenItemModel[] variants;
     private ItemOverrideList overrides;
     public DiagonalScreenItemModel(IBakedModel delegate) {
-        this(delegate,false);
+        this(delegate,false,false);
     }
-    public DiagonalScreenItemModel(IBakedModel delegate,boolean redstone) {
-        this.delegate=delegate;this.redstone=redstone;
+    private DiagonalScreenItemModel(IBakedModel delegate,boolean redstone,boolean shallow) {
+        this.delegate=delegate;
+        variants=redstone||shallow?null:new DiagonalScreenItemModel[4];
         TextureAtlasSprite wall=sprite("programmable_glass/door_side"),screen=redstone?atlas("minecraft:blocks/concrete_black"):sprite("unified/screen_bridge_bare_engineering_static");
         List<BakedQuad> built=new ArrayList<>();
-        for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(false).quads) {
+        for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(false,shallow).quads) {
             double[][] points=new double[4][5];
             for(int i=0;i<4;i++) {
                 ScreenHousingMesh.Vertex v=face.vertices[(4-i)&3];
@@ -32,13 +32,13 @@ public final class DiagonalScreenItemModel implements IBakedModel {
             }
             built.add(quad(points,wall));
         }
-        ScreenSurface.Quad s=ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false);
+        ScreenSurface.Quad s=ScreenSurface.diagonal(false,shallow);
         ScreenSurface.Vertex[] vertices={s.topLeft,s.topRight,s.bottomRight,s.bottomLeft};
         double[][] points=new double[4][5];
         for(int i=0;i<4;i++) {
             ScreenSurface.Vertex v=vertices[i];
             // Small normal offset gives the item image the same depth separation as the TESR.
-            points[i]=new double[]{v.x,v.y+.01,v.z-.01,i==0||i==3?16:0,i<2?0:16};
+            points[i]=new double[]{v.x,v.y+s.ny*.015,v.z+s.nz*.015,i==0||i==3?16:0,i<2?0:16};
         }
         built.add(quad(points,screen));
         if(redstone){
@@ -81,14 +81,17 @@ public final class DiagonalScreenItemModel implements IBakedModel {
     public TextureAtlasSprite getParticleTexture(){return delegate.getParticleTexture();}
     public ItemCameraTransforms getItemCameraTransforms(){return delegate.getItemCameraTransforms();}
     public ItemOverrideList getOverrides(){
-        if(redstone)return ItemOverrideList.NONE;
+        if(variants==null)return ItemOverrideList.NONE;
         if(overrides==null)overrides=new ItemOverrideList(Collections.emptyList()){
             @Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){
                 net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
-                if(tag!=null && tag.getCompoundTag("RedstonePrimary").getBoolean("Enabled")){
-                    if(controlsModel==null)controlsModel=new DiagonalScreenItemModel(delegate,true);return controlsModel;
-                }
-                return original;
+                if(tag==null)return original;
+                boolean redstone=tag.getCompoundTag("RedstonePrimary").getBoolean("Enabled");
+                boolean shallow=tag.getBoolean(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.SHALLOW_DIAGONAL);
+                int variant=(redstone?1:0)+(shallow?2:0);
+                if(variant==0)return original;
+                if(variants[variant]==null)variants[variant]=new DiagonalScreenItemModel(delegate,redstone,shallow);
+                return variants[variant];
             }
         };return overrides;
     }

@@ -77,6 +77,8 @@ public final class ScreenHousingMesh {
     private static final ScreenHousingMesh HALF_CONSOLE=buildHalfConsole();
     private static final ScreenHousingMesh DIAGONAL=buildDiagonal(false);
     private static final ScreenHousingMesh DIAGONAL_INVERTED=buildDiagonal(true);
+    private static final ScreenHousingMesh SHALLOW_DIAGONAL=shallow(DIAGONAL,false);
+    private static final ScreenHousingMesh SHALLOW_DIAGONAL_INVERTED=shallow(DIAGONAL_INVERTED,true);
 
     public static ScreenHousingMesh cube() { return CUBE; }
     private static final java.util.Map<String,ScreenHousingMesh> BOXES=new java.util.concurrent.ConcurrentHashMap<>();
@@ -110,6 +112,24 @@ public final class ScreenHousingMesh {
     public static ScreenHousingMesh halfConsole() { return HALF_CONSOLE; }
     public static ScreenHousingMesh diagonal(boolean inverted) {
         return inverted?DIAGONAL_INVERTED:DIAGONAL;
+    }
+
+    public static ScreenHousingMesh diagonal(boolean inverted,boolean shallow) {
+        if(!shallow)return diagonal(inverted);
+        return inverted?SHALLOW_DIAGONAL_INVERTED:SHALLOW_DIAGONAL;
+    }
+
+    private static ScreenHousingMesh shallow(ScreenHousingMesh full,boolean upper) {
+        Face[] faces=new Face[full.quads.length];
+        for(int i=0;i<faces.length;i++) {
+            Vertex[] source=full.quads[i].vertices,vertices=new Vertex[source.length];
+            for(int j=0;j<vertices.length;j++) {
+                Vertex v=source[j];
+                vertices[j]=new Vertex(v.x,(upper?8:0)+v.y*.5,v.z,v.u,v.v*.5);
+            }
+            faces[i]=new Face(vertices);
+        }
+        return new ScreenHousingMesh(faces,new Face[0]);
     }
 
     private static ScreenHousingMesh buildConsole() {

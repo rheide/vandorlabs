@@ -19,7 +19,7 @@ public final class DiagonalScreenSelection {
         double x=pos.getX()-player.lastTickPosX-(player.posX-player.lastTickPosX)*partial;
         double y=pos.getY()-player.lastTickPosY-(player.posY-player.lastTickPosY)*partial;
         double z=pos.getZ()-player.lastTickPosZ-(player.posZ-player.lastTickPosZ)*partial;
-        DiagonalScreenShape shape=DiagonalScreenShape.of(state.getValue(BlockProgrammableDiagonalScreen.FACING),state.getValue(BlockProgrammableDiagonalScreen.INVERTED));
+        DiagonalScreenShape shape=DiagonalScreenShape.of(state.getValue(BlockProgrammableDiagonalScreen.FACING),state.getValue(BlockProgrammableDiagonalScreen.INVERTED),BlockProgrammableDiagonalScreen.shallow(player.world,pos));
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.glLineWidth(2);
         GlStateManager.disableTexture2D();GlStateManager.depthMask(false);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_LINES,DefaultVertexFormats.POSITION_COLOR);

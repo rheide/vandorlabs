@@ -579,8 +579,7 @@ public class TEAnimatedScreenSelector
         }
         if(te.getSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE||te.hasVehiclePanel(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
             redstoneFace(te,0);
-            ScreenSurface.Kind framedSurface=state.getBlock() instanceof BlockProgrammableConsole?ScreenSurface.Kind.CONSOLE:diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
-            FrameSurfaceRenderer.screen(te,ScreenSurface.quad(framedSurface,diagonalInverted));
+            FrameSurfaceRenderer.screen(te,com.vandorlabs.blocks.RedstoneScreenInteractions.surface(state,te,0));
             GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
         }
         int mode = te.getEffectiveMode();
@@ -635,7 +634,7 @@ public class TEAnimatedScreenSelector
         ScreenSurface.Kind surface=state.getBlock() instanceof BlockProgrammableConsole
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
-        ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
+        ScreenSurface.Quad quad=com.vandorlabs.blocks.RedstoneScreenInteractions.surface(state,te,0);
         if(te.frameAppearance.displayFit&&!te.splitDisplay()){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);{float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
         if(te.splitDisplay()){drawSplitScreen(te,FrameSurfaceRenderer.content(te,quad),buf);}else drawScreenQuad(buf,FrameSurfaceRenderer.content(te,quad),uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
@@ -1393,7 +1392,7 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite wall = wallSprite(te);
         // Explicit upper/lower geometry keeps the artwork upright. Reflecting
         // the model matrix would also reflect the texture.
-        drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted));
+        drawWallMesh(wall,ScreenHousingMesh.diagonal(inverted,te.isShallowDiagonalScreen()));
     }
 
     /** Adjacent light cubes fully cover these surfaces, regardless of Join. */

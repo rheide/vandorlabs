@@ -7,22 +7,23 @@ import java.util.*;
 
 /** Exact mesh picking and cached one-pixel collision slices of the solid housing. */
 public final class DiagonalScreenShape {
-    private static final DiagonalScreenShape[][] SHAPES=new DiagonalScreenShape[4][2];
-    static {for(int face=0;face<4;face++)for(int upper=0;upper<2;upper++)SHAPES[face][upper]=new DiagonalScreenShape(EnumFacing.getHorizontal(face),upper!=0);}
+    private static final DiagonalScreenShape[][][] SHAPES=new DiagonalScreenShape[4][2][2];
+    static {for(int face=0;face<4;face++)for(int upper=0;upper<2;upper++)for(int shallow=0;shallow<2;shallow++)
+        SHAPES[face][upper][shallow]=new DiagonalScreenShape(EnumFacing.getHorizontal(face),upper!=0,shallow!=0);}
     public final AxisAlignedBB[] collision;
     public final double[][] outline;
     private final Triangle[] triangles;
-    public static DiagonalScreenShape of(EnumFacing facing,boolean upper){return SHAPES[facing.getHorizontalIndex()][upper?1:0];}
-    private DiagonalScreenShape(EnumFacing facing,boolean upper){
+    public static DiagonalScreenShape of(EnumFacing facing,boolean upper,boolean shallow){return SHAPES[facing.getHorizontalIndex()][upper?1:0][shallow?1:0];}
+    private DiagonalScreenShape(EnumFacing facing,boolean upper,boolean shallow){
         collision=new AxisAlignedBB[16];
         for(int z=0;z<16;z++){
-            double height=(z+1)/16D;
+            double height=(z+1)/(shallow?32D:16D);
             collision[z]=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?1-height:0,z/16D,1,upper?1:height,(z+1)/16D),facing);
         }
         List<Triangle> faces=new ArrayList<>();Map<String,List<Edge>> edges=new LinkedHashMap<>();
-        for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(upper).quads){
+        for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(upper,shallow).quads){
             Vec3d[] points=new Vec3d[4];for(int i=0;i<4;i++){ScreenHousingMesh.Vertex v=face.vertices[i];points[i]=world(v.x/16,v.y/16,v.z/16,facing);}
-            faces.add(new Triangle(points[0],points[1],points[2],facing,upper));faces.add(new Triangle(points[0],points[2],points[3],facing,upper));
+            faces.add(new Triangle(points[0],points[1],points[2],facing,upper,shallow));faces.add(new Triangle(points[0],points[2],points[3],facing,upper,shallow));
             Vec3d normal=points[1].subtract(points[0]).crossProduct(points[2].subtract(points[0])).normalize();
             for(int i=0;i<4;i++){Vec3d a=points[i],b=points[(i+1)%4];String ka=key(a),kb=key(b),key=ka.compareTo(kb)<0?ka+":"+kb:kb+":"+ka;edges.computeIfAbsent(key,k->new ArrayList<>()).add(new Edge(a,b,normal));}
         }
@@ -44,7 +45,7 @@ public final class DiagonalScreenShape {
     }
     private static final class Triangle {
         final Vec3d a,e1,e2,normal;
-        Triangle(Vec3d a,Vec3d b,Vec3d c,EnumFacing facing,boolean upper){
+        Triangle(Vec3d a,Vec3d b,Vec3d c,EnumFacing facing,boolean upper,boolean shallow){
             this.a=a;e1=b.subtract(a);e2=c.subtract(a);Vec3d n=e1.crossProduct(e2).normalize();
             Vec3d center=a.add(b).add(c).scale(1D/3);
             // The housing has small concave end caps and mixed legacy windings.
@@ -52,6 +53,7 @@ public final class DiagonalScreenShape {
             // including rays that leave the housing from inside it.
             Vec3d probe=RedstoneScreenInteractions.local(center.add(n.scale(.00001)),facing).scale(1D/16);
             double height=probe.z<1D/16?1D/16:probe.z>=15D/16?1:probe.z;
+            if(shallow)height*=.5;
             boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=0 && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
             normal=inside?n.scale(-1):n;
         }
