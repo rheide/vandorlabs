@@ -25,6 +25,7 @@ public final class VehicleSignals {
     private final Set<TileEntitySpaceDoor> securityDoors=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
     private final List<TileEntityConstructor> maxwellEngines=new ArrayList<>();
+    private final Set<BlockPos> pendingThrusters=new HashSet<>();
     private final List<StorageChannelOutput> storageOutputs=new ArrayList<>();
     public void transmitterChanged(RedstoneChannelMember member){revision=-1;tick();Link link=links.get(member);if(link!=null){RedstoneChannels.channelChanged(link,member.getRedstoneChannels());RedstoneChannels.positionChanged(link);}changed(member.channelTile().getPos());persist();}
     public void cockpitChanged(TileEntityCockpit tile){
@@ -206,6 +207,7 @@ public final class VehicleSignals {
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
         craft.articulation.tickCapturedControls();
+        settleThrusters();
         resources.tick();
         resources.flushChanges(dirty,false);
         for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.maxwellFlightDemand());
@@ -213,7 +215,7 @@ public final class VehicleSignals {
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
     }
-    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();resources.close();}
+    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();pendingThrusters.clear();resources.close();}
     public void open(){detached=false;revision=-1;}
     public void persist(){if(!craft.world.isRemote && !detached){
         resources.flushChanges(dirty,true);
@@ -270,6 +272,7 @@ public final class VehicleSignals {
     }
     private final Map<BlockPos,Long> releases=new HashMap<>();
     private boolean clickControl(BlockPos pos){
+        if(thruster(craft.view,pos))return stepThruster(pos,false);
         tick();TileEntityRedstoneChannel tile=(TileEntityRedstoneChannel)craft.view.getTileEntity(pos);
         Link link=links.get(tile);if(link==null || tile.getRedstoneChannels().isEmpty())return false;
         IBlockState state=craft.view.getBlockState(pos);
@@ -278,6 +281,40 @@ public final class VehicleSignals {
         if(link instanceof LatchLink && ((LatchLink)link).isChannelLatch())RedstoneChannels.latchLevelChanged((LatchLink)link,level);
         else {tile.setLocalOn(true);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,true));RedstoneChannels.inputChanged(link);releases.put(pos,craft.world.getTotalWorldTime()+20);}
         dirty.add(pos);flush();return true;
+    }
+    static boolean thruster(VehicleWorld view,BlockPos pos){
+        net.minecraft.block.Block block=view.getBlockState(pos).getBlock();
+        return block instanceof BlockSignalControl&&((BlockSignalControl)block).hasSelectableType()
+                &&view.getTileEntity(pos) instanceof TileEntitySignalControl;
+    }
+    boolean stepThruster(BlockPos pos,boolean reverse){
+        if(!thruster(craft.view,pos))return false;
+        tick();
+        TileEntitySignalControl control=(TileEntitySignalControl)craft.view.getTileEntity(pos);
+        control.requestStep(reverse);
+        pendingThrusters.add(pos.toImmutable());
+        BlockSignalControl.playClick(craft.world,craft.toWorld(new Vec3d(pos).addVector(.5,.5,.5),pos),control.getStep());
+        dirty.add(pos);flush();return true;
+    }
+    private void settleThrusters(){
+        for(Iterator<BlockPos> pending=pendingThrusters.iterator();pending.hasNext();){
+            BlockPos pos=pending.next();
+            if(!thruster(craft.view,pos)){pending.remove();continue;}
+            TileEntitySignalControl control=(TileEntitySignalControl)craft.view.getTileEntity(pos);
+            if(control.ticksUntilSettled()>0)continue;
+            pending.remove();
+            int step=control.settleStep();
+            if(step<0)continue;
+            control.setStep(step);
+            Link link=links.get(control);
+            if(link instanceof LatchLink)RedstoneChannels.latchLevelChanged((LatchLink)link,control.levelForStep(step));
+            else{
+                IBlockState state=craft.view.getBlockState(pos);
+                IBlockState updated=state.withProperty(BlockVandorSwitch.ON,control.getOutputLevel()>0);
+                if(updated!=state)replaceState(pos,updated);
+            }
+            dirty.add(pos);
+        }
     }
     /** Current known controls over the immutable source envelope; no synthetic capability serialization. */
     static NBTTagCompound snapshotData(TileEntity tile,NBTTagCompound original){
@@ -295,8 +332,9 @@ public final class VehicleSignals {
             // A redundant notification must not invalidate its open preview.
             if((tile instanceof TileEntityPilotSeat||tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).maxwell()) && craft.structure.at(pos)!=null
                     && data.equals(craft.structure.at(pos).tileData()))continue;
-            saved.put(pos,data);variableNavigation|=tile instanceof TileEntityNavigationTable;
-            try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(tile instanceof TileEntityTokenSlot||tile instanceof TileEntityAnimatedScreenSelector?tile.getUpdateTag():data,bytes);
+            if(!(tile instanceof TileEntitySignalControl)||original==null||!original.sameTileData(data))saved.put(pos,data);
+            variableNavigation|=tile instanceof TileEntityNavigationTable;
+            try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(tile instanceof TileEntityTokenSlot||tile instanceof TileEntityAnimatedScreenSelector||tile instanceof TileEntitySignalControl?tile.getUpdateTag():data,bytes);
                 if(bytes.size()>VehicleNetwork.FRAGMENT){fullSnapshot=true;continue;}
                 VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();packet.origin=pos;packet.data=bytes.toByteArray();packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(pos));
                 com.vandorlabs.network.TrackingPackets.send(packet,craft);
@@ -339,7 +377,16 @@ public final class VehicleSignals {
                 VehicleLandingGear.correct(craft,packet.origin,authoritative);
                 List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(packet.origin)?new VehicleStructure.Cell(cell.pos,net.minecraft.block.Block.getStateById(packet.sequence),gear.writeToNBT(new NBTTagCompound())):cell);
                 craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);
-            }else{tile.readFromNBT(data);save(craft,packet.origin,data,net.minecraft.block.Block.getStateById(packet.sequence));}
+            }else{
+                IBlockState state=net.minecraft.block.Block.getStateById(packet.sequence);
+                if(tile instanceof TileEntitySignalControl){
+                    TileEntitySignalControl control=(TileEntitySignalControl)tile;
+                    int previousStep=control.getStep();control.readFromNBT(data);
+                    if(previousStep!=control.getStep())craft.view.controlAppearanceChanged();
+                    NBTTagCompound saved=snapshotData(control,original.tileData());
+                    if(state!=original.state||!original.sameTileData(saved))save(craft,packet.origin,saved,state);
+                }else{tile.readFromNBT(data);save(craft,packet.origin,data,state);}
+            }
             tile.updateContainingBlockInfo();
         }catch(IOException | RuntimeException error){VehicleCompatibility.warn(tile.getBlockType(),"control update",error);}
     }

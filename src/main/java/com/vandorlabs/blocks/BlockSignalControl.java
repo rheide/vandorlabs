@@ -12,8 +12,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.*;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /** Supplied four-state controls reuse mounted switch placement and channel configuration. */
+@Mod.EventBusSubscriber(modid=com.vandorlabs.VandorLabs.MODID)
 public class BlockSignalControl extends BlockVandorSwitch {
     public static final PropertyInteger LEVEL=PropertyInteger.create("level",0,3);
     private final String kind;
@@ -36,18 +41,50 @@ public class BlockSignalControl extends BlockVandorSwitch {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntitySignalControl();}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         state=super.getActualState(state,world,pos);TileEntity tile=world.getTileEntity(pos);
-        int step=world instanceof com.vandorlabs.vehicle.VehicleWorld && hasSelectableType() && tile instanceof TileEntitySignalControl && ((TileEntitySignalControl)tile).getRedstoneChannels().isEmpty()
-                ?(((com.vandorlabs.vehicle.VehicleWorld)world).propulsionLevel>0?1:0)
-                :tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0;
+        int step=tile instanceof TileEntitySignalControl?((TileEntitySignalControl)tile).getStep():0;
         return state.withProperty(LEVEL,step);
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing facing,float x,float y,float z){
         if(player.isSneaking())return super.onBlockActivated(world,pos,state,player,hand,facing,x,y,z);
         if(!world.isRemote && world.getTileEntity(pos) instanceof TileEntitySignalControl){
-            TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(pos);control.setStep((control.getStep()+1)%4);
-            world.playSound(null,pos,net.minecraft.init.SoundEvents.BLOCK_LEVER_CLICK,SoundCategory.BLOCKS,.3F,.5F+control.getStep()*.1F);
+            TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(pos);
+            if(hasSelectableType())requestStep(world,pos,state,control,false);else control.setStep((control.getStep()+1)%4);
+            playClick(world,new Vec3d(pos).addVector(.5,.5,.5),control.getStep());
         }
         return true;
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void reverseCreative(PlayerInteractEvent.LeftClickBlock event){
+        EntityPlayer player=event.getEntityPlayer();World world=event.getWorld();BlockPos pos=event.getPos();
+        if(!player.isCreative()||!player.isSneaking()||event.getUseBlock()==net.minecraftforge.fml.common.eventhandler.Event.Result.DENY
+                ||!world.isBlockLoaded(pos,false))return;
+        IBlockState state=world.getBlockState(pos);
+        if(!(state.getBlock() instanceof BlockSignalControl)||!((BlockSignalControl)state.getBlock()).hasSelectableType())return;
+        event.setCanceled(true);
+        if(world.isRemote||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))return;
+        TileEntity tile=world.getTileEntity(pos);
+        if(!(tile instanceof TileEntitySignalControl))return;
+        TileEntitySignalControl control=(TileEntitySignalControl)tile;
+        ((BlockSignalControl)state.getBlock()).requestStep(world,pos,state,control,true);
+        playClick(world,new Vec3d(pos).addVector(.5,.5,.5),control.getStep());
+    }
+    private void requestStep(World world,BlockPos pos,IBlockState state,TileEntitySignalControl control,boolean reverse){
+        control.requestStep(reverse);
+        world.scheduleUpdate(pos,this,TileEntitySignalControl.SETTLE_TICKS);
+        world.notifyBlockUpdate(pos,state,state,2);
+    }
+    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){
+        if(world.isRemote||!hasSelectableType())return;
+        TileEntity tile=world.getTileEntity(pos);
+        if(!(tile instanceof TileEntitySignalControl))return;
+        TileEntitySignalControl control=(TileEntitySignalControl)tile;
+        int remaining=control.ticksUntilSettled();
+        if(remaining>0){world.scheduleUpdate(pos,this,remaining);return;}
+        int selected=control.settleStep();
+        if(selected>=0)control.setStep(selected);
+    }
+    public static void playClick(World world,Vec3d position,int step){
+        world.playSound(null,position.x,position.y,position.z,net.minecraft.init.SoundEvents.BLOCK_LEVER_CLICK,SoundCategory.BLOCKS,.3F,.5F+step*.1F);
     }
     @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return 0;}
     public AxisAlignedBB originalBounds(IBlockState state){

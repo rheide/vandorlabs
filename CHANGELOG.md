@@ -5,6 +5,7 @@
 - Count upright wheels on settled side-mounted swing arms as landing supports. Taxi and ordinary Park use the same tire contact at the runway surface.
 
 - Fuel Maxwell Drives through three inlets and select Digital or Analog redstone response with the shared activation selector. Build five engine sizes and inspect remaining fuel on the front gauge. The front casing and corner trim render without flickering.
+- Operate Thruster Levers on placed and assembled Forge vehicles. Right-click advances the handle, and Creative Shift + left-click reverses it. The output changes after four quiet server ticks so intermediate positions send no pulses.
 - Select Flight from Vehicle Status and build speed on a runway or accelerate from Hover. The Controller's Flight tab shows actual weight, the reduction from lift plates, and effective weight. Compare the current takeoff limit with the theoretical maximum from every installed drive.
 - On Forge, use A/D to roll through a full turn and release to hold the bank. W/S pitch in the aircraft's frame, and the cockpit view and attitude indicator follow the hull. Above 45 degrees nose-up, acceleration falls and pitch eases toward 45 degrees.
 - Keep flying forward as reduced Maxwell thrust lowers the altitude ceiling. Glide on total thrust loss and level out for landing or a return to Hover. Recover to a level pose after terrain contact.
