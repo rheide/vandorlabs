@@ -290,6 +290,22 @@ public final class VehicleCollision {
         if(recentPoses.size()>3)recentPoses.remove(recentPoses.keySet().iterator().next());
         return posed;
     }
+    /** Highest support under the centre of a standing body, with room for its full width and height. */
+    double deckHeight(double x,double z,double minimum,double maximum,double radius,double height) {
+        double floor=Double.NEGATIVE_INFINITY;
+        for(Cluster cluster:clusters){
+            if(cluster.bounds.maxY<minimum || cluster.bounds.minY>maximum ||
+                    x<cluster.bounds.minX || x>cluster.bounds.maxX || z<cluster.bounds.minZ || z>cluster.bounds.maxZ)continue;
+            for(AxisAlignedBB box:cluster.boxes)
+                if(box.maxY>=minimum && box.maxY<=maximum && x>=box.minX && x<=box.maxX && z>=box.minZ && z<=box.maxZ)
+                    floor=Math.max(floor,box.maxY);
+        }
+        if(!Double.isFinite(floor))return floor;
+        AxisAlignedBB body=new AxisAlignedBB(x-radius,floor+.0001,z-radius,x+radius,floor+height,z+radius);
+        for(Cluster cluster:clusters)if(cluster.bounds.intersects(body))
+            for(AxisAlignedBB box:cluster.boxes)if(box.intersects(body))return Double.NaN;
+        return floor;
+    }
     private float boundedYaw=Float.NaN;private AxisAlignedBB bounded;
     public AxisAlignedBB bounds(float yaw){
         if(posed!=null&&yaw==posedYaw)return posedBounds;

@@ -60,6 +60,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     @Override public void notifyDataManagerChange(net.minecraft.network.datasync.DataParameter<?> key){
         super.notifyDataManagerChange(key);
+        if(cabin!=null)cabin.changed(key);
         if(TRANSFERRING.equals(key)){transferInProgress=dataManager.get(TRANSFERRING);if(transferInProgress){pendingInputs.clear();nextPrediction=null;motionX=motionY=motionZ=0;}}
     }
     public boolean taxiReturnPending;
@@ -96,6 +97,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private final VehicleFlightReadout.Sampler flightSampler=new VehicleFlightReadout.Sampler();
     private VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
     private final VehicleFlightMotion flightMotion=new VehicleFlightMotion(this);
+    final FlightCabin cabin=new FlightCabin(this);
     public final VehicleCruise cruise=new VehicleCruise(this);
 
     public boolean flying(){return flightPhase>=POWERED_FLIGHT;}
@@ -213,6 +215,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         VehicleNetwork.state(this);
     }
     public boolean flightDismount;
+    void toggleCabin(EntityPlayerMP player){
+        if(cabin.toggle(player)){
+            serverInputs.clear();forward=strafe=0;brake=false;lastInput=-100;
+            updatePassenger(player);
+        }
+    }
     public void exitFlight(EntityPlayerMP player){
         if(!isPassenger(player)||flying())return;
         if(getControllingPassenger()==player && hover && !autopilot.enabled())holdHoverPosition();
@@ -349,6 +357,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return new Vec3d(direction[0],direction[1],direction[2]);
     }
     private Vec3d seatPosition(VehiclePose pose,Entity passenger,float partial,double eye) {
+        Vec3d deck=cabin.position(passenger,partial);
+        if(deck!=null)return pose.world(deck.addVector(0,eye,0),structure.bounds.maxX/2,structure.bounds.maxZ/2);
         BlockPos seat=seatForPassenger(passenger);
         if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(partial),cockpit.facing());return seatWorld(pose,new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset()+eye,seat.getZ()+at.z),seat,partial,structure.bounds.maxX/2,structure.bounds.maxZ/2);}
         return seatWorld(pose,new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset()+eye,seat.getZ()+.5),seat,partial,structure.bounds.maxX/2,structure.bounds.maxZ/2);
@@ -549,12 +559,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collisionCache.restart(view);
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
-    @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);}
+    @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);FlightCabin.define(this);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
         tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeCouplerOwnershipMetadata(tag);
-        writeFlightMode(tag);cruise.write(tag);
+        writeFlightMode(tag);cruise.write(tag);cabin.write(tag);
         if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);
         if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());
     }
@@ -563,7 +573,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;
         readFlightMode(tag);cruise.read(tag);
         try{
-            couplerAssociationGeneration=readCouplerGeneration(tag);structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));restoreCouplerOwnershipMetadata(tag);
+            couplerAssociationGeneration=readCouplerGeneration(tag);structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);cabin.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));restoreCouplerOwnershipMetadata(tag);
             for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}
         }catch(Exception|LinkageError failure){
             articulation.retain(tag);signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),failure);
@@ -583,6 +593,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void addPassenger(Entity passenger){super.addPassenger(passenger);recordCurrentCouplingDriver();}
     @Override public Entity getControllingPassenger(){if(structure==null)return null;for(Entity passenger:getPassengers())if(structure.pilotSeats().contains(seatForPassenger(passenger)))return passenger;return null;}
     // Vanilla otherwise sends client vehicle positions, overriding the server controller.
+    @Override public boolean shouldRiderSit(){return getPassengers().size()!=1 || !cabin.walking(getControllingPassenger());}
     @Override public boolean canPassengerSteer(){return false;}
     @Override protected boolean canFitPassenger(Entity passenger){return structure!=null&&!cruise.projected()&&getPassengers().size()<structure.passengerSeats().size();}
     @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand) {
@@ -623,7 +634,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean wasDriver=getControllingPassenger()==passenger;
         if(wasDriver&&structure!=null)taxiReturnSeat=seatForPassenger(passenger);
         super.removePassenger(passenger);
-        if(!world.isRemote){assignSeat(passenger,null);recordCurrentCouplingDriver();}
+        if(!world.isRemote){if(cabin.walking(passenger))cabin.clear();assignSeat(passenger,null);recordCurrentCouplingDriver();}
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
         if(world.isRemote || collision==null || VehicleTransfer.isMutating(world) || passenger==teleportingPassenger)return;
         if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
@@ -731,7 +742,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         VehicleControls.Command command=serverInputs.poll();
         if(command!=null && !automated){forward=command.forward;strafe=command.strafe;brake=command.brake;}
         boolean controlled=getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10;
-        if(flying())advanceFlight(controlled);
+        boolean walking=cabin.walking(getControllingPassenger());
+        if(walking && controlled)cabin.move(getControllingPassenger(),forward,strafe);
+        if(flying())advanceFlight(controlled&&!walking);
         else if(takeoffRoll())advanceTakeoff(controlled);
         else advance(automated||controlled);
         if(ticksExisted%2==0)VehicleNetwork.state(this);
@@ -818,6 +831,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         float elevator=controlled&&!launching?-forward*(float)(.7+.36*response):0;
         float pitch=AircraftAttitude.pitch(flightPitch,(float)(elevator*Math.cos(roll)));
         float yaw=rotationYaw+AircraftAttitude.coordinatedTurn(roll,response)+(float)(elevator*Math.sin(roll));
+        if(cabin.walking(getControllingPassenger())){
+            bank=AircraftAttitude.levelBank(flightBank);flightRollRate=0;roll=Math.toRadians(bank);
+            pitch=(float)approach(flightPitch,0,2.25);yaw=rotationYaw;
+        }
         if(gliding||limited)pitch=AircraftAttitude.recoveryPitch(flightPitch,pitch,Math.max(0,altitude-ceiling),gliding);
         if(launching){
             pitch=initialClimb<=2?3:0;bank=0;yaw=rotationYaw;initialClimb--;
@@ -947,6 +964,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     private void finishFlight(boolean toHover) {finishFlight(toHover,0);}
     private void finishFlight(boolean toHover,double carrySpeed) {
+        cabin.clear();
         if(Float.isFinite(flightViewYaw))for(Entity passenger:getPassengers())
             if(passenger instanceof EntityPlayer)releasePilotView(passenger,rotationYaw);
         flightViewYaw=Float.NaN;

@@ -58,6 +58,7 @@ final class CruisePhysicalChecks {
     }
 
     static boolean tick(Minecraft mc,File output)throws Exception {
+        if(Boolean.getBoolean("vandorlabs.cabinWalkChecks"))return CabinWalkChecks.tick(mc);
         require(++wait<680,"timed out rider="+mc.player.getRidingEntity()+" x="+mc.player.posX);
         if(work!=null){
             if(!work.isDone())return false;
