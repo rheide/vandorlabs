@@ -83,20 +83,8 @@ public final class OpeningCanopyGeometry {
         List<CanopyMesh.Face> result=new ArrayList<>();
         // Retain the fixed roof frame while joining the aperture underneath it.
         // Taking the complete roof from one variant avoids overlapping extended glazing.
-        for(CanopyMesh.Face face:aperture)if(!roof(face))// A Long Angled windshield ends where the horizontal roof glazing begins.
-            if(depth==3&&angle==2&&"glass".equals(face.baseMaterial)){
-                double y=face.vertices[0].y;
-                face.sideGlass=true;
-                for(Vec3d vertex:face.vertices)if(Math.abs(vertex.y-y)>1e-6){face.sideGlass=false;break;}
-            }
-            result.add(face);
-        for(CanopyMesh.Face face:roof)if(roof(face))// A Long Angled windshield ends where the horizontal roof glazing begins.
-            if(depth==3&&angle==2&&"glass".equals(face.baseMaterial)){
-                double y=face.vertices[0].y;
-                face.sideGlass=true;
-                for(Vec3d vertex:face.vertices)if(Math.abs(vertex.y-y)>1e-6){face.sideGlass=false;break;}
-            }
-            result.add(face);
+        for(CanopyMesh.Face face:aperture)if(!roof(face))result.add(face);
+        for(CanopyMesh.Face face:roof)if(roof(face))result.add(face);
         return result;
     }
     private static boolean roof(CanopyMesh.Face face){
