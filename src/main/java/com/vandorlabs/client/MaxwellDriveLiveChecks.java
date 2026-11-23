@@ -46,6 +46,7 @@ final class MaxwellDriveLiveChecks {
     private static Future<?> setup;
     private static int stage, ticks;
     private static int shutdownBurnUnits;
+    private static long[] placedBurnStart;
 
     private MaxwellDriveLiveChecks() {}
 
@@ -142,6 +143,15 @@ final class MaxwellDriveLiveChecks {
         if(stage==8&&ticks>12){
             TileEntityConstructor engine=(TileEntityConstructor)mc.world.getTileEntity(ROOT);
             if(engine.maxwellActiveLevel()!=15)return false;
+            if(placedBurnStart==null){placedBurnStart=mc.getIntegratedServer().callFromMainThread(()->placedBurn(mc)).get();return false;}
+            if(ticks%5!=0)return false;
+            long[] current=mc.getIntegratedServer().callFromMainThread(()->placedBurn(mc)).get();
+            long elapsed=current[0]-placedBurnStart[0];
+            if(elapsed<200)return false;
+            long used=(placedBurnStart[1]-current[1])*com.vandorlabs.drives.MaxwellEngine.BURN_UNITS_PER_MB+current[2]-placedBurnStart[2];
+            require(current[1]<placedBurnStart[1]&&Math.abs(used-elapsed*15)<=15,
+                    "placed Maxwell consumes 1 mB per 200 real server ticks at full signal; elapsed="+elapsed+" burn units="+used);
+            System.out.println("[vandorlabs][reprolab] maxwell-block-burn PASS native placed core, wireless throttle, "+elapsed+" world ticks, "+placedBurnStart[1]+" -> "+current[1]+" mB");
             mc.getIntegratedServer().addScheduledTask(()->{
                 WorldServer w=player(mc).getServerWorld();
                 ((TileEntityRedstoneChannel)w.getTileEntity(TRANSMITTER)).setLocalOn(false);
@@ -244,6 +254,13 @@ final class MaxwellDriveLiveChecks {
         require(engine.maxwellFuel()>0&&engine.maxwellActiveLevel()==0&&engine.maxwellThrustLevel(false)==0,
                 "fuel remains with zero authoritative throttle and activity");
         return engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger("MaxwellBurnUnits");
+    }
+    private static long[] placedBurn(Minecraft mc){
+        WorldServer world=player(mc).getServerWorld();
+        TileEntityConstructor engine=(TileEntityConstructor)world.getTileEntity(ROOT);
+        require(engine.maxwellActiveLevel()==15&&engine.formed(),"world ticks the placed formed drive at full throttle");
+        return new long[]{world.getTotalWorldTime(),engine.maxwellFuel(),
+                engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger("MaxwellBurnUnits")};
     }
 
     private static void prepareClick(Minecraft mc, ItemStack held) {
