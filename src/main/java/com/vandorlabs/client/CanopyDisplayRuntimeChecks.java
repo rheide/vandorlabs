@@ -384,7 +384,8 @@ final class CanopyDisplayRuntimeChecks {
     private static void checkHud(TileEntityCanopy tile)throws Exception{
         Field cache=CanopyDisplayRenderer.class.getDeclaredField("DISPLAYS");cache.setAccessible(true);
         Object[] displays=(Object[])((java.util.Map<?,?>)cache.get(null)).get(tile);
-        net.minecraft.client.shader.Framebuffer frame=(net.minecraft.client.shader.Framebuffer)field(displays[0],"frame");
+        Field buffer=displays[0].getClass().getDeclaredField("frame");buffer.setAccessible(true);
+        net.minecraft.client.shader.Framebuffer frame=(net.minecraft.client.shader.Framebuffer)buffer.get(displays[0]);
         int old=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D);
         java.nio.ByteBuffer alpha=org.lwjgl.BufferUtils.createByteBuffer(frame.framebufferWidth*frame.framebufferHeight);
         frame.bindFramebufferTexture();org.lwjgl.opengl.GL11.glGetTexImage(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,0,org.lwjgl.opengl.GL11.GL_ALPHA,org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,alpha);
