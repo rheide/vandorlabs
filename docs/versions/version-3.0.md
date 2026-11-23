@@ -37,7 +37,9 @@ Open the Controller’s **Flight** tab for projected maximum speed and altitude 
 
 From Y=256 to Y=512, the seed surface gradually fades in over the visible Overworld chunks. The aircraft uses normal terrain tracking throughout this band. Above Y=512 it enters its configured cruise mode with a fully opaque seed surface. On descent, the destination terrain starts loading at Y=512. Populated columns can reach the client while the rest of the landing area loads, and excess airspeed bleeds off through the band to the low-altitude limit at Y=256. The view starts preparing at Y=200. Near the build ceiling, each ground pixel covers four blocks. Two five-by-five tile layers keep finer relief and coastlines visible farther ahead. The atmospheric horizon begins at 8,192 blocks and grows smoothly with altitude. At Y=1,024, the nearest samples are eight blocks apart and the horizon extends 16,384 blocks in each direction. Nearby hills, coastlines and slope shading in standard Overworlds use the seed’s terrain density. Distant tiles use the seed’s biome layers. Player builds and trees are absent from this view. Vanilla Overworlds generate tiles on a background thread and share up to 128 MiB of reusable tile pixels and elevations per world in memory. Cruise does not write these tiles to disk. Custom biome generators use a limited world-thread sampler. Instruments show flight altitude and omit ground clearance during cruise. Descend to Y=256 or below to select Taxi or Hover manually.
 
-In the server’s `config/vandorlabs-blocks.cfg`, choose `cruiseCoordinates` under `vehicles`.
+In the server’s `config/vandorlabs-blocks.cfg`, `vehicles.cruiseHandoffAltitude` sets the top of the blend. The default is **512**. Use **320** for a 64-block transition, or **256** to enter seed view directly above the build limit. Lower values stop ordinary player chunk tracking earlier on ascent and resume it later on descent. High-speed descent braking still begins at Y=512. Restart after editing the setting.
+
+Choose `cruiseCoordinates` in the same category.
 
 | Setting | What moves during cruise | Terrain and map behavior |
 | --- | --- | --- |

@@ -33,6 +33,7 @@ public final class VehicleCruise {
     private final CruiseTiles tiles=new CruiseTiles();
     private final CruiseGeography geography=new CruiseGeography();
     private static final DataParameter<Integer> FRACTION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
+    private static final DataParameter<Integer> HANDOFF=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
 
     public double view(boolean east,float partial){
         if(!active()){geography.clear();return east?craft.posX:craft.posZ;}
@@ -57,7 +58,11 @@ public final class VehicleCruise {
         craft.getDataManager().register(ROUTE,BlockPos.ORIGIN);
         craft.getDataManager().register(FRACTION,0);
         craft.getDataManager().register(ANCHOR,BlockPos.ORIGIN);
+        craft.getDataManager().register(HANDOFF,FlightEnvelope.CRUISE_ALTITUDE);
+        if(craft.world!=null&&!craft.world.isRemote)
+            craft.getDataManager().set(HANDOFF,BlockAvailability.cruiseHandoffAltitude());
     }
+    public int handoffAltitude(){return craft.getDataManager().get(HANDOFF);}
     boolean preparingArrival(){ return arrival!=null; }
     public boolean projected() { return active()&&craft.getDataManager().get(ANCHOR).getY()==1; }
     double anchorX() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getX():anchorX; }
@@ -80,7 +85,7 @@ public final class VehicleCruise {
         boolean cruising = active();
         double height = Math.min(FlightEnvelope.MAX_ALTITUDE, altitude() + dy);
         if (!cruising) {
-            if (dy < 0 || height <= FlightEnvelope.CRUISE_ALTITUDE) return false;
+            if (dy < 0 || height <= handoffAltitude()) return false;
             routeX = craft.posX;
             routeZ = craft.posZ;
             anchor(craft.posX,craft.posZ);
@@ -89,7 +94,7 @@ public final class VehicleCruise {
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);
-        if (height <= FlightEnvelope.CRUISE_ALTITUDE) {
+        if (height <= handoffAltitude()) {
             VehiclePose pose=new VehiclePose(routeX,craft.posY,routeZ,yaw,pitch,bank,craft.structure.facing);
             AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
                 routeX-craft.posX,0,routeZ-craft.posZ));
@@ -156,7 +161,7 @@ public final class VehicleCruise {
             craft.getEntityBoundingBox().minY-craft.posY);
         // Old saves can already be cruising inside the transition band.
         double y=Math.max(FlightEnvelope.WORLD_CEILING-Math.min(0,lowest)+.01,
-                Math.min(arrivalAltitude,FlightEnvelope.CRUISE_ALTITUDE));
+                Math.min(arrivalAltitude,handoffAltitude()));
         if(!arrival.ready(craft,pose)) {
             double hold=SKY_OFFSET+Math.min(y,altitude());
             craft.setPosition(projected()?routeX:craft.posX,hold,projected()?routeZ:craft.posZ);

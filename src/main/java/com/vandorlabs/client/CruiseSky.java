@@ -120,7 +120,7 @@ public final class CruiseSky {
         double physicalZ=owner.lastTickPosZ+partial*(owner.posZ-owner.lastTickPosZ);
         double physicalY=owner.lastTickPosY+partial*(owner.posY-owner.lastTickPosY);
         double altitude=owner.cruise.altitude()+physicalY-owner.posY;
-        double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude);
+        double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude,owner.cruise.handoffAltitude());
         if(opacity<=0)return;
         net.minecraft.client.renderer.entity.RenderManager camera=mc.getRenderManager();
         double x=camera.viewerPosX+(cruising?owner.cruise.view(true,partial)-physicalX:0);
