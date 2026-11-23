@@ -61,7 +61,7 @@ public final class VehicleNetwork {
             flightPhase=b.readUnsignedByte();flightPitch=b.readFloat();flightLanded=b.readBoolean();
             int drives=b.readInt(),fuel=b.readInt(),capacity=b.readInt();
             float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat(),rated=b.readFloat();boolean partial=b.readBoolean();
-            if(flightPhase>5||!com.vandorlabs.physics.AircraftAttitude.validPitch(flightPitch)||
+            if(flightPhase>EntityGroundVehicle.GLIDING_FLIGHT||!com.vandorlabs.physics.AircraftAttitude.validPitch(flightPitch)||
                 drives<0||fuel<0||capacity<fuel||!Float.isFinite(mass)||mass<0||!Float.isFinite(effective)||effective<0||effective>mass||
                 !Float.isFinite(thrust)||thrust<0||!Float.isFinite(rated)||rated<thrust)return false;
             flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,rated,partial);return true;

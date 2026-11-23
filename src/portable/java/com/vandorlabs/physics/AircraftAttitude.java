@@ -1,19 +1,43 @@
 package com.vandorlabs.physics;
 
-/** Bank and high-angle pitch response for the Forge aircraft controls. */
+/** Control rates and lift response shared by Forge's aircraft and its tests. */
 public final class AircraftAttitude {
-    public static final float TRIM_PITCH = 45, MAX_PITCH = 75, MAX_BANK = 32;
+    public static final float TRIM_PITCH = 45, MAX_PITCH = 75, MIN_PITCH = -85;
+    private static final float ROLL_RATE = 8.5F;
+
     private AircraftAttitude() {}
 
     public static float pitch(float current, float input) {
         float next = current + input;
         if (next > TRIM_PITCH) next -= (next - TRIM_PITCH) * .085F;
-        return Math.max(-TRIM_PITCH, Math.min(MAX_PITCH, next));
+        return Math.max(MIN_PITCH, Math.min(MAX_PITCH, next));
     }
 
-    public static float bank(float current, int steer) {
-        float target = MAX_BANK * steer;
-        return current + Math.max(-2.8F, Math.min(2.8F, target - current));
+    public static float rollRate(float current, int steer, double response) {
+        float target = ROLL_RATE * steer * (float) (.72 + .07 * response);
+        return approach(current, target, steer == 0 ? 2.25F : 1.35F);
+    }
+
+    public static float bank(float current, float rate) {
+        return wrap(current + rate);
+    }
+
+    public static float levelBank(float current) {
+        return approach(wrap(current), 0, 4);
+    }
+
+    public static float coordinatedTurn(double roll, double response) {
+        return (float) (Math.sin(roll) * (.95 + .3 * response));
+    }
+
+    public static double bankSink(double roll, double speed) {
+        return (1 - Math.cos(roll)) * Math.min(.28, .065 + speed * .016);
+    }
+
+    public static float recoveryPitch(float current, float pilotPitch, double excessAltitude, boolean gliding) {
+        float glideAngle = gliding ? 14 : 5;
+        if (!gliding) glideAngle += (float) Math.min(11, Math.log1p(excessAltitude) * 1.35);
+        return Math.min(pilotPitch, approach(current, -glideAngle, 2.25F));
     }
 
     public static double propulsion(float pitch) {
@@ -21,10 +45,21 @@ public final class AircraftAttitude {
     }
 
     public static boolean validPitch(float pitch) {
-        return Float.isFinite(pitch) && pitch >= -TRIM_PITCH && pitch <= MAX_PITCH;
+        return Float.isFinite(pitch) && pitch >= MIN_PITCH && pitch <= MAX_PITCH;
     }
 
     public static boolean validBank(float bank) {
-        return Float.isFinite(bank) && Math.abs(bank) <= MAX_BANK;
+        return Float.isFinite(bank) && bank >= -180 && bank < 180;
+    }
+
+    public static float wrap(float angle) {
+        angle %= 360;
+        if (angle >= 180) angle -= 360;
+        if (angle < -180) angle += 360;
+        return angle;
+    }
+
+    private static float approach(float current, float target, float distance) {
+        return current + Math.max(-distance, Math.min(distance, target - current));
     }
 }

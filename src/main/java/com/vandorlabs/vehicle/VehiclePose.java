@@ -16,9 +16,18 @@ public final class VehiclePose {
     public VehiclePose(double x,double y,double z,float yaw,float pitch,float bank,EnumFacing facing){this.x=x;this.y=y;this.z=z;this.yaw=yaw;this.pitch=pitch;this.bank=bank;this.facing=facing;}
     public VehiclePose interpolate(VehiclePose next,float partial) {
         return new VehiclePose(x+(next.x-x)*partial,y+(next.y-y)*partial,z+(next.z-z)*partial,
-                yaw+MathHelper.wrapDegrees(next.yaw-yaw)*partial,pitch+(next.pitch-pitch)*partial,bank+(next.bank-bank)*partial,next.facing);
+                yaw+MathHelper.wrapDegrees(next.yaw-yaw)*partial,pitch+(next.pitch-pitch)*partial,MathHelper.wrapDegrees(bank+MathHelper.wrapDegrees(next.bank-bank)*partial),next.facing);
     }
     public boolean tilted(){return pitch!=0||bank!=0;}
+
+    /** Apply the aircraft's tilt to a world-aligned mouse direction or rider. */
+    public RigidTransform viewRotation(){
+        if(!tilted())return RigidTransform.IDENTITY;
+        double hx=facing.getFrontOffsetX(),hz=facing.getFrontOffsetZ();
+        return RigidTransform.rotation(0,1,0,-yaw).then(RigidTransform.rotation(-hz,0,hx,pitch))
+                .then(RigidTransform.rotation(hx,0,hz,bank)).then(RigidTransform.rotation(0,1,0,yaw));
+    }
+
     RigidTransform transform(double px,double pz){
         double hx=facing.getFrontOffsetX(),hz=facing.getFrontOffsetZ();
         RigidTransform yawPitch=RigidTransform.translation(x,y,z).then(RigidTransform.joint(px,0,pz,hx,hz,yaw,pitch));

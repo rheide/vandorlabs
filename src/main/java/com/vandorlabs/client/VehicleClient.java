@@ -217,12 +217,21 @@ public final class VehicleClient {
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
         if(craft.structure==null)return;
         float partial=event.getPartialRenderTick();
-        Vec3d at=craft.seatPosition(craft.visualPose(partial),event.getEntityPlayer(),partial);
+        VehiclePose pose=craft.visualPose(partial);
+        Vec3d at=craft.seatPosition(pose,event.getEntityPlayer(),partial);
         Entity rider=event.getEntityPlayer();
         GlStateManager.pushMatrix();
         GlStateManager.translate(at.x-(rider.lastTickPosX+(rider.posX-rider.lastTickPosX)*partial),
                 at.y-(rider.lastTickPosY+(rider.posY-rider.lastTickPosY)*partial),
                 at.z-(rider.lastTickPosZ+(rider.posZ-rider.lastTickPosZ)*partial));
+        if(pose.tilted()){
+            GlStateManager.translate(event.getX(),event.getY(),event.getZ());
+            GlStateManager.rotate(-pose.yaw,0,1,0);
+            GlStateManager.rotate(pose.pitch,-pose.facing.getFrontOffsetZ(),0,pose.facing.getFrontOffsetX());
+            GlStateManager.rotate(pose.bank,pose.facing.getFrontOffsetX(),0,pose.facing.getFrontOffsetZ());
+            GlStateManager.rotate(pose.yaw,0,1,0);
+            GlStateManager.translate(-event.getX(),-event.getY(),-event.getZ());
+        }
     }
     @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Post event) {
         if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat && ((com.vandorlabs.entity.EntityChairSeat)event.getEntityPlayer().getRidingEntity()).cockpitRiderPosition(event.getEntityPlayer(),event.getPartialRenderTick())!=null){GlStateManager.popMatrix();return;}
@@ -256,18 +265,28 @@ public final class VehicleClient {
         Vec3d vanillaEye=new Vec3d(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*partial,
                 mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial+mc.player.getEyeHeight(),
                 mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*partial);
-        Vec3d delta=eye.subtract(vanillaEye);
-        // CameraSetup precedes vanilla's final pitch/yaw rotations. Express the world
-        // anchor correction in that camera basis, including first-person views.
-        double yaw=Math.toRadians(event.getYaw()),pitch=Math.toRadians(event.getPitch());
-        double dx=Math.cos(yaw)*delta.x+Math.sin(yaw)*delta.z;
-        double dz=-Math.sin(yaw)*delta.x+Math.cos(yaw)*delta.z;
-        GlStateManager.translate(-dx,-(Math.cos(pitch)*delta.y-Math.sin(pitch)*dz),
-                -(Math.sin(pitch)*delta.y+Math.cos(pitch)*dz));
+        Vec3d look=Vec3d.fromPitchYaw(event.getPitch(),event.getYaw()-180);
+        if(pose.tilted()){
+            com.vandorlabs.physics.RigidTransform tilt=pose.viewRotation();
+            double rawYaw=Math.toRadians(event.getYaw()),rawPitch=Math.toRadians(event.getPitch());
+            double[] up=tilt.vector(Math.sin(rawYaw)*Math.sin(rawPitch),Math.cos(rawPitch),-Math.cos(rawYaw)*Math.sin(rawPitch));
+            double[] forward=tilt.vector(look.x,look.y,look.z);
+            look=new Vec3d(forward[0],forward[1],forward[2]);
+            float adjustedYaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z))+180;
+            float adjustedPitch=(float)-Math.toDegrees(Math.atan2(look.y,Math.hypot(look.x,look.z)));
+            Vec3d cameraUp=cameraAxes(new Vec3d(up[0],up[1],up[2]),adjustedYaw,adjustedPitch);
+            event.setYaw(adjustedYaw);
+            event.setPitch(adjustedPitch);
+            event.setRoll(event.getRoll()+(float)Math.toDegrees(Math.atan2(cameraUp.x,cameraUp.y)));
+        }
+        // CameraSetup precedes vanilla's rotations. Convert the displaced seat eye into the full view basis.
+        Vec3d delta=cameraAxes(eye.subtract(vanillaEye),event.getYaw(),event.getPitch());
+        double roll=Math.toRadians(event.getRoll()),sin=Math.sin(roll),cos=Math.cos(roll);
+        GlStateManager.translate(-(cos*delta.x-sin*delta.y),-(sin*delta.x+cos*delta.y),-delta.z);
         if(mc.gameSettings.thirdPersonView==0)return;
         // Vanilla mouse look already orbits the pilot; extend its camera arm and clip it against terrain.
         boolean front=mc.gameSettings.thirdPersonView==2;
-        Vec3d away=mc.player.getLook(partial).scale(front?1:-1);
+        Vec3d away=look.scale(front?1:-1);
         double distance=cameraDistance;
         for(int n=0;n<8;n++) {
             Vec3d start=eye.addVector((n%2==0?-.1:.1),(n/2%2==0?-.1:.1),(n/4==0?-.1:.1));
@@ -276,6 +295,12 @@ public final class VehicleClient {
         }
         double adjustment=pose.tilted()?distance-PlacedSeatCamera.vanillaArm(mc,vanillaEye,front):Math.max(0,distance-4);
         GlStateManager.translate(0,0,(front?1:-1)*adjustment);
+    }
+    private static Vec3d cameraAxes(Vec3d direction,float heading,float elevation){
+        double yaw=Math.toRadians(heading),pitch=Math.toRadians(elevation);
+        double x=Math.cos(yaw)*direction.x+Math.sin(yaw)*direction.z;
+        double z=-Math.sin(yaw)*direction.x+Math.cos(yaw)*direction.z;
+        return new Vec3d(x,Math.cos(pitch)*direction.y-Math.sin(pitch)*z,Math.sin(pitch)*direction.y+Math.cos(pitch)*z);
     }
     @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){cruisePilotDraws=0;GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {

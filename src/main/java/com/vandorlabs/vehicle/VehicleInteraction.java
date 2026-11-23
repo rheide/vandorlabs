@@ -26,10 +26,15 @@ public final class VehicleInteraction {
         }
         return player.getPositionEyes(1);
     }
+    public static Vec3d look(EntityPlayer player) {
+        Vec3d direction=Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw);
+        Entity mount=player.getRidingEntity();
+        return mount instanceof EntityGroundVehicle?((EntityGroundVehicle)mount).interactionLook(direction):direction;
+    }
     public static Target pointed(EntityPlayer player) {
         double reach=Math.min(8,player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue());
         if(!Double.isFinite(reach) || reach<=0)return null;
-        Vec3d start=eyes(player),end=start.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
+        Vec3d start=eyes(player),end=start.add(look(player).scale(reach));
         RayTraceResult terrain=player.world.rayTraceBlocks(start,end,false,true,false);
         double nearest=terrain==null?reach*reach:start.squareDistanceTo(terrain.hitVec);
         Target target=null;
@@ -99,7 +104,7 @@ public final class VehicleInteraction {
         if(target.hit.action==VehicleSelection.Action.COCKPIT){
             com.vandorlabs.tiles.TileEntityCockpit tile=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(tile==null)return false;
             Vec3d eye=eyes(player);
-            Vec3d start=craft.toLocal(eye,tile.getPos()).subtract(new Vec3d(tile.getPos())),end=craft.toLocal(eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(8)),tile.getPos()).subtract(new Vec3d(tile.getPos()));
+            Vec3d start=craft.toLocal(eye,tile.getPos()).subtract(new Vec3d(tile.getPos())),end=craft.toLocal(eye.add(look(player).scale(8)),tile.getPos()).subtract(new Vec3d(tile.getPos()));
             if(player.isSneaking() || player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER){if(!player.isSneaking()&&tile.useEmergencyPark(start,end,player))return true;com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;}
             if(tile.use(start,end,player)){if(craft.view.getTileEntity(tile.getPos())==tile)craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
         }
