@@ -66,6 +66,10 @@ public final class FlightEnvelope {
     }
 
     /** Opacity of the seed surface through the band where real terrain is still tracked. */
+    public static double seedOpacity(double altitude) {
+        return seedOpacity(altitude,CRUISE_ALTITUDE);
+    }
+
     public static double seedOpacity(double altitude, int handoffAltitude) {
         if(handoffAltitude<=WORLD_CEILING)return altitude>WORLD_CEILING?1:0;
         double t = Math.max(0, Math.min(1, (altitude - WORLD_CEILING) / (handoffAltitude - WORLD_CEILING)));
