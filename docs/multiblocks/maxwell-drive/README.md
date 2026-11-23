@@ -60,6 +60,8 @@ The assembled drive shown here has fuel in its tank.
 
 The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time. On NeoForge, the `vandorlabs:maxwell_fuels` fluid tag can add other registered fuels.
 
+On Forge 1.12.2, a powered Thermal Dynamics fluid servo also fills its fluiduct network. For refined fuel, each standard fluiduct can hold 3,000 mB. Starting with 16,000 mB and an empty drive, two ducts can leave 9,000 mB in the source tank, 6,000 mB in the ducts and 1,000 mB in the drive. Five ducts can hold the remaining 15,000 mB and empty the source tank. The buffered fuel supplies the drive as it burns. To keep more fuel in the source tank, use fewer ducts or switch off the servo once the drive fills.
+
 Right-click the formed drive or use the Configurizer to open its **Engine** and **Redstone** tabs. The Engine tab shows the tank level and has a **Purge Tank** button that discards its contents.
 
 - **Activation: Disabled** lets the drive run automatically during powered Flight and its takeoff roll.
