@@ -49,6 +49,8 @@ final class ThrusterLeverLiveChecks {
     private static final BlockPos PLACED=new BlockPos(24,100,25), ORIGIN=PLACED.east(12).down();
     private static final BlockPos FREE=new BlockPos(0,1,0), LINKED=new BlockPos(5,1,0), ENGINE=new BlockPos(2,1,1);
     private static final int CHANNEL=29341;
+    // Give the carried cutout meshes time to rebuild in shader clients before capture.
+    private static final int CAPTURE_TICKS=40;
     private static int stage,ticks;
     private static UUID owner;
     private static Vec3d eye;
@@ -65,18 +67,18 @@ final class ThrusterLeverLiveChecks {
                 if(!ready(mc)||mc.world.getBlockState(PLACED).getBlock()!=lever())return false;
                 clickPlaced(mc,false);clickPlaced(mc,false);next();return false;
             case 2:
-                if(!at((TileEntitySignalControl)mc.world.getTileEntity(PLACED),2,10)||ticks<9)return false;
+                if(!at((TileEntitySignalControl)mc.world.getTileEntity(PLACED),2,10)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->expectLevels(10)).get();
                 shot(mc,output,"shot_thruster-placed-medium.png");
                 sneaking(mc,()->{clickPlaced(mc,true);clickPlaced(mc,true);});next();return false;
             case 3:
-                if(!at((TileEntitySignalControl)mc.world.getTileEntity(PLACED),0,0)||ticks<9)return false;
+                if(!at((TileEntitySignalControl)mc.world.getTileEntity(PLACED),0,0)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->{expectLevels(10,0);spawn(mc);}).get();next();return false;
             case 4:
                 if(!ready(mc)||client(mc)==null)return false;
                 clickCarried(mc,FREE,false);next();return false;
             case 5:
-                if(!carried(mc,FREE,1,5)||ticks<9)return false;
+                if(!carried(mc,FREE,1,5)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->{
                     EntityGroundVehicle craft=server(mc);IBlockState state=craft.view.getBlockState(FREE);
                     require(lever().getWeakPower(state,craft.view,FREE,EnumFacing.UP)==5,"unchannelled carried lever delivers physical Low");
@@ -84,7 +86,7 @@ final class ThrusterLeverLiveChecks {
                 shot(mc,output,"shot_thruster-carried-low.png");
                 sneaking(mc,()->clickCarried(mc,FREE,true));next();return false;
             case 6:
-                if(!carried(mc,FREE,0,0)||ticks<9)return false;
+                if(!carried(mc,FREE,0,0)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->require(server(mc).board(player(mc)),"pilot boards actual carried seat")).get();
                 next();return false;
             case 7:
@@ -92,7 +94,7 @@ final class ThrusterLeverLiveChecks {
                 if(craft==null||mc.player.getRidingEntity()!=craft||ticks<8)return false;
                 aimPilot(mc,craft);clickCarried(mc,LINKED,false);next();return false;
             case 8:
-                if(!carried(mc,LINKED,1,5)||!engineAt(mc,5)||ticks<9)return false;
+                if(!carried(mc,LINKED,1,5)||!engineAt(mc,5)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->{
                     expectLevels(5);
                     require(((TileEntityConstructor)server(mc).view.getTileEntity(ENGINE)).maxwellActiveLevel()==5,"seated pilot's lever powers the real carried drive at Low");
@@ -103,7 +105,7 @@ final class ThrusterLeverLiveChecks {
                 try{clickCarried(mc,LINKED,true);}finally{mc.player.movementInput.sneak=false;}
                 next();return false;
             case 9:
-                if(!carried(mc,LINKED,0,0)||!engineAt(mc,0)||ticks<9)return false;
+                if(!carried(mc,LINKED,0,0)||!engineAt(mc,0)||ticks<CAPTURE_TICKS)return false;
                 mc.getIntegratedServer().addScheduledTask(()->{
                     expectLevels(5,0);
                     TileEntitySignalControl control=(TileEntitySignalControl)server(mc).view.getTileEntity(LINKED);
