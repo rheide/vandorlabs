@@ -35,7 +35,9 @@ public final class CruiseMapView {
         EntityGroundVehicle craft=mounted();
         if(craft==null||mc.gameSettings.debugCamEnable)return headYaw;
         float partial=mc.getRenderPartialTicks();
-        Vec3d look=mc.player.getLook(partial);
+        float pitch=mc.player.prevRotationPitch+(mc.player.rotationPitch-mc.player.prevRotationPitch)*partial;
+        float yaw=mc.player.prevRotationYaw+net.minecraft.util.math.MathHelper.wrapDegrees(mc.player.rotationYaw-mc.player.prevRotationYaw)*partial;
+        Vec3d look=Vec3d.fromPitchYaw(pitch,yaw);
         double[] world=craft.pilotView(craft.visualPose(partial)).vector(look.x,look.y,look.z);
         float heading=(float)Math.toDegrees(Math.atan2(-world[0],world[2]));
         return mc.gameSettings.thirdPersonView==2?heading+180:heading;
