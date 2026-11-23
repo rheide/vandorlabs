@@ -29,7 +29,7 @@ On a full-height display, enable **Split display** and choose a **Vehicle Status
 
 Canopy, Long Canopy, and Front Canopy glazing can also display these instruments. Use the canopy’s **Main** and **Side** tabs to choose each finish independently. The Side selection applies to both side panes. If framebuffers are disabled in your video settings, the pane displays ordinary glass until framebuffers are enabled.
 
-Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height.
+Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height. Top speed is **300 m/s** at Y=10,000 for aircraft with enough thrust, including in a dive.
 
 ## Overworld cruise
 

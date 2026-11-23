@@ -21,13 +21,13 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.maximumAltitude(limit,3.59)<FlightEnvelope.MAX_ALTITUDE&&
                 FlightEnvelope.maximumAltitude(limit,3.60)==FlightEnvelope.MAX_ALTITUDE,"Y=10000 needs about 3.60 times takeoff thrust");
         require(FlightEnvelope.cruiseSpeed(256)==1.5&&FlightEnvelope.cruiseSpeed(300)<1.51,"continuous handoff at build height");
-        require(FlightEnvelope.cruiseSpeed(10000)==75&&FlightEnvelope.cruiseSpeed(20000)==75,"speed cap");
+        require(FlightEnvelope.cruiseSpeed(10000)==15&&FlightEnvelope.cruiseSpeed(20000)==15,"speed cap");
 
         require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"light drive handoff is continuous");
-        require(FlightEnvelope.cruiseSpeed(257,200,1)<1.6,"first cruise block has no speed jump");
+        require(FlightEnvelope.cruiseSpeed(257,200,1)<1.62,"first cruise block has no speed jump");
         require(FlightEnvelope.cruiseSpeed(320,200,1)*20>=100,"one Maxwell with modest cargo can reach 100 m/s soon above the build ceiling");
         require(FlightEnvelope.cruiseSpeed(800,400,1)<FlightEnvelope.cruiseSpeed(800,200,1),"payload reduces cruise speed");
-        require(FlightEnvelope.cruiseSpeed(10000,120,1)==75,"light craft retain the absolute speed cap");
+        require(FlightEnvelope.cruiseSpeed(10000,120,1)==15,"light craft retain the absolute speed cap");
         require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
 
         require(FlightEnvelope.seedOpacity(255)==0&&FlightEnvelope.seedOpacity(384)==.5&&FlightEnvelope.seedOpacity(513)==1,

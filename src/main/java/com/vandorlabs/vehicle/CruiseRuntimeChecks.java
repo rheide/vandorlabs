@@ -105,13 +105,13 @@ public final class CruiseRuntimeChecks {
         @SubscribeEvent public void tick(net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent event){
             if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
             double y=craft.flightAltitude();
-            if(y<400 && y>320 && craft.driveSpeed>3 && craft.driveSpeed<28 && !craft.cruise.active())intermediate=true;
+            if(y<400 && y>320 && craft.driveSpeed>3 && craft.driveSpeed<15 && !craft.cruise.active())intermediate=true;
             if(y>256)return;
             require(intermediate&&craft.flying()&&craft.driveSpeed<=1.51,
                     "forward dive slows through real terrain band, speed at build height="+craft.driveSpeed);
             MinecraftForge.EVENT_BUS.unregister(this);
             done=true;
-            System.out.println("[vandorlabs] altitude band dive PASS entry=30 low="+craft.driveSpeed);
+            System.out.println("[vandorlabs] altitude band dive PASS entry=15 low="+craft.driveSpeed);
         }
     }
     private static final DiveProbe diveProbe=new DiveProbe();
@@ -252,6 +252,7 @@ public final class CruiseRuntimeChecks {
                 glide.setFloat("MaxwellFlightPitch",-75);
                 glide.setDouble("MaxwellFlightSpeed",30);
                 craft.readFlightMode(glide);
+                require(craft.driveSpeed==15,"legacy overspeed save clamped to 300 m/s");
                 require(craft.cruise.move(0,530-craft.posY,0),"stage accelerated high-altitude descent");
                 MinecraftForge.EVENT_BUS.register(diveProbe);
             });
