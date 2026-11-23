@@ -45,6 +45,8 @@ public final class VehicleRotation {
         }
         // Retraction can lower the chassis onto the ground. Keep its support height
         // when extending the restored feet, then validate the raised hull normally.
+        // Freeze ticking tiles while the queued collision build consumes this snapshot.
+        VehicleTransfer.holdForParkingGeometry(craft);
         VehicleCollision extended=VehicleTransfer.geometry(craft.world,parking.structure);
         int supportedY=(int)Math.round(craft.posY+craft.collision.bounds.minY-extended.bounds.minY);
         return new Plan(parking.structure,new BlockPos(parking.origin.getX(),Math.max(parking.origin.getY(),supportedY),parking.origin.getZ()),parking.seatPositions);
