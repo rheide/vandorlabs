@@ -818,7 +818,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
         double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);
         EnumFacing front=structure.facing;
-        if(!launching && dimension==0){
+        if(!launching && dimension==0 && !cruise.preparingArrival()){
             double drop=AircraftAttitude.bankSink(roll,driveSpeed)-Math.sin(radians)*driveSpeed;
             driveSpeed=FlightEnvelope.descentSpeed(driveSpeed,altitude,gliding||limited?Math.max(.06,drop):drop);
         }

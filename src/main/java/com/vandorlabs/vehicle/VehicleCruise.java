@@ -58,6 +58,7 @@ public final class VehicleCruise {
         craft.getDataManager().register(FRACTION,0);
         craft.getDataManager().register(ANCHOR,BlockPos.ORIGIN);
     }
+    boolean preparingArrival(){ return arrival!=null; }
     public boolean projected() { return active()&&craft.getDataManager().get(ANCHOR).getY()==1; }
     double anchorX() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getX():anchorX; }
     double anchorZ() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getZ():anchorZ; }

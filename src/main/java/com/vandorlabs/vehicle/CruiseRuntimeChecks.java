@@ -83,6 +83,23 @@ public final class CruiseRuntimeChecks {
     }
     private static final OpacityProbe opacityProbe=new OpacityProbe();
 
+    public static final class DiveProbe {
+        private boolean intermediate;
+        private volatile boolean done;
+        @SubscribeEvent public void tick(net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent event){
+            if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
+            double y=craft.flightAltitude();
+            if(y<400 && y>320 && craft.driveSpeed>3 && craft.driveSpeed<28 && !craft.cruise.active())intermediate=true;
+            if(y>256)return;
+            require(intermediate&&craft.flying()&&craft.driveSpeed<=1.51,
+                    "forward dive slows through real terrain band, speed at build height="+craft.driveSpeed);
+            MinecraftForge.EVENT_BUS.unregister(this);
+            done=true;
+            System.out.println("[vandorlabs] altitude band dive PASS entry=30 low="+craft.driveSpeed);
+        }
+    }
+    private static final DiveProbe diveProbe=new DiveProbe();
+
     private static final TransitChunks transitChunks=new TransitChunks();
 
     private static void observeRoute() {
@@ -212,6 +229,17 @@ public final class CruiseRuntimeChecks {
             require(!local.cruise.active()&&local.posY>345&&local.posY<405,"real coordinates during blended flight at "+local.posY);
             require(mc.world.isBlockLoaded(new BlockPos(local.posX,64,local.posZ)),"real terrain remains available during transition");
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"cruise-blend-mid.png"));
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                NBTTagCompound glide=new NBTTagCompound();
+                glide.setByte("MaxwellFlightPhase",(byte)EntityGroundVehicle.GLIDING_FLIGHT);
+                glide.setFloat("MaxwellFlightPitch",-75);
+                glide.setDouble("MaxwellFlightSpeed",30);
+                craft.readFlightMode(glide);
+                require(craft.cruise.move(0,530-craft.posY,0),"stage accelerated high-altitude descent");
+                MinecraftForge.EVENT_BUS.register(diveProbe);
+            });
+            stage=14;
+        }else if(stage==14&&diveProbe.done){
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=11;
         }else if(stage==11 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
