@@ -14,7 +14,7 @@ public final class FrameAppearancePane {
     private final GuiContainer host;private final TileEntity owner;private final FrameAppearance appearance;private final Runnable bareToggle;private final BooleanSupplier framed;
     private boolean displayPage,standalone;private HousingTextureList textures;private int page,contentTop;private List<GuiButton> buttons;
     public FrameAppearancePane(GuiContainer host,TileEntity owner){this(host,owner,null,null);}
-    public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();FrameAppearance.of(owner).write(draft);appearance.read(draft);appearance.exterior=appearance.exteriorChoice();if(FrameAppearance.usesMainFront(owner.getBlockType()))appearance.front=-1;if(appearance.splitTop<0)appearance.splitTop=defaultScreen();if(appearance.splitBottom<0)appearance.splitBottom=defaultScreen();if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
+    public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();FrameAppearance.of(owner).write(draft);appearance.read(draft);appearance.exterior=appearance.exteriorChoice();if(FrameAppearance.usesMainFront(owner.getBlockType()))appearance.front=-1;if(appearance.splitTop==-1)appearance.splitTop=defaultScreen();if(appearance.splitBottom==-1)appearance.splitBottom=defaultScreen();if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
     private static int defaultScreen(){
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Screens".equals(ScreenHousingTextures.category(i))&&FrameAppearance.bareChoice(i)==i)return ScreenHousingTextures.choiceAt(i);
         return 0;
@@ -53,8 +53,10 @@ public final class FrameAppearancePane {
             buttons.add(new DialogTabButton(3005,left+12,top+54,span-2,18,"Top"));buttons.add(new DialogTabButton(3006,left+12+span,top+54,span-2,18,"Bottom"));
             for(GuiButton b:buttons)if(b.id==3005||b.id==3006)b.enabled=b.id!=(page==2?3005:3006);
             textures=HousingTextureList.forCategory("Screens",left+12,top+78,controls-left-31,page==2?appearance.splitTop:appearance.splitBottom,8).visibleRows(Math.max(2,(host.getYSize()-110)/HousingTextureList.ROW_HEIGHT));
+            if(RedstoneScreenInteractions.supportsSplitStatus(owner.getBlockType()))textures.vehicleHalf(this::selectSplit);
         }
     }
+    private void selectSplit(int choice){if(page==2)appearance.splitTop=choice;else appearance.splitBottom=choice;send();}
     private void refresh(){
         // GuiScreen iterates this list by index while dispatching a click. Moving
         // the replacement button past Done can dispatch that same click twice.

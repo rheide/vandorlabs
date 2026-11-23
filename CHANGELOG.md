@@ -13,6 +13,7 @@
 - Supply onboard engines and observers through Thermal Dynamics, Mekanism and Galacticraft conduits. Route RF, fluids or items through settled Arm endpoints.
 - On Vehicle Status, select Park, Taxi, Hover or Flight from a two-row grid. Unavailable modes are gray and fuel stays within the screen.
 - On Forge, choose Status or four flight instruments in the Vehicle Status folder. The Controller projects maximum speed and altitude, and lighter Maxwell aircraft gain speed sooner above Y=256.
+- Choose **Status (Half)** independently for the top and bottom of a split display. Park a stopped craft with a signaled Maxwell running. On formation, a Maxwell immediately connects to existing Fluiducts at its inlets. A drive at zero throttle stops burning fuel and its nozzle stops glowing.
 - Configure Main and Side glazing independently on Forge Canopies and Front Canopies, with Vehicle Status and flight instruments selectable for each pane.
 - Copy Thermal Dynamics fluiducts and fluxducts with their attachments on Forge. Survival copies start with empty supported storage and require the matching duct and attachments. Creative copies preserve stored amounts.
 - Transmit Tank and Battery fullness over redstone channels.

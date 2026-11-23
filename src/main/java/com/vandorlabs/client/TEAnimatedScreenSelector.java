@@ -7,6 +7,7 @@ import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.render.InputSurfaceLayout;
 import com.vandorlabs.render.ScreenHousingMesh;
 import com.vandorlabs.tiles.ScreenHousingTextures;
+import com.vandorlabs.tiles.FrameAppearance;
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.blocks.PanelPlane;
@@ -576,7 +577,7 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getSurfaceTextureLayout());
         }
-        if(te.hasRedstoneScreen(0)||te.hasVehiclePanel(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
+        if(te.getSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE||te.hasVehiclePanel(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
             redstoneFace(te,0);
             ScreenSurface.Kind framedSurface=state.getBlock() instanceof BlockProgrammableConsole?ScreenSurface.Kind.CONSOLE:diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
             FrameSurfaceRenderer.screen(te,ScreenSurface.quad(framedSurface,diagonalInverted));
@@ -772,13 +773,19 @@ public class TEAnimatedScreenSelector
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
-        Tessellator.getInstance().draw();GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
+        Tessellator.getInstance().draw();
+        // Interactive halves stay on their host block so each has its own touch targets.
+        GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit&&!tile.hasSplitVehicleStatus(0)?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
         int n=layout.rows;boolean middle=(n&1)!=0&&layout.row==n/2,input=tile.getBlockType() instanceof BlockProgrammableInput;
         for(int half=0;half<2;half++){
             boolean upper=layout.row>=n/2;if(!middle&&((half==0)!=upper))continue;
             double localTop=middle&&half==1?.5:0,localBottom=middle&&half==0?.5:1;
             ScreenSurface.Quad part=middle?ScreenSurface.half(quad,half==0):quad;
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
+            if(FrameAppearance.statusSplit(choice)&&tile.hasSplitVehicleStatus(0)){
+                RedstoneScreenRenderer.drawVehicle(tile,part,com.vandorlabs.screen.ScreenControlLayout.HALF_HEIGHT,com.vandorlabs.screen.VehicleInstrument.STATUS);
+                continue;
+            }
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
             double[] uv=bindDisplay(tile,choice,tile.getEffectiveMode()!=TileEntityAnimatedScreenSelector.MODE_OFF,tile.getEffectiveMode()==TileEntityAnimatedScreenSelector.MODE_ANIMATED,tile.getAnimationSpeedIndex());
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);

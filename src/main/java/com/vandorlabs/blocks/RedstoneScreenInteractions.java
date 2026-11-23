@@ -29,7 +29,7 @@ public final class RedstoneScreenInteractions {
         Vec3d end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
         if(ScreenChipSupport.activate(tile,player,hand,eye,end))return true;
         if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,hand,eye,end))return true;
-        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatusControls(slot)&&supportsSlot(state.getBlock(),slot)){
             int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;
         }
@@ -57,6 +57,7 @@ public final class RedstoneScreenInteractions {
     public static boolean supportsSlot(net.minecraft.block.Block block,int slot){
         return supports(block) && (slot==0 || slot==1 && (block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableHalfConsole));
     }
+    public static boolean supportsSplitStatus(net.minecraft.block.Block block){return supports(block)&&!half(block,0);}
     public static boolean half(net.minecraft.block.Block block,int slot){
         return block instanceof BlockProgrammableInput && !(block instanceof BlockProgrammableFullInput)
             || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
@@ -117,7 +118,14 @@ public final class RedstoneScreenInteractions {
         int height=displayHeight(state.getBlock(),slot);
         double x=(q.topRight.x-hit.x)/(q.topRight.x-q.topLeft.x)*128;
         double dy=q.bottomRight.y-q.topRight.y,dz=q.bottomRight.z-q.topRight.z;
-        double y=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz)*height;
+        double v=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz);
+        if(tile.hasSplitVehicleStatus(slot)){
+            if(v<0||v>=1)return -1;
+            boolean top=v<.5;
+            if(!com.vandorlabs.tiles.FrameAppearance.statusSplit(top?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom))return -1;
+            return com.vandorlabs.vehicle.VehicleStatus.panelAction(height/2,x,(v-(top?0:.5))*height);
+        }
+        double y=v*height;
         return com.vandorlabs.vehicle.VehicleStatus.panelAction(height,x,y);
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){

@@ -1,12 +1,16 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.*;
+import com.vandorlabs.drives.MaxwellRuntimeChecks;
+import com.vandorlabs.navigation.NavigationScreenSettings;
+import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.WorldServer;
@@ -16,6 +20,7 @@ import java.util.*;
 /** Real client render and interaction round trips for every vehicle mode. */
 final class VehicleStatusClientRuntimeChecks {
     private static final BlockPos BASE=new BlockPos(184,120,82),SCREEN=new BlockPos(0,1,0),CONTROL=new BlockPos(1,1,0),INPUT=new BlockPos(2,1,0),CONSOLE=new BlockPos(3,1,0);
+    private static final BlockPos ENGINE=new BlockPos(5,1,0);
     private static int action;private static UUID id;private static int stage,frame,total;private static Vec3d expectedEye;
     private static void require(boolean value,String what){if(!value)throw new IllegalStateException("vehicle status client: "+what);}
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
@@ -69,7 +74,20 @@ final class VehicleStatusClientRuntimeChecks {
         BlockPos seatPos=new BlockPos(4,1,1);TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(seatPos);seat.setTaxiMode(false);seat.owner=player(mc).getUniqueID();cells.add(new VehicleStructure.Cell(seatPos,ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new NBTTagCompound())));
         String[] names={"antigravity_plate","repulsor_array","vertical_hover_thruster"};for(int i=0;i<3;i++)cells.add(new VehicleStructure.Cell(new BlockPos(i,1,3),net.minecraft.block.Block.getBlockFromName("vandorlabs:"+names[i]).getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(new BlockPos(4,1,3),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),null));
+        addEngine(w,cells);
         EntityGroundVehicle craft=new EntityGroundVehicle(w);craft.install(new VehicleStructure(cells,seatPos,EnumFacing.NORTH,1));craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(w.spawnEntity(craft),"fixture spawn");id=craft.getUniqueID();
+    }
+    private static void addEngine(WorldServer world,List<VehicleStructure.Cell> cells){
+        BlockPos source=BASE.add(18,3,0), offset=ENGINE.subtract(source);
+        MaxwellRuntimeChecks.assemble(world,source,3,EnumFacing.NORTH,0,0);
+        for(BlockPos at:BlockPos.getAllInBox(source,source.add(2,2,3))){
+            TileEntity tile=world.getTileEntity(at);
+            require(tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart,"formed Maxwell occupies complete carried footprint");
+            cells.add(new VehicleStructure.Cell(at.add(offset),world.getBlockState(at),
+                    VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),offset)));
+        }
+        for(BlockPos at:BlockPos.getAllInBox(source,source.add(2,2,3)))world.setBlockToAir(at);
+        cells.add(new VehicleStructure.Cell(ENGINE.down(),Blocks.REDSTONE_BLOCK.getDefaultState(),null));
     }
     private static void aim(Minecraft mc,BlockPos local,boolean vehicle)throws Exception{
         EntityGroundVehicle craft=vehicle?client(mc):null;
@@ -79,6 +97,7 @@ final class VehicleStatusClientRuntimeChecks {
         // The horizontal console deck cannot be intersected by a horizontal ray.
         com.vandorlabs.render.ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,0);
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
+        if(tile.hasSplitVehicleStatus(0)){q=com.vandorlabs.render.ScreenSurface.half(q,false);height/=2;}
         com.vandorlabs.screen.VehicleStatusLayout layout=com.vandorlabs.screen.VehicleStatusLayout.forHeight(height);
         int mode=action==VehicleStatus.FLIGHT_ACTION?com.vandorlabs.screen.VehicleStatusLayout.FLIGHT:action-1;
         double u=(action==0?85:action==4?25:layout.centerX(mode))/128D;
@@ -172,10 +191,25 @@ final class VehicleStatusClientRuntimeChecks {
         if(stage==12){state(mc,false,true);click(mc,true,2);next();return false;}
         if(stage==13){require(!client(mc).hover,"Taxi screen button synchronized");mc.getIntegratedServer().addScheduledTask(()->{TileEntityWaypoint wp=(TileEntityWaypoint)world(mc).getTileEntity(BASE.add(1,-1,0));wp.stopMode=1;for(int z=-1;z>=-3;z--)world(mc).setBlockState(BASE.add(1,-1,z),Blocks.CONCRETE.getDefaultState(),3);}).get();click(mc,true,0);next();return false;}
         if(stage==14){state(mc,true,true);mc.getIntegratedServer().addScheduledTask(()->require(server(mc).autopilot.controller().status.equals("Parked at waypoint"),"waiting before Next pulse")).get();click(mc,true,4);next();return false;}
-        if(stage==15){mc.getIntegratedServer().addScheduledTask(()->{require(server(mc).posZ<BASE.getZ()-.1,"Next button leaves manual waypoint: "+server(mc).autopilot.controller().status+" pos="+server(mc).posZ+" route="+server(mc).autopilot.write());EntityGroundVehicle craft=server(mc);craft.autopilot.controller().setEnabled(false);craft.stopForParking();craft.rotationYaw=0;craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());VehicleNetwork.state(craft);}).get();next();return false;}
-        if(stage==16){click(mc,true,1);next();return false;}
-        if(stage==17){if(client(mc)!=null)return false;mc.getIntegratedServer().addScheduledTask(()->{require(world(mc).getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector,"Block screen button restores tiles");for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();stage=18;System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles mode-buttons next-waypoint client-server-sync half-input half-console");VehicleFlightClientChecks.begin(mc);return false;}
+        if(stage==15){mc.getIntegratedServer().addScheduledTask(()->{require(server(mc).posZ<BASE.getZ()-.1,"Next button leaves manual waypoint: "+server(mc).autopilot.controller().status+" pos="+server(mc).posZ+" route="+server(mc).autopilot.write());EntityGroundVehicle craft=server(mc);craft.autopilot.controller().setEnabled(false);craft.stopForParking();craft.rotationYaw=0;craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());startPoweredPark(craft);VehicleNetwork.state(craft);}).get();next();return false;}
+        if(stage==16){
+            TileEntityAnimatedScreenSelector split=(TileEntityAnimatedScreenSelector)client(mc).view.getTileEntity(SCREEN);
+            TileEntityConstructor drive=(TileEntityConstructor)client(mc).view.getTileEntity(ENGINE);
+            if(!split.hasSplitVehicleStatus(0)||drive.maxwellActiveLevel()!=15)return false;
+            shot(mc,output,"split_halves",0x153A29);
+            click(mc,true,1);next();return false;
+        }
+        if(stage==17){if(client(mc)!=null)return false;mc.getIntegratedServer().addScheduledTask(()->{require(world(mc).getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector,"Block screen button restores tiles");TileEntityConstructor drive=(TileEntityConstructor)world(mc).getTileEntity(BASE.add(ENGINE));require(drive.formed()&&drive.maxwellFuel()>0&&drive.maxwellActiveLevel()==15,"real Park click restores the entire powered drive and its fuel");for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();stage=18;System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles mode-buttons next-waypoint client-server-sync half-input half-console powered-Maxwell Park from split Status");VehicleFlightClientChecks.begin(mc);return false;}
         return false;
+    }
+    private static void startPoweredPark(EntityGroundVehicle craft){
+        TileEntityConstructor drive=(TileEntityConstructor)craft.view.getTileEntity(ENGINE);
+        require(MaxwellRuntimeChecks.inlet(drive,EnumFacing.NORTH).fill(new net.minecraftforge.fluids.FluidStack(MaxwellRuntimeChecks.testFuel(),200),true)==200,"fuel captured drive for parking check");
+        drive.configureMachine(new NavigationScreenSettings(-1,false,1,true,false),new int[0],false,127,0,ChannelList.EMPTY);
+        TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(SCREEN);
+        screen.frameAppearance.split=true;
+        screen.frameAppearance.splitTop=screen.frameAppearance.splitBottom=TileEntityAnimatedScreenSelector.VEHICLE_SURFACE;
+        screen.markDirty();
     }
     private VehicleStatusClientRuntimeChecks(){}
 }

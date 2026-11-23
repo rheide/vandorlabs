@@ -74,9 +74,11 @@ public final class ScreenModeTransitionRuntimeChecks {
         return (HousingTextureList)field(field(gui,name),"list");
     }
     private static void choose(Minecraft mc,int sentinel)throws Exception{
-        GuiScreen gui=mc.currentScreen;
-        HousingTextureList list=pickerList(gui);List<?> rows=(List<?>)field(list,"rows");
-        if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(mc,-100002);
+        choose(mc.currentScreen,pickerList(mc.currentScreen),sentinel);
+    }
+    private static void choose(GuiScreen gui,HousingTextureList list,int sentinel)throws Exception{
+        List<?> rows=(List<?>)field(list,"rows");
+        if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(gui,list,-100002);
         int index=rows.indexOf(sentinel),count=(Integer)field(list,"count");require(index>=0,"picker contains requested live surface");
         int scroll=Math.max(0,index-count+1);Field f=HousingTextureList.class.getDeclaredField("scroll");f.setAccessible(true);f.setInt(list,scroll);
         mouse(gui,(Integer)field(list,"x")+4,(Integer)field(list,"y")+(index-scroll)*HousingTextureList.ROW_HEIGHT+10);
@@ -109,6 +111,31 @@ public final class ScreenModeTransitionRuntimeChecks {
                     "actual reverse picker packet restores exclusive Status mode")).get();
             TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);
             require(client.hasVehicleStatus(slot())&&!client.hasRedstoneScreen(slot()),"client receives exclusive Status mode after reverse transition");
+            if(scenario==0){
+                button(mc.currentScreen,3007);
+                FrameAppearancePane pane=(FrameAppearancePane)field(mc.currentScreen,"framePane");
+                choose(mc.currentScreen,pane.picker(),VehicleInstrument.STATUS.choice);
+                button(mc.currentScreen,3006);
+                choose(mc.currentScreen,pane.picker(),VehicleInstrument.STATUS.choice);
+                next();return false;
+            }
+            return advance(mc,output);
+        }
+        if(stage==7&&frame>10){
+            mc.getIntegratedServer().addScheduledTask(()->{
+                TileEntityAnimatedScreenSelector tile=tile(mc);
+                require(tile.hasSplitVehicleStatus(0)&&FrameAppearance.statusSplit(tile.frameAppearance.splitTop)
+                        &&FrameAppearance.statusSplit(tile.frameAppearance.splitBottom),"both Half Status picker packets persist independently");
+                FrameAppearance loaded=new FrameAppearance();loaded.read(tile.writeToNBT(new NBTTagCompound()));
+                require(loaded.split&&FrameAppearance.statusSplit(loaded.splitTop)&&FrameAppearance.statusSplit(loaded.splitBottom),"both Half Status choices survive tile serialization");
+            }).get();
+            VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_split_vehicle_status_picker.png");
+            System.out.println("[vandorlabs][reprolab] split-status-picker PASS top and bottom actual picker packets, independent selections, tile save/read");
+            return advance(mc,output);
+        }
+        return false;
+    }
+    private static boolean advance(Minecraft mc,File output)throws Exception{
             if(++scenario==blocks.size()){
                 mc.player.closeScreen();
                 VehicleStatusRenderChecks.instruments(mc,output);
@@ -116,7 +143,6 @@ public final class ScreenModeTransitionRuntimeChecks {
                 return true;
             }
             prepare(mc);
-        }
         return false;
     }
 }

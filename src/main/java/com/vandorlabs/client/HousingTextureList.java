@@ -22,10 +22,12 @@ final class HousingTextureList {
     private Runnable chipAction;
     HousingTextureList chip(Runnable action){chipAction=action;setSelected(selected());return this;}
     private java.util.function.IntConsumer vehicleAction;
-    private boolean vehicleOpen;
+    private boolean vehicleOpen,vehicleHalf;
     HousingTextureList vehicle(java.util.function.IntConsumer action){
         vehicleAction=action;vehicleOpen=VehicleInstrument.includes(selected);setSelected(selected());return this;
     }
+    HousingTextureList vehicleHalf(java.util.function.IntConsumer action){vehicleHalf=true;return vehicle(action);}
+    private String vehicleLabel(VehicleInstrument instrument){return vehicleHalf?"Status (Half)":instrument.label;}
     private Runnable redstoneAction;
     HousingTextureList redstone(Runnable action){redstoneAction=action;setSelected(selected());return this;}
     private final Map<Integer,Option> options=new LinkedHashMap<>();
@@ -234,7 +236,8 @@ final class HousingTextureList {
         if(vehicleAction!=null){
             rows.add(VEHICLE_ROW);
             for(VehicleInstrument instrument:VehicleInstrument.values()){
-                if(query.isEmpty()?vehicleOpen:TextureListLayout.matches(query,instrument.label,"Vehicle Status",""))rows.add(instrument.choice);
+                if(vehicleHalf&&instrument!=VehicleInstrument.STATUS)continue;
+                if(query.isEmpty()?vehicleOpen:TextureListLayout.matches(query,vehicleLabel(instrument),"Vehicle Status",""))rows.add(instrument.choice);
             }
         }
         if(chipAction!=null)rows.add(CHIP_ROW);
@@ -347,7 +350,7 @@ final class HousingTextureList {
             else if(choice==CHIP_ROW){font.drawStringWithShadow("Chip",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==VEHICLE_ROW){font.drawStringWithShadow((vehicleOpen||!query.isEmpty()?"- ":"+ ")+"Vehicle Status",x+3,yy+7,0xFFABCFE8);}
             else if(VehicleInstrument.includes(choice)){
-                font.drawStringWithShadow(VehicleInstrument.forChoice(choice).label,x+11,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
+                font.drawStringWithShadow(vehicleLabel(VehicleInstrument.forChoice(choice)),x+11,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
             }
             else if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==CUSTOM_ROW){

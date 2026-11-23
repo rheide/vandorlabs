@@ -226,7 +226,7 @@ public final class VehicleSignals {
         TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel)return true;
         if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;
-        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatus(slot) || tile.hasChipSurface(slot) || tile.hasNavigation(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
+        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatusControls(slot) || tile.hasChipSurface(slot) || tile.hasNavigation(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
@@ -249,13 +249,13 @@ public final class VehicleSignals {
             if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){flush();return true;}
             if(ScreenChipSupport.activate(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){dirty.add(pos);flush();return true;}
         }
-        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatusControls(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             int action=RedstoneScreenInteractions.statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(emergencyOnly!=(action==VehicleStatus.EMERGENCY_PARK_ACTION))continue;
             VehicleStatus.activate(craft.view,pos,player,action);return true;
         }
         if(emergencyOnly)return false;
-        for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<2;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);int index=RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,contents.rows().size());if(index<0)continue;
             RedstoneScreenContents.Row row=contents.rows().get(index);Link link=links.get(row);if(!(link instanceof LatchLink))return false;
             if(row.status)return true;
