@@ -51,6 +51,10 @@ final class VehicleInstrumentRenderer {
 
     static void drawFace(VehicleInstrument instrument, int height, double pitch, double bank, double heading,
                          double altitude, double speed, double projectedMax) {
+        if(instrument==VehicleInstrument.HUD){
+            drawHud(height,pitch,bank,heading,altitude,speed);
+            return;
+        }
         boolean compact = height < 96;
         double x = compact ? 96 : 64;
         double y = compact ? height / 2D : height / 2D + 1;
@@ -127,6 +131,36 @@ final class VehicleInstrumentRenderer {
         }
         GlStateManager.color(1,1,1,1);
         GlStateManager.disableBlend();
+    }
+
+    /** Transparent flight symbology. The centre stays clear at the horizon. */
+    private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed){
+        final int green=0xff8dffbf;
+        double y=height*.5,angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
+        RedstoneScreenRenderer.bindWhite();
+        BufferBuilder b=Tessellator.getInstance().getBuffer();
+        b.begin(7,BlockSurfaceFormat.get());
+        for(int mark=-90;mark<=90;mark+=10){
+            double offset=(pitch-mark)*height/76;
+            if(Math.abs(offset)>height*.25)continue;
+            double cx=64+nx*offset,cy=y+ny*offset,span=mark==0?22:9;
+            line(b,cx-ny*span,cy+nx*span,cx-ny*3,cy+nx*3,1,.03,green);
+            line(b,cx+ny*3,cy-nx*3,cx+ny*span,cy-nx*span,1,.03,green);
+        }
+        line(b,57,y,62,y,1,.04,POINTER);
+        line(b,62,y,64,y+2,1,.04,POINTER);
+        line(b,64,y+2,66,y,1,.04,POINTER);
+        line(b,66,y,71,y,1,.04,POINTER);
+        Tessellator.getInstance().draw();
+        FontRenderer font=Minecraft.getMinecraft().fontRenderer;
+        label(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),64,height*.19,38,1,green);
+        label(font,"SPD",20,y-10,34,.75F,green);
+        label(font,Math.round(speed)+" m/s",20,y,35,.85F,green);
+        label(font,"ALT",108,y-10,34,.75F,green);
+        label(font,Math.round(altitude)+" m",108,y,35,.85F,green);
+        label(font,String.format(Locale.ROOT,"%+.0f°",pitch),64,height*.76,35,.8F,green);
+        GlStateManager.color(1,1,1,1);
     }
 
     private static void attitude(BufferBuilder b,double x,double y,double r,double pitch,double bank) {

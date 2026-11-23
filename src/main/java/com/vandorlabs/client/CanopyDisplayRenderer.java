@@ -93,6 +93,11 @@ public final class CanopyDisplayRenderer {
         for(int side=0;side<displays.length;side++){
             Display display=displays[side];
             if(display==null||display.frame==null||display.rendered!=display.requested)continue;
+            boolean hud=display.rendered==VehicleInstrument.HUD;
+            if(hud){
+                GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
+                GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+            }
             display.frame.bindFramebufferTexture();
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
             buffer.setTranslation(0,0,0);
@@ -102,6 +107,7 @@ public final class CanopyDisplayRenderer {
                 emit(buffer,face,tile);
             }
             Tessellator.getInstance().draw();
+            if(hud)GlStateManager.disableBlend();
             drawn=true;
         }
         return drawn;
@@ -127,7 +133,7 @@ public final class CanopyDisplayRenderer {
                 display.frame.setFramebufferFilter(GL11.GL_LINEAR);
             }
             display.frame.bindFramebuffer(true);
-            GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);
+            GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,display.requested==VehicleInstrument.HUD?0:1);
             GlStateManager.depthMask(true);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);
             GlStateManager.enableDepth();
             RedstoneScreenRenderer.drawVehicleSelection(display.requested,tile.getWorld(),tile.getPos(),height);

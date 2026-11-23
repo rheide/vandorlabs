@@ -119,20 +119,19 @@ public final class ScreenHousingMesh {
         return inverted?SHALLOW_DIAGONAL_INVERTED:SHALLOW_DIAGONAL;
     }
 
-    /** The full wedge translated down eight pixels and clipped at the floor. */
+    /** Only the portion of the translated casing below the floor is removed. */
     private static ScreenHousingMesh buildShallowDiagonal() {
+        int start=ScreenSurface.DIAGONAL_DROP, rear=16-start, end=15-start;
         return new ScreenHousingMesh(new Face[]{
-                quad(0,0,8,16,0,8,16,0,16,0,0,16,0,8,16,0),
-                quad(0,0,16,16,0,16,16,8,16,0,8,16,0,16,16,8),
-                quad(0,0,8,16,0,8,16,7,15,0,7,15,0,8,16,1),
-                quad(0,7,15,16,7,15,16,8,15,0,8,15,0,9,16,8),
-                quad(0,8,15,16,8,15,16,8,16,0,8,16,0,15,16,16),
-                // Split the triangular side's bottom edge so the mesh retains
-                // quad primitives in world, shadow, inventory and selection passes.
-                sideQuad(0,0,8,7,15,0,15,0,12),
-                sideQuad(16,0,12,0,15,7,15,0,8),
-                sideQuad(0,0,15,8,15,8,16,0,16),
-                sideQuad(16,0,15,0,16,8,16,8,15)},new Face[0]);
+                quad(0,0,start,16,0,start,16,0,16,0,0,16,0,rear,16,0),
+                quad(0,0,16,16,0,16,16,rear,16,0,rear,16,0,16,16,start),
+                quad(0,0,start,16,0,start,16,end,15,0,end,15,0,rear,16,1),
+                quad(0,end,15,16,end,15,16,rear,15,0,rear,15,0,start+1,16,start),
+                quad(0,rear,15,16,rear,15,16,rear,16,0,rear,16,0,15,16,16),
+                sideQuad(0,0,start,end,15,0,15,0,(start+15)/2),
+                sideQuad(16,0,(start+15)/2,0,15,end,15,0,start),
+                sideQuad(0,0,15,rear,15,rear,16,0,16),
+                sideQuad(16,0,15,0,16,rear,16,rear,15)},new Face[0]);
     }
 
     private static ScreenHousingMesh mirrorVertical(ScreenHousingMesh mesh) {

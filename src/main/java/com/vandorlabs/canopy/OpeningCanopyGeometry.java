@@ -24,6 +24,12 @@ public final class OpeningCanopyGeometry {
                 face.vertices[i]=new Vec3d(vertex.x,vertex.y,vertex.z);
                 face.uv[i]=new double[]{source.u(i),source.v(i)};
             }
+            // A Long Angled windshield ends where the horizontal roof glazing begins.
+            if(depth==3&&angle==2&&"glass".equals(face.baseMaterial)){
+                double y=face.vertices[0].y;
+                face.sideGlass=true;
+                for(Vec3d vertex:face.vertices)if(Math.abs(vertex.y-y)>1e-6){face.sideGlass=false;break;}
+            }
             result.add(face);
         }
         if (width>1) joinMainGlass(result);
@@ -35,7 +41,7 @@ public final class OpeningCanopyGeometry {
         double left=Double.POSITIVE_INFINITY, right=Double.NEGATIVE_INFINITY;
         double front=Double.POSITIVE_INFINITY, back=Double.NEGATIVE_INFINITY;
         for (CanopyMesh.Face face:faces) {
-            if (!face.baseMaterial.equals("glass")) continue;
+            if (!face.baseMaterial.equals("glass") || face.sideGlass) continue;
             double minX=Double.POSITIVE_INFINITY, maxX=Double.NEGATIVE_INFINITY;
             for (Vec3d vertex:face.vertices) {
                 minX=Math.min(minX,vertex.x);
@@ -77,8 +83,20 @@ public final class OpeningCanopyGeometry {
         List<CanopyMesh.Face> result=new ArrayList<>();
         // Retain the fixed roof frame while joining the aperture underneath it.
         // Taking the complete roof from one variant avoids overlapping extended glazing.
-        for(CanopyMesh.Face face:aperture)if(!roof(face))result.add(face);
-        for(CanopyMesh.Face face:roof)if(roof(face))result.add(face);
+        for(CanopyMesh.Face face:aperture)if(!roof(face))// A Long Angled windshield ends where the horizontal roof glazing begins.
+            if(depth==3&&angle==2&&"glass".equals(face.baseMaterial)){
+                double y=face.vertices[0].y;
+                face.sideGlass=true;
+                for(Vec3d vertex:face.vertices)if(Math.abs(vertex.y-y)>1e-6){face.sideGlass=false;break;}
+            }
+            result.add(face);
+        for(CanopyMesh.Face face:roof)if(roof(face))// A Long Angled windshield ends where the horizontal roof glazing begins.
+            if(depth==3&&angle==2&&"glass".equals(face.baseMaterial)){
+                double y=face.vertices[0].y;
+                face.sideGlass=true;
+                for(Vec3d vertex:face.vertices)if(Math.abs(vertex.y-y)>1e-6){face.sideGlass=false;break;}
+            }
+            result.add(face);
         return result;
     }
     private static boolean roof(CanopyMesh.Face face){

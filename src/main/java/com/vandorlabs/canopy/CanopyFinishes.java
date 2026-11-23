@@ -69,6 +69,7 @@ public final class CanopyFinishes {
     }
 
     public static boolean isSideGlass(CanopyMesh.Face face){
+        if(face.sideGlass)return true;
         for(int i=1;i<face.vertices.length-1;i++){
             Vec3d normal=face.vertices[i].subtract(face.vertices[0]).crossProduct(face.vertices[i+1].subtract(face.vertices[0]));
             if(normal.lengthSquared()>1e-16)return Math.abs(normal.x)>Math.abs(normal.y)&&Math.abs(normal.x)>Math.abs(normal.z);
@@ -105,13 +106,14 @@ public final class CanopyFinishes {
             }
             centerX=(bounds.minU+bounds.maxU)*.5;centerY=(bounds.minV+bounds.maxV)*.5;
             for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")){
+                if(face.sideGlass)continue;
                 boolean side=isSideGlass(face);
                 Pane pane=panes[paneIndex(face,side)];
                 for(Vec3d point:face.vertices)pane.include(u(point,side),v(point,side));
             }
             // The sloping nose leaves a triangular remainder on the side. Keep the
             // readable part of its display in glazing that reaches the upper edge.
-            for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")&&isSideGlass(face)){
+            for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")&&!face.sideGlass&&isSideGlass(face)){
                 int index=paneIndex(face,true);
                 Pane pane=panes[index];
                 double top=pane.minV+(pane.maxV-pane.minV)*.75;
@@ -120,6 +122,7 @@ public final class CanopyFinishes {
         }
 
         double[][] coordinates(CanopyMesh.Face face,boolean side){
+            if(face.sideGlass)return surfaceUv(face,TextureLayoutMode.STRETCH,0,1);
             if(!side&&face.joinedStretchUv!=null){
                 double[][] uv=new double[face.vertices.length][2];
                 for(int i=0;i<uv.length;i++){

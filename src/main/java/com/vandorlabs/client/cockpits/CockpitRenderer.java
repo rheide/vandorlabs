@@ -39,7 +39,8 @@ public final class CockpitRenderer {
             Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
                 .renderModelBrightnessColor(adjustable?CockpitModels.baked(rig.staticResource,sideTexture,height):CockpitModels.baked(rig.staticResource,sideTexture),1,1,1,1);
             for (CockpitModels.Part part : rig.parts) {
-                double value = CockpitMotion.sample(part.values, detents.applyAsDouble(part.id));
+                double detent=detents.applyAsDouble(part.id);
+                double value = CockpitMotion.sample(part.values, detent);
                 GlStateManager.pushMatrix();
                 try {
                     if(id.startsWith("cockpit")&&(part.id.startsWith("throttle_")||part.id.endsWith("_button")))GlStateManager.translate(0,0,detents.applyAsDouble("seat_assembly")/3);
@@ -52,7 +53,7 @@ public final class CockpitRenderer {
                             part.axis[1] * value, part.axis[2] * value);
                     }
                     // Part vertices are already local to their pivot; do NOT translate -pivot.
-                    Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(CockpitModels.baked(part.modelResource,sideTexture),1,1,1,1);
+                    Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(CockpitModels.baked(part.modelResource,sideTexture,part.id.startsWith("throttle_")&&detent>.01),1,1,1,1);
                 } finally {
                     GlStateManager.popMatrix();
                 }

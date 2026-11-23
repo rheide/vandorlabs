@@ -6,7 +6,8 @@ public enum VehicleInstrument {
     ATTITUDE(-21, "Attitude Indicator"),
     COMPASS(-22, "Compass"),
     ALTIMETER(-23, "Altimeter"),
-    AIRSPEED(-24, "Airspeed Indicator");
+    AIRSPEED(-24, "Airspeed Indicator"),
+    HUD(-25, "HUD");
 
     private static final VehicleInstrument[] CHOICES = values();
     public final int choice;

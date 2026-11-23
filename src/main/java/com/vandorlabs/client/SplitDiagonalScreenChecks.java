@@ -185,29 +185,29 @@ final class SplitDiagonalScreenChecks {
             IBlockState state=block.getDefaultState().withProperty(BlockProgrammableDiagonalScreen.FACING,facing)
                 .withProperty(BlockProgrammableDiagonalScreen.INVERTED,upper);
             AxisAlignedBB bounds=block.getBoundingBox(state,player.world,POS);
-            need(bounds.maxY-bounds.minY==.5,"shallow collision height for "+facing);
+            need(bounds.maxY-bounds.minY==.875,"shallow collision height for "+facing);
             ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,screen,0),full=ScreenSurface.diagonal(upper,false);
             double length=Math.hypot(q.topLeft.y-q.bottomLeft.y,q.topLeft.z-q.bottomLeft.z);
             double fullLength=Math.hypot(full.topLeft.y-full.bottomLeft.y,full.topLeft.z-full.bottomLeft.z);
             need(q.ny==full.ny&&q.nz==full.nz&&Math.abs(length/fullLength
                 -(q.topRight.x-q.topLeft.x)/(full.topRight.x-full.topLeft.x))<1e-7,"angle and display proportions");
-            for(ScreenSurface.Vertex v:q.vertices)need(v.z>=8&&v.z<=15&&Math.abs(v.y-(upper?24-v.z:v.z-8))<1e-8,
+            for(ScreenSurface.Vertex v:q.vertices)need(v.z>=2&&v.z<=15&&Math.abs(v.y-(upper?18-v.z:v.z-2))<1e-8,
                 "image lies on the translated, clipped plane");
             com.vandorlabs.blocks.MachineMountSurface reader=com.vandorlabs.blocks.ScreenChipSupport.localMount(state,screen);
-            need(Math.abs(reader.center.y-(upper?1.5-reader.center.z:reader.center.z-.5))<1e-8
-                &&reader.center.x+reader.height/2<q.topLeft.x/16,"chip reader fits beside artwork");
+            need(Math.abs(reader.center.y-(upper?1.125-reader.center.z:reader.center.z-.125))<1e-8
+                &&reader.center.z+reader.width/2/Math.sqrt(2)<4.25/16,"chip reader fits ahead of artwork");
             com.vandorlabs.blocks.DiagonalScreenShape shape=com.vandorlabs.blocks.DiagonalScreenShape.of(facing,upper,true);
-            need(shape.collision.length==8,"clipped wedge has eight occupied slices");
+            need(shape.collision.length==14,"clipped wedge has fourteen occupied slices");
             for(AxisAlignedBB slice:shape.collision)need(bounds.contains(new Vec3d(
                 (slice.minX+slice.maxX)/2,(slice.minY+slice.maxY)/2,(slice.minZ+slice.maxZ)/2)),"collision slice within selection bounds");
-            Vec3d front=com.vandorlabs.blocks.DiagonalScreenShape.world(.5,.25,.4,facing);
+            Vec3d front=com.vandorlabs.blocks.DiagonalScreenShape.world(.5,.25,.06,facing);
             need(!bounds.contains(front)&&shape.trace(BlockPos.ORIGIN,front.addVector(0,1,0),front.addVector(0,-1,0))==null,
                 "front half has no selection or hidden pick face");
             Vec3d slope=com.vandorlabs.blocks.DiagonalScreenShape.world(.5,.5,.75,facing);
             Vec3d vertical=new Vec3d(0,upper?-1:1,0);
             RayTraceResult hit=shape.trace(BlockPos.ORIGIN,slope.add(vertical),slope.subtract(vertical));
-            need(hit!=null&&Math.abs(hit.hitVec.y-(upper?.75:.25))<1e-7,"picked 45-degree incline");
-            double y=upper?.9:.1,empty=upper?.4:.6;
+            need(hit!=null&&Math.abs(hit.hitVec.y-(upper?.375:.625))<1e-7,"picked 45-degree incline");
+            double y=upper?.9:.1,empty=upper?.15:.85;
             need(shape.trace(BlockPos.ORIGIN,com.vandorlabs.blocks.DiagonalScreenShape.world(-.2,y,.8,facing),com.vandorlabs.blocks.DiagonalScreenShape.world(1.2,y,.8,facing))!=null
                 &&shape.trace(BlockPos.ORIGIN,com.vandorlabs.blocks.DiagonalScreenShape.world(-.2,empty,.8,facing),com.vandorlabs.blocks.DiagonalScreenShape.world(1.2,empty,.8,facing))==null,
                 "ray distinguishes shallow solid and empty space for "+facing);
