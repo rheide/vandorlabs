@@ -46,7 +46,7 @@ final class VehicleFlightClientChecks {
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
     private static float steepPitch,rollTravel,previousBank,heldBank;
     private static double limitedCeiling,limitedX,limitedZ,glideZ,landingX,landingZ;
-    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel,divePressed,viewTurned,sawHoverCoast;
+    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel,divePressed,viewTurned,sawHoverCoast,sawGroundRoll,retriedTakeoff;
     private static Vec3d cabinLook,cabinUp,hoverEntry;
     private static float cabinYaw;
     private static double hoverEntrySpeed;
@@ -138,7 +138,7 @@ final class VehicleFlightClientChecks {
         EntityGroundVehicle craft=client(mc);
         if(craft==null||craft.structure==null||mc.player.getRidingEntity()!=craft)return false;
         frame++;
-        if(stage==0&&frame>=15){
+        if(stage==0&&frame>=28){
             VehicleFlightReadout readout=craft.flightReadout();
             if(readout.drives==0&&frame<60)return false;
             if(!readout.canFly()||readout.drives!=1){
@@ -156,7 +156,7 @@ final class VehicleFlightClientChecks {
             runwayY=craft.posY;
             aim(mc,craft,3);next();return false;
         }
-        if(stage==1&&frame>=3){
+        if(stage==1&&frame>=10){
             aim(mc,craft,3);
             VehicleInteraction.Target hit=VehicleInteraction.pointed(mc.player);
             need(hit!=null&&hit.hit.cell.pos.equals(SCREEN)&&VehicleInteraction.supported(mc.player,hit),"real seated access to Flight button");
@@ -166,10 +166,18 @@ final class VehicleFlightClientChecks {
                 need(selected!=null&&selected.hit.cell.pos.equals(SCREEN)&&VehicleInteraction.supported(pilot,selected),
                         "server aim and held stack synced for Status click; yaw="+pilot.rotationYaw+" pitch="+pilot.rotationPitch+" held="+pilot.getHeldItemMainhand());
             }).get();
-            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
+            useStatus(mc);
             next();return false;
         }
-        if(stage==2&&frame>=22){
+        if(stage==2){
+            sawGroundRoll|=craft.takeoffRoll();
+            // A shader warm-up can interrupt the first click before any ground motion.
+            if(frame>=52&&!sawGroundRoll&&!retriedTakeoff&&!craft.flying()
+                    &&Math.hypot(craft.posX-ORIGIN.getX(),craft.posZ-ORIGIN.getZ())<.05){
+                aim(mc,craft,3);
+                if(alignedServer(mc)){useStatus(mc);retriedTakeoff=true;}
+            }
+            if(frame<22)return false;
             String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed;
             if(!craft.flying()&&(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4)&&frame<100)return false;
             if(!craft.takeoffRoll())motion+=mc.getIntegratedServer().callFromMainThread(()->{
@@ -399,7 +407,7 @@ final class VehicleFlightClientChecks {
                         && selected!=null&&selected.hit.cell.pos.equals(SCREEN);
             }).get();
             if(!ready){need(frame<100,"second departure must synchronize seat, runway and Status aim");return false;}
-            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
+            useStatus(mc);
             next();return false;
         }
         if(stage==15){
@@ -497,9 +505,10 @@ final class VehicleFlightClientChecks {
         }).get();
     }
 
-    private static void useStatus(Minecraft mc){
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(
-                new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
+    private static void useStatus(Minecraft mc)throws Exception{
+        mc.objectMouseOver=new net.minecraft.util.math.RayTraceResult(net.minecraft.util.math.RayTraceResult.Type.MISS,
+                VehicleInteraction.eyes(mc.player),EnumFacing.UP,BlockPos.ORIGIN);
+        ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);
     }
 
     private static void spawnHover(Minecraft mc){
