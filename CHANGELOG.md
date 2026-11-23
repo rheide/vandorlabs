@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Recover completed parking after a drive burns fuel or controls change. A conflicting hull edit protects the affected area while nearby independent vehicles can still enter Taxi or Hover.
+
 - Limit Flight to 300 m/s at maximum altitude. Align distant JourneyMap beacons to the interpolated client camera and send populated destination columns while the rest of the arrival footprint loads.
 
 - Fix the Forge Copy Controller channel increment for built-in transmitters including Tanks and Thruster Levers, cockpit channel banks, installed Autopilot modules, and stored Arm sections.

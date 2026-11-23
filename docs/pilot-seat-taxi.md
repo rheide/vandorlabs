@@ -51,6 +51,8 @@ See [Autopilot and waypoints](vehicle-autopilot.md) for route markers, timed sto
 
 Vehicle conversion prepares collision geometry and writes recovery records on bounded background workers. The server rechecks the craft before committing, then spreads lighting, neighbor updates and affected-chunk checkpoints across ticks. It does not force a world-wide save for each boarding or parking operation. A craft stays stationary until its checkpoint completes; slow storage delays that transfer without making the server wait for disk I/O. Animation retains its last exact collision pose while preparation is pending.
 
+After an interrupted park, recovery can recognize a complete parked craft even if its drive has burned fuel or its controls have changed state. It keeps those current readings. If a hull block or its stored contents conflict with the transfer record, the server protects the affected craft and area and logs the location. Other vehicles with clear transfer areas can still change modes. Recovery checks the protected area again when the world next loads.
+
 ## Skis and landing struts
 
 Ski Landing Gear, Landing Struts, and Angled Landing Struts share the wheeled gear's extension slider, redstone channels, and On/Off/Disabled trigger modes. Choose Small (one block) or Large (2x2) in the Configurizer dialog. The angled strut points toward its placement direction.
