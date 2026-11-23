@@ -46,7 +46,10 @@ final class VehicleFlightClientChecks {
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
     private static float steepPitch,rollTravel,previousBank,heldBank;
     private static double limitedCeiling,limitedX,limitedZ,glideZ,landingX,landingZ;
-    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel,divePressed;
+    private static boolean sawInversion,sawLimitedDescent,sawGlideTravel,divePressed,viewTurned,sawHoverCoast;
+    private static Vec3d cabinLook,cabinUp,hoverEntry;
+    private static float cabinYaw;
+    private static double hoverEntrySpeed;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -119,7 +122,7 @@ final class VehicleFlightClientChecks {
         Vec3d screenLocal=new Vec3d(SCREEN).addVector(1-x,y,1-z);
         Vec3d target=craft.toWorld(screenLocal),eye=VehicleInteraction.eyes(mc.player);
         Vec3d delta=target.subtract(eye);
-        double[] raw=craft.visualPose(1).viewRotation().inverseVector(delta.x,delta.y,delta.z);
+        double[] raw=craft.pilotView(craft.visualPose(1)).inverseVector(delta.x,delta.y,delta.z);
         Vec3d input=new Vec3d(raw[0],raw[1],raw[2]);
         float yaw=(float)Math.toDegrees(Math.atan2(-input.x,input.z));
         float pitch=(float)-Math.toDegrees(Math.atan2(input.y,Math.hypot(input.x,input.z)));
@@ -127,7 +130,7 @@ final class VehicleFlightClientChecks {
         mc.player.rotationPitch=mc.player.prevRotationPitch=pitch;
         mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(yaw,pitch,false));
         Vec3d a=craft.toLocal(eye).subtract(new Vec3d(SCREEN)),b=craft.toLocal(eye.add(delta.scale(1.2))).subtract(new Vec3d(SCREEN));
-        need(RedstoneScreenInteractions.statusAction(state,tile,0,a,b)==VehicleStatus.FLIGHT_ACTION,"seated ray hits Flight button at "+a+" toward "+b);
+        need(RedstoneScreenInteractions.statusAction(state,tile,0,a,b)==(mode==3?VehicleStatus.FLIGHT_ACTION:mode+1),"seated ray hits mode "+mode+" button at "+a+" toward "+b);
     }
 
     static boolean tick(Minecraft mc,File output)throws Exception{
@@ -261,30 +264,43 @@ final class VehicleFlightClientChecks {
         }
         if(stage==9){
             if(frame==inversionShot)shot(mc,output,"shot_vehicle_flight_inverted.png");
-            float bank=craft.visualPose(1).bank;
+            VehiclePose pose=craft.visualPose(1);
+            float bank=pose.bank;
             if(frame>3)rollTravel+=MathHelper.wrapDegrees(bank-previousBank);
             previousBank=bank;
-            need(frame<100&&craft.flying()&&!craft.descendingFromFlight(),"held D completes an uninterrupted 360-degree roll; total="+rollTravel);
+            need(frame<175&&craft.flying()&&!craft.descendingFromFlight(),"held D completes two uninterrupted rolls; total="+rollTravel);
+            if(frame==9){
+                mc.gameSettings.thirdPersonView=0;
+                aim(mc,craft,3);
+                Matrix4f inverse=VehicleCameraRuntimeChecks.inverseCamera(mc);
+                cabinLook=localDirection(craft,pose,cameraLook(inverse));
+                cabinUp=localDirection(craft,pose,cameraUp(inverse));
+                cabinYaw=pose.yaw;
+            }
+            if(frame>9&&frame%3==0){
+                VehiclePose half=craft.visualPose(.5F);
+                Matrix4f inverse=VehicleCameraRuntimeChecks.inverseCamera(mc,.5F);
+                double forward=localDirection(craft,half,cameraLook(inverse)).dotProduct(cabinLook);
+                double up=localDirection(craft,half,cameraUp(inverse)).dotProduct(cabinUp);
+                viewTurned|=Math.abs(MathHelper.wrapDegrees(pose.yaw-cabinYaw))>5;
+                need(forward>.998&&up>.998,"unmoved mouse stays fixed in the changing cockpit frame; look="+forward+" up="+up+" bank="+bank);
+            }
             if(!sawInversion&&Math.abs(bank)>160){
-                VehiclePose pose=craft.visualPose(1);
                 double px=craft.structure.bounds.maxX/2,pz=craft.structure.bounds.maxZ/2;
                 Vec3d hullTop=pose.world(new Vec3d(px,2,pz),px,pz);
                 Vec3d hullBottom=pose.world(new Vec3d(px,0,pz),px,pz);
                 need(hullTop.y<hullBottom.y-1.5,"the physical hull is upside down");
-                mc.gameSettings.thirdPersonView=0;
-                aim(mc,craft,3);
                 Matrix4f inverse=VehicleCameraRuntimeChecks.inverseCamera(mc);
-                Vec3d cameraLook=new Vec3d(-inverse.m20,-inverse.m21,-inverse.m22);
-                need(inverse.m11<-.7&&cameraLook.dotProduct(VehicleInteraction.look(mc.player))>.999,
+                need(inverse.m11<-.7&&cameraLook(inverse).dotProduct(VehicleInteraction.look(mc.player))>.999,
                         "the first-person camera is inverted and its crosshair matches the carried ray; up="+inverse.m11);
                 VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);
-                need(target!=null&&target.craft==craft&&target.hit.cell.pos.equals(SCREEN),"inverted pilot can point at the actual carried Status face");
+                need(target!=null&&target.craft==craft&&target.hit.cell.pos.equals(SCREEN),"inverted pilot can point at the carried Status face without re-aiming");
                 sawInversion=true;
                 inversionShot=frame+1;
             }
-            if(rollTravel<390)return false;
+            if(rollTravel<750)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
-            need(sawInversion,"360° roll passed through an inverted hull and cockpit");
+            need(sawInversion&&viewTurned,"two full rolls covered inversion and changing heading");
             next();return false;
         }
         if(stage==10){
@@ -410,10 +426,96 @@ final class VehicleFlightClientChecks {
             need(separated,"aircraft was never advanced through the wall or left embedded");
             shot(mc,output,"shot_vehicle_flight_terrain_recovery.png");
             mc.gameSettings.thirdPersonView=0;
-            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank full-roll inverter-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact");
+            mc.getIntegratedServer().addScheduledTask(()->spawnHover(mc)).get();
+            next();return false;
+        }
+        if(stage==18&&frame>=14){
+            need(frame<120,"hover-capable aircraft receives its seat and fueled snapshot");
+            if(!craft.hover||!craft.flightReadout().canFly())return false;
+            aim(mc,craft,3);
+            if(!alignedServer(mc))return false;
+            useStatus(mc);
+            next();return false;
+        }
+        if(stage==19){
+            need(frame<120,"real Flight click from Hover builds airspeed; "+flightState(craft));
+            if(!craft.flying()||craft.driveSpeed<1.4)return false;
+            aim(mc,craft,2);
+            if(!alignedServer(mc))return false;
+            hoverEntry=craft.getPositionVector();
+            hoverEntrySpeed=craft.driveSpeed;
+            useStatus(mc);
+            next();return false;
+        }
+        if(stage==20){
+            need(frame<80,"Flight approaches Hover at a controlled speed; "+flightState(craft));
+            if(craft.flying()){
+                double travel=craft.getPositionVector().subtract(hoverEntry).lengthVector();
+                sawHoverCoast|=craft.descendingFromFlight()&&travel>2
+                        &&craft.driveSpeed<hoverEntrySpeed-.12&&craft.driveSpeed>EntityGroundVehicle.HOVER_CRUISE_SPEED;
+                return false;
+            }
+            boolean carryingSpeed=mc.getIntegratedServer().callFromMainThread(()->{
+                EntityGroundVehicle actual=server(mc);
+                return actual.hover&&!actual.flying()&&actual.driveSpeed>.35&&actual.driveSpeed<=EntityGroundVehicle.HOVER_CRUISE_SPEED
+                        &&Math.hypot(actual.posX-hoverEntry.x,actual.posZ-hoverEntry.z)>5;
+            }).get();
+            need(sawHoverCoast&&craft.hover&&carryingSpeed,
+                    "actual Hover click coasts through an intermediate speed and hands forward movement into Hover");
+            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast");
             return true;
         }
         return false;
+    }
+
+    private static Vec3d cameraLook(Matrix4f inverse){return new Vec3d(-inverse.m20,-inverse.m21,-inverse.m22);}
+    private static Vec3d cameraUp(Matrix4f inverse){return new Vec3d(inverse.m10,inverse.m11,inverse.m12);}
+
+    private static Vec3d localDirection(EntityGroundVehicle craft,VehiclePose pose,Vec3d direction){
+        double px=craft.structure.bounds.maxX/2,pz=craft.structure.bounds.maxZ/2;
+        Vec3d origin=new Vec3d(pose.x,pose.y,pose.z);
+        return pose.local(origin.add(direction),px,pz).subtract(pose.local(origin,px,pz)).normalize();
+    }
+
+    private static boolean alignedServer(Minecraft mc)throws Exception{
+        return mc.getIntegratedServer().callFromMainThread(()->{
+            EntityPlayerMP pilot=player(mc);
+            VehicleInteraction.Target target=VehicleInteraction.pointed(pilot);
+            return pilot.getHeldItemMainhand().isEmpty()&&target!=null&&target.craft==server(mc)&&target.hit.cell.pos.equals(SCREEN);
+        }).get();
+    }
+
+    private static void useStatus(Minecraft mc){
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(
+                new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
+    }
+
+    private static void spawnHover(Minecraft mc){
+        EntityGroundVehicle grounded=server(mc);
+        EntityPlayerMP pilot=player(mc);
+        List<VehicleStructure.Cell> cells=new ArrayList<>(grounded.structure.cells);
+        String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster"};
+        for(int z=0;z<lift.length;z++){
+            IBlockState state=Block.getBlockFromName("vandorlabs:"+lift[z]).getDefaultState()
+                    .withProperty(com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.DOWN);
+            cells.add(new VehicleStructure.Cell(new BlockPos(0,0,z),state,null));
+        }
+        IBlockState thruster=Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.SOUTH);
+        cells.add(new VehicleStructure.Cell(new BlockPos(0,1,3),thruster,null));
+        EntityGroundVehicle craft=new EntityGroundVehicle(world(mc));
+        craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,4));
+        craft.setPosition(grounded.posX-16,runwayY+31,grounded.posZ+36);
+        need(craft.setHover(true)&&world(mc).spawnEntity(craft),"spawn the truly equipped Hover aircraft");
+        TileEntityConstructor drive=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
+        if(drive.maxwellFuel()==0)need(MaxwellRuntimeChecks.inlet(drive,drive.facing())
+                .fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,"fuel the Hover aircraft");
+        grounded.setTransferInProgress(true);
+        pilot.dismountRidingEntity();
+        grounded.setDead();
+        pilot.connection.setPlayerLocation(craft.posX+2.5,craft.posY+2,craft.posZ+5,180,0);
+        need(craft.board(pilot),"board the second aircraft");
+        id=craft.getUniqueID();
     }
 
     private static void stagePose(EntityGroundVehicle craft,double altitude,float pitch,float bank){
