@@ -54,6 +54,7 @@ public final class CopyRuntimeChecks {
         try{
             actor.capabilities.isCreativeMode=true;
             for(EnumFacing facing:EnumFacing.HORIZONTALS){Fixture f=new Fixture(world,actor,base,facing,2);world.setBlockState(f.source(),Blocks.OAK_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,facing).withProperty(BlockStairs.HALF,BlockStairs.EnumHalf.TOP),2);CopyPlan plan=f.plan();f.copy();require(plan.result.matches(world,plan.targetOrigin)&&plan.original.matches(world,plan.sourceOrigin),"actual Creative queued copy without material chest preserves state "+facing);}
+            configuredBanks(world,actor,base);
             exactContents(world,actor,base);centeredRecovery(world,actor,base);transmitterOwnership(world,actor,base);authorization(world,actor,base);faults(world,actor,base);
             require(CopyTransactions.pendingCount(world)==0,"no pending economic ownership at fixture end");
         }finally{CopyTransactions.fault=null;world.disableLevelSaving=saving;actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(x,y,z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}
