@@ -50,12 +50,18 @@ public final class CruiseTracking {
         return craft==null?actor.posZ:craft.cruise.anchorZ();
     }
 
-    public static double viewerX(Entity viewer,Entity tracked) {
-        return tracked==mount(viewer)?viewer.posX:trackingX(viewer);
+    public static double viewerX(Entity viewer,Entity tracked,long encoded) {
+        return vehicleViewer(viewer,tracked)?encoded/4096.0:trackingX(viewer);
     }
 
-    public static double viewerZ(Entity viewer,Entity tracked) {
-        return tracked==mount(viewer)?viewer.posZ:trackingZ(viewer);
+    public static double viewerZ(Entity viewer,Entity tracked,long encoded) {
+        return vehicleViewer(viewer,tracked)?encoded/4096.0:trackingZ(viewer);
+    }
+
+    private static boolean vehicleViewer(Entity viewer,Entity tracked) {
+        // The tracker evaluates visibility against its previous packet position. An attached
+        // rider must retain the aircraft while that reference is stale during cruise or arrival.
+        return tracked instanceof EntityGroundVehicle&&tracked==viewer.getRidingEntity();
     }
 
     public static void writeAnchor(EntityPlayerMP rider,NBTTagCompound tag) {

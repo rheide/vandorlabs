@@ -25,6 +25,7 @@ public final class VehicleCruise {
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
+    private CruiseArrival arrival;
     private final CruiseTiles tiles=new CruiseTiles();
     private BlockPos viewSample;
     private double previousX,previousZ;
@@ -60,6 +61,7 @@ public final class VehicleCruise {
         craft.getDataManager().set(FRACTION,((int)(long)Math.floor(routeX*256)&255)|(((int)(long)Math.floor(routeZ*256)&255)<<8));
     }
 
+
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
     static void define(EntityGroundVehicle craft) {
@@ -93,17 +95,17 @@ public final class VehicleCruise {
             routeZ = craft.posZ;
             anchor(craft.posX,craft.posZ);
         }
+        if(arrival!=null)return finishArrival(yaw,pitch,bank);
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);
         if (height <= FlightEnvelope.WORLD_CEILING) {
-            // Load the destination only at reentry. The complete hull starts above build height.
-            double bottomOffset = craft.posY - craft.getEntityBoundingBox().minY;
-            double arrivalY = FlightEnvelope.WORLD_CEILING + Math.max(0, bottomOffset) + .01;
-            craft.world.getChunkFromBlockCoords(new BlockPos(routeX, 0, routeZ));
-            endForLanding();
-            relocate(routeX, arrivalY, routeZ, true);
-            return true;
+            VehiclePose pose=new VehiclePose(routeX,craft.posY,routeZ,yaw,pitch,bank,craft.structure.facing);
+            AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
+                routeX-craft.posX,0,routeZ-craft.posZ));
+            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1));
+            craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+            return finishArrival(yaw,pitch,bank);
         }
         boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);
         if (!cruising || residentHop || craft.ticksExisted % 3 == 0) {
@@ -127,6 +129,32 @@ public final class VehicleCruise {
         } else if(cruising) craft.setPosition(craft.posX,SKY_OFFSET+height,craft.posZ);
         updateTerrain(routeX, routeZ, height);
         return true;
+    }
+
+    private boolean finishArrival(float yaw,float pitch,float bank) {
+        VehiclePose pose=new VehiclePose(routeX,0,routeZ,yaw,pitch,bank,craft.structure.facing);
+        double lowest=Math.min(craft.flightBounds(pose).minY,
+            craft.getEntityBoundingBox().minY-craft.posY);
+        double y=FlightEnvelope.WORLD_CEILING-Math.min(0,lowest)+.01;
+        if(!arrival.ready(craft,pose)) {
+            double hold=SKY_OFFSET+Math.min(y,altitude());
+            craft.setPosition(projected()?routeX:craft.posX,hold,projected()?routeZ:craft.posZ);
+            return true;
+        }
+        CruiseArrival prepared=arrival;
+        arrival=null;
+        endForLanding();
+        craft.applyFlightPose(new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw,pitch,bank,craft.structure.facing));
+        relocate(routeX,y,routeZ,true);
+        prepared.close();
+        VehicleNetwork.state(craft);
+        return true;
+    }
+
+    void cancelArrival() {
+        if(arrival==null)return;
+        arrival.close();
+        arrival=null;
     }
 
     /** Vanilla may find the saved chunk entity before attempting to restore the player's RootVehicle. */
@@ -200,6 +228,7 @@ public final class VehicleCruise {
     }
 
     void endForLanding() {
+        cancelArrival();
         projection(false);
         craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
         clearTerrain();

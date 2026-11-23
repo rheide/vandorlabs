@@ -271,6 +271,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         nextPrediction=new Control(sequence,f,s,b,flightSprint);
         forward=f;strafe=s;brake=b;
     }
+    private boolean clientProjectedMotion;
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
         if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
@@ -281,21 +282,19 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         int oldPhase=flightPhase;
         flightPhase=p.flightPhase;flightReadout=p.flightReadout;landedFromFlight=p.flightLanded;
         if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}
+        long priorTick=lastServerTick;
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
-        if(world.isRemote&&cruise.projected()) {
-            flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;
-            driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
+        boolean projected=world.isRemote&&cruise.projected();
+        boolean continuous=projected&&clientProjectedMotion&&priorTick!=Long.MIN_VALUE&&Math.abs(p.y-posY)<2048;
+        clientProjectedMotion=projected;
+        if(!continuous&&longPositionChange(p.x,p.y,p.z)){
+            flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
             snapPosition(p.x,p.y,p.z,p.yaw);
             for(Entity passenger:getPassengers())updatePassenger(passenger);
             return;
         }
-        if(longPositionChange(p.x,p.y,p.z)){
-            flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
-            snapPosition(p.x,p.y,p.z,p.yaw);
-            return;
-        }
-        if(!localDriver||transferInProgress||flying()||takeoffRoll()){pendingInputs.clear();nextPrediction=null;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;targetX=p.x;targetY=p.y;targetZ=p.z;targetYaw=p.yaw;targetPitch=p.flightPitch;targetBank=p.flightBank;interpolation=3;return;}
+        if(projected||!localDriver||transferInProgress||flying()||takeoffRoll()){pendingInputs.clear();nextPrediction=null;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;targetX=p.x;targetY=p.y;targetZ=p.z;targetYaw=p.yaw;targetPitch=p.flightPitch;targetBank=p.flightBank;interpolation=continuous?(int)Math.max(2,Math.min(4,p.serverTick-priorTick)):3;return;}
         double oldX=posX+correctionX,oldY=posY+correctionY,oldZ=posZ+correctionZ;
         float oldYaw=rotationYaw+correctionYaw;
         pendingInputs.removeIf(c->c.sequence<=p.sequence);
@@ -580,7 +579,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return true;
     }
     @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
-    @Override public void onRemovedFromWorld(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void onRemovedFromWorld(){cruise.cancelArrival();VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
     @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
@@ -622,6 +621,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public boolean attackEntityFrom(DamageSource source,float damage){return false;}
     @Override public void setPortal(BlockPos p){}
     @Override public void setPositionAndRotationDirect(double x,double y,double z,float yaw,float pitch,int steps,boolean teleport) {
+        if(world.isRemote&&clientProjectedMotion&&cruise.projected()&&lastServerTick!=Long.MIN_VALUE)return;
         if(teleport&&longPositionChange(x,y,z)){snapPosition(x,y,z,yaw);return;}
         if(localDriver)return;
         // Custom STATE is the single observer interpolation stream after its first packet.
