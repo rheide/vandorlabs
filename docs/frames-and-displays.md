@@ -40,6 +40,8 @@ uses the original full-block wedge. **Shallow** lowers the same 45° face by
 two pixels and clips the front of the casing at the floor. Both profiles have
 the same full-width display, including its diagonal length. Invert the screen to mirror the shape against a ceiling. The profile is saved with the placed screen and its configured item.
 
+In the Cockpit editor, select **Displays**, pick a physical screen and turn on **Split display**. Use **Editing** to switch between the top and bottom halves. Each half can show artwork, an instrument, or a Redstone panel with up to three control rows. The cockpit throttle grips turn cyan in Low, Medium and High.
+
 Display artwork and playback controls stay on the **Display** or **Controls**
 page. Programmable Glass and Portholes, including diagonal variants, show playback and speed directly on **Glass** when Display artwork is selected; plain glass hides these controls. Housing artwork and its layout controls are on **Sides**. Channel trigger
 controls are on **Redstone**. Transmitter slots appear only on transmitting controls; passive blocks, lights, doors and ordinary displays do not need them. Door access-card filtering

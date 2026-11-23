@@ -2,6 +2,9 @@
 
 ## 3.0.0 (in development)
 
+- Keep the full width and diagonal of the Shallow screen when lowering its casing by two pixels. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
+- Project a transparent flight HUD on the canopy windshield. The short rear roof of a Long Angled canopy uses the Side glass finish.
+
 - Recover completed parking after a drive burns fuel or controls change. A conflicting hull edit protects the affected area while nearby independent vehicles can still enter Taxi or Hover.
 
 - Limit Flight to 300 m/s at maximum altitude. Align distant JourneyMap beacons to the interpolated client camera and send populated destination columns while the rest of the arrival footprint loads.

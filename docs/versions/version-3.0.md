@@ -29,7 +29,7 @@ In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and cho
 
 On a full-height display, enable **Split display** and choose a **Vehicle Status** option on the **Top** or **Bottom** tab. **Status (Half)** keeps the clickable mode controls. Pair it with a compact instrument or regular artwork, or put a different instrument on each half.
 
-Canopy, Long Canopy, and Front Canopy glazing can also display these instruments. Use the canopy’s **Main** and **Side** tabs to choose each finish independently. The Side selection applies to both side panes. If framebuffers are disabled in your video settings, the pane displays ordinary glass until framebuffers are enabled.
+Canopy, Long Canopy, and Front Canopy glazing can also display these instruments. Use the canopy’s **Main** and **Side** tabs to choose each finish independently. Choose **Vehicle Status → HUD** for transparent heading, altitude, airspeed and an artificial horizon with pitch marks. The Side selection applies to both side panes and the short horizontal roof behind the Long Angled windshield. If framebuffers are disabled in your video settings, the pane displays ordinary glass until framebuffers are enabled.
 
 Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height. Top speed is **300 m/s** at Y=10,000 for aircraft with enough thrust, including in a dive.
 
@@ -63,7 +63,7 @@ One full 3 × 3 × 4 drive supports 512 effective weight units at takeoff. Large
 
 ## Joined canopy glass
 
-Place two or more Canopies side by side facing the same direction, or use a row of Long Canopies. Select **Stretch** to spread one image across the joined windshield and roof. Select **Tile** for repeated artwork. The image stays attached to the glass as the canopy opens.
+Place two or more Canopies side by side facing the same direction, or use a row of Long Canopies. Select **Stretch** to spread one image across the joined windshield and roof. On the Long Angled windshield, the rear roof uses the independent Side finish. Select **Tile** for repeated artwork. The image stays attached to the glass as the canopy opens.
 
 ## Supplying engines and observers on board
 
