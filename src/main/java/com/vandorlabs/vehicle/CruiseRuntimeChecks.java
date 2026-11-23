@@ -51,6 +51,7 @@ public final class CruiseRuntimeChecks {
         }
     }
     /** Render the same distant surface over two extreme sky colors in one frame. */
+    @SideOnly(Side.CLIENT)
     public static final class OpacityProbe {
         boolean requested,passed;
         @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
@@ -83,6 +84,7 @@ public final class CruiseRuntimeChecks {
     }
     private static final OpacityProbe opacityProbe=new OpacityProbe();
 
+    @SideOnly(Side.CLIENT)
     public static final class DiveProbe {
         private boolean intermediate;
         private volatile boolean done;
