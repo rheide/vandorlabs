@@ -40,7 +40,7 @@ The Autopilot Module uses a cyan NAV label in its Module Rack, Waypoint an amber
 
 `vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1â€“32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.
 
-Forge 1.12.2 servers select High Flight coordinates with `vehicles.cruiseCoordinates` in `config/vandorlabs-blocks.cfg`. Restart after changing it.
+On Forge 1.12.2 the aircraft follows ordinary Minecraft coordinates and chunk tracking through Y=512, including the Y=256–512 surface transition. Servers select High Flight coordinates with `vehicles.cruiseCoordinates` in `config/vandorlabs-blocks.cfg`. Restart after changing it.
 
 - `anchored` is the default. The occupied departure stays loaded while the geographic route advances. Keeping Minecraft’s ordinary entity coordinates at the anchor also prevents unrelated mods from following those positions and requesting route terrain.
 - `resident` occasionally moves the physical anchor to a destination where the full rotated hull and rider view already fit in loaded, populated columns. It tries every 40 ticks once the route is at least 64 blocks from the anchor. If a column is absent or queued to unload, travel continues with the current anchor. Minecraft manages previously visited terrain normally after a hop.

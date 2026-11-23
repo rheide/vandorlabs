@@ -229,6 +229,7 @@ public final class CruiseRuntimeChecks {
         }else if(stage==13 && ticks>12 && mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
             require(!local.cruise.active()&&local.posY>345&&local.posY<405,"real coordinates during blended flight at "+local.posY);
+            require(VehicleClient.cruisePilotDraws()==1,"transition band draws the third-person pilot once");
             require(mc.world.isBlockLoaded(new BlockPos(local.posX,64,local.posZ)),"real terrain remains available during transition");
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"cruise-blend-mid.png"));
             work=mc.getIntegratedServer().addScheduledTask(()->{

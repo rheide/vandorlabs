@@ -208,6 +208,9 @@ public final class VehicleClient {
     private static UUID cameraCraft;
     private static int cruisePilotDraws;
     public static int cruisePilotDraws(){return cruisePilotDraws;}
+    private static boolean aboveRenderSections(EntityGroundVehicle craft){
+        return craft.dimension==0&&craft.flying()&&craft.flightAltitude()>com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING;
+    }
 
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST) public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
         if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat){
@@ -239,7 +242,7 @@ public final class VehicleClient {
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
             if(craft.structure!=null)GlStateManager.popMatrix();
-            if(craft.cruise.active()&&event.getEntityPlayer()==Minecraft.getMinecraft().player&&!VehicleRenderPass.shadow())
+            if(aboveRenderSections(craft)&&event.getEntityPlayer()==Minecraft.getMinecraft().player&&!VehicleRenderPass.shadow())
                 cruisePilotDraws++;
         }
     }
@@ -311,7 +314,7 @@ public final class VehicleClient {
         if(mc.player==null||mc.getRenderViewEntity()!=mc.player||mc.gameSettings.thirdPersonView==0
                 ||!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)mc.player.getRidingEntity();
-        if(craft.structure==null||!craft.cruise.active()||VehicleRenderPass.shadow())return;
+        if(craft.structure==null||!aboveRenderSections(craft)||VehicleRenderPass.shadow())return;
 
         // OptiFine visits entities in visible terrain sections. Cruise can place the player
         // above those sections, so use the same vanilla player renderer if it missed this frame.
