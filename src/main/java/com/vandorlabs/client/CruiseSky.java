@@ -29,7 +29,21 @@ public final class CruiseSky {
     private static final List<Tile> renderOrder=new ArrayList<>();
     private static final Map<Tile,byte[]> elevations=new HashMap<>();
     private static final Map<Tile,Integer> peaks=new HashMap<>();
-    private static final Set<Tile> backed=new HashSet<>();
+    private static final Map<Tile,List<Tile>> parents=new HashMap<>();
+    private static final int[] parentSpan=new int[13],parentFade=new int[13];
+    private static final double[] parentEdge=new double[13];
+    private static int parentCount;
+    private static double overlap(Tile tile,double altitude,double margin){
+        double interior=coveredRadius[Integer.numberOfTrailingZeros(tile.step)];
+        double peak=peaks.getOrDefault(tile,63);
+        return Math.max(0,interior*Math.min(1,(altitude-margin-peak)/Math.max(1,altitude-margin-62))-2*margin);
+    }
+    private static double underlay(double distance,double edge){
+        return edge==0?1:Math.max(0,Math.min(1,(distance-edge*.90)/(edge*.10)));
+    }
+    private static double detail(double distance,int span,int radius){
+        return radius==0?1:Math.max(0,Math.min(1,(radius-distance/span)*2.5));
+    }
     private static long footprintKey=Long.MIN_VALUE;
     private static final double[] coveredRadius=new double[13];
     private static final double[] xs=new double[32],zs=new double[32];
@@ -102,7 +116,7 @@ public final class CruiseSky {
     }
     private static void clear(){
         for(ResourceLocation loc:tiles.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(loc);
-        footprintKey=Long.MIN_VALUE;tiles.clear();elevations.clear();peaks.clear();renderOrder.clear();backed.clear();owner=null;
+        footprintKey=Long.MIN_VALUE;tiles.clear();elevations.clear();peaks.clear();renderOrder.clear();parents.clear();owner=null;
     }
     public static void receive(MessageCruiseTerrain image){
         Minecraft mc=Minecraft.getMinecraft();
@@ -146,10 +160,10 @@ public final class CruiseSky {
         }
         renderOrder.clear();renderOrder.addAll(tiles.keySet());
         renderOrder.sort(Comparator.comparingInt((Tile t)->t.step).reversed());
-        backed.clear();
+        parents.clear();
         for(Tile t:renderOrder)for(Tile coarse:renderOrder){
             if(coarse.step<=t.step)break;
-            if(covers(coarse,t.x,t.z)){backed.add(t);break;}
+            if(covers(coarse,t.x,t.z))parents.computeIfAbsent(t,key->new ArrayList<>()).add(coarse);
         }
     }
     private static final int GL12_CLAMP_TO_EDGE=org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
@@ -213,7 +227,8 @@ public final class CruiseSky {
                 int span=t.step*MessageCruiseTerrain.SIZE;
                 double dx=t.x-x,dz=t.z-z;
                 if(dx>horizon||dz>horizon||dx+span< -horizon||dz+span< -horizon)continue;
-                boolean fade=backed.contains(t);
+                List<Tile> ancestors=parents.get(t);
+                boolean fade=ancestors!=null;
                 int radius=CruiseAtlas.radius(t.step,step);
                 if(fade&&(dx>=radius*span||dz>=radius*span||dx+span<=-radius*span||dz+span<=-radius*span))continue;
                 if(!skyFrustum.isBoxInFrustum(dx,y-63,dz,dx+span,y+192,dz+span))continue;
@@ -224,14 +239,20 @@ public final class CruiseSky {
                 // Early in the blend the visible native terrain supplies the fine relief.
                 // Keep every colour sample; use every second relief vertex on the overlay.
                 int stride=earlyBlend?2:1;
-                double inner=cruising||!prune?0:coveredRadius[Integer.numberOfTrailingZeros(t.step)];
                 // Relief can rise above the coarser surface. Keep a guard beneath the
                 // finer outer edge for height parallax, camera orbit and incomplete tiles.
-                double high=heights==null?63:peaks.get(t);
-                double overlap=Math.max(0,inner*Math.min(1,(altitude-eyeMargin-high)/Math.max(1,altitude-eyeMargin-62))-2*eyeMargin);
+                double overlap=cruising||!prune?0:overlap(t,altitude,eyeMargin);
                 double hole=overlap*.90;
                 if(hole>0&&dx<hole&&dz<hole&&dx+span>-hole&&dz+span>-hole)trimmed++;
                 if(hole>0&&dx>=-hole&&dz>=-hole&&dx+span<=hole&&dz+span<=hole)continue;
+                parentCount=0;
+                if(!cruising&&prune&&opacity<1&&ancestors!=null){
+                    for(Tile parent:ancestors){
+                        parentSpan[parentCount]=parent.step*MessageCruiseTerrain.SIZE;
+                        parentFade[parentCount]=parents.containsKey(parent)?CruiseAtlas.radius(parent.step,step):0;
+                        parentEdge[parentCount++]=overlap(parent,altitude,eyeMargin);
+                    }
+                }
                 int nx=axis(xs,dx,span,cells,stride,hole,overlap),nz=axis(zs,dz,span,cells,stride,hole,overlap);
                 // Composite atmosphere under each tile on its own mesh so distant ridges
                 // never protrude through a flat fog plane. Only pure haze fades into the sky.
@@ -252,12 +273,12 @@ public final class CruiseSky {
                             int first=col++;
                             while(col<nx-1&&!(cut&&xs[col]>=-hole&&xs[col+1]<=hole))col++;
                             // Repeat the previous end and next start to join independent strips.
-                            if(previous)vertex(b,dx,dz,span,xs[first],zs[row],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,hole,overlap);
+                            if(previous)vertex(b,dx,dz,span,xs[first],zs[row],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,overlap);
                             for(int c=first;c<=col;c++){
-                                vertex(b,dx,dz,span,xs[c],zs[row],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,hole,overlap);
-                                vertex(b,dx,dz,span,xs[c],zs[row+1],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,hole,overlap);
+                                vertex(b,dx,dz,span,xs[c],zs[row],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,overlap);
+                                vertex(b,dx,dz,span,xs[c],zs[row+1],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,overlap);
                             }
-                            vertex(b,dx,dz,span,xs[col],zs[row+1],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,hole,overlap);
+                            vertex(b,dx,dz,span,xs[col],zs[row+1],y,opacity,fade?radius:0,heights,horizon,atmosphere,fog,overlap);
                             previous=true;
                         }
                     }
@@ -277,15 +298,26 @@ public final class CruiseSky {
         }
         return trimmed;
     }
-    private static void vertex(BufferBuilder b,double dx,double dz,int span,double x,double z,double y,double opacity,int fadeRadius,byte[] heights,double horizon,boolean atmosphere,net.minecraft.util.math.Vec3d fog,double hole,double overlap){
+    private static void vertex(BufferBuilder b,double dx,double dz,int span,double x,double z,double y,double opacity,int fadeRadius,byte[] heights,double horizon,boolean atmosphere,net.minecraft.util.math.Vec3d fog,double overlap){
         double u=(x-dx)/span,v=(z-dz)/span;
         // The next coarser tile extends underneath this entire tile. Feather the level
         // change around the aircraft so individual square tile boundaries stay invisible.
-        double detail=fadeRadius==0?1:Math.max(0,Math.min(1,(fadeRadius-Math.max(Math.abs(x),Math.abs(z))/span)*2.5));
+        double distance=Math.max(Math.abs(x),Math.abs(z));
+        double detail=detail(distance,span,fadeRadius);
         double radius=Math.sqrt(x*x+z*z)/horizon;
         double visibility=Math.max(0,Math.min(1,(1-radius)/.14));
-        double underlay=hole==0?1:Math.max(0,Math.min(1,(Math.max(Math.abs(x),Math.abs(z))-hole)/(overlap-hole)));
-        double total=opacity*detail*visibility*underlay;
+        double weight=opacity*visibility;
+        // Preserve the amount of native terrain visible through the original multilevel
+        // blend. Carry any omitted parent's opacity into the next available finer layer.
+        double originalTransmission=1,remainingTransmission=1;
+        for(int i=0;i<parentCount;i++){
+            originalTransmission*=1-weight*detail(distance,parentSpan[i],parentFade[i]);
+            remainingTransmission+=(originalTransmission-remainingTransmission)*underlay(distance,parentEdge[i]);
+        }
+        double nominal=weight*detail;
+        double total=remainingTransmission>0
+                ?1-originalTransmission*(1-nominal)/remainingTransmission:nominal;
+        total=Math.max(0,Math.min(1,total))*underlay(distance,overlap);
         double clear=Math.max(0,Math.min(1,(.92-radius)/.55));
         double surface=total*clear*clear*(3-2*clear);
         double alpha=atmosphere?(total>=1?1:(total-surface)/(1-surface)):surface;
