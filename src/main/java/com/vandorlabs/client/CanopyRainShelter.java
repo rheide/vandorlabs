@@ -32,7 +32,7 @@ public final class CanopyRainShelter {
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){
         if(event.phase!=TickEvent.Phase.END)return;Minecraft mc=Minecraft.getMinecraft();WorldClient next=mc.world;
         if(next!=world){clear();world=next;}if(world==null)return;
-        boolean active=mc.player!=null&&SHADERS!=null&&SHADERS.active()&&world.getRainStrength(1)>0&&sheltered(world,mc.player.getPosition());
+        boolean active=aboveWeather(mc)||mc.player!=null&&SHADERS!=null&&SHADERS.active()&&world.getRainStrength(1)>0&&sheltered(world,mc.player.getPosition());
         IRenderHandler current=world.provider.getWeatherRenderer();
         // A dimension/mod-owned weather renderer retains control of its own pass.
         if(active&&current==null)world.provider.setWeatherRenderer(WEATHER);else if(!active&&current==WEATHER)world.provider.setWeatherRenderer(null);
@@ -43,8 +43,12 @@ public final class CanopyRainShelter {
         if(location<0){draw.run();return;}VALUE.clear();GL20.glGetUniform(program,location,VALUE);float previous=VALUE.get(0);GL20.glUniform1f(location,0);
         try{draw.run();}finally{int active=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);if(active!=program)GL20.glUseProgram(program);GL20.glUniform1f(location,previous);if(active!=program)GL20.glUseProgram(active);}
     }
+    static boolean aboveWeather(Minecraft mc){
+        return mc.player!=null && mc.player.getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle
+            && ((com.vandorlabs.vehicle.EntityGroundVehicle)mc.player.getRidingEntity()).cruise.active();
+    }
     private static void renderWeather(Minecraft mc,WorldClient view,float partial){
-        Entity camera=mc.getRenderViewEntity();if(camera==null||view.getRainStrength(partial)<=0)return;
+        Entity camera=mc.getRenderViewEntity();if(aboveWeather(mc)||camera==null||view.getRainStrength(partial)<=0)return;
         try(TurntableRenderState saved=new TurntableRenderState()){
             mc.entityRenderer.enableLightmap();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.depthMask(false);GlStateManager.disableLighting();
             SHADERS.begin();try{withoutWind(()->columns(mc,view,camera,partial));}finally{SHADERS.end();mc.entityRenderer.disableLightmap();}

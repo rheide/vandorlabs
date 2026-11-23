@@ -1,9 +1,6 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.config.BlockAvailability;
-import com.vandorlabs.navigation.NavigationService;
-import com.vandorlabs.network.MessageCruiseTerrain;
-import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -28,14 +25,46 @@ public final class VehicleCruise {
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
-    private MessageCruiseTerrain pending, published;
-    private final java.util.Set<EntityPlayerMP> viewers = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
-    private int nextPixel, publishedX, publishedZ, publishedStep;
+    private final CruiseTiles tiles=new CruiseTiles();
+    private BlockPos viewSample;
+    private double previousX,previousZ;
+    private float sampleTime,duration;
+    private static final DataParameter<Integer> FRACTION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
+    private int viewFraction;
+
+    /** Render a continuous path between authoritative geographic samples. */
+    public double view(boolean east,float partial){
+        if(!active()){viewSample=null;return east?craft.posX:craft.posZ;}
+        BlockPos packet=craft.getDataManager().get(ROUTE);
+        int fraction=craft.getDataManager().get(FRACTION);
+        float now=craft.ticksExisted+partial;
+        if(!packet.equals(viewSample)||fraction!=viewFraction){
+            double x=packet.getX()+(fraction&255)/256.0,z=packet.getZ()+(fraction>>>8)/256.0;
+            if(viewSample==null || Math.abs(viewSample.getX()-x)>512 || Math.abs(viewSample.getZ()-z)>512){
+                previousX=x;previousZ=z;duration=1;
+            }else{
+                previousX=interpolate(true,now);previousZ=interpolate(false,now);
+                duration=MathHelper.clamp(now-sampleTime,1,4);
+            }
+            viewSample=packet;viewFraction=fraction;sampleTime=now;
+        }
+        return interpolate(east,now);
+    }
+    private double interpolate(boolean east,float now){
+        double from=east?previousX:previousZ;
+        double to=east?viewSample.getX()+(viewFraction&255)/256.0:viewSample.getZ()+(viewFraction>>>8)/256.0;
+        return from+(to-from)*MathHelper.clamp((now-sampleTime)/duration,0,1);
+    }
+    private void publishRoute(){
+        craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+        craft.getDataManager().set(FRACTION,((int)(long)Math.floor(routeX*256)&255)|(((int)(long)Math.floor(routeZ*256)&255)<<8));
+    }
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
     static void define(EntityGroundVehicle craft) {
         craft.getDataManager().register(ROUTE,BlockPos.ORIGIN);
+        craft.getDataManager().register(FRACTION,0);
         craft.getDataManager().register(ANCHOR,BlockPos.ORIGIN);
     }
     public boolean projected() { return active()&&craft.getDataManager().get(ANCHOR).getY()==1; }
@@ -78,7 +107,7 @@ public final class VehicleCruise {
         }
         boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);
         if (!cruising || residentHop || craft.ticksExisted % 3 == 0) {
-            craft.getDataManager().set(ROUTE, new BlockPos(routeX,1,routeZ));
+            publishRoute();
         }
         boolean physical=BlockAvailability.cruiseCoordinates()==BlockAvailability.CruiseCoordinates.PHYSICAL
                 && CruiseTracking.ready(craft);
@@ -167,59 +196,7 @@ public final class VehicleCruise {
     }
 
     private void updateTerrain(double x, double z, double height) {
-        java.util.List<Entity> riders=craft.getPassengers();
-        viewers.retainAll(riders);
-        if (riders.isEmpty()) return;
-        final int size = MessageCruiseTerrain.SIZE;
-        int step = Math.max(8,Integer.highestOneBit((int)height / 8) / 2);
-        int centerX = MathHelper.floor(x / step) * step;
-        int centerZ = MathHelper.floor(z / step) * step;
-        if (published!=null && Math.abs(x-publishedX)<size*publishedStep/4 && Math.abs(z-publishedZ)<size*publishedStep/4) {
-            for (Entity rider:riders) if (rider instanceof EntityPlayerMP && viewers.add((EntityPlayerMP)rider))
-                PacketHandler.INSTANCE.sendTo(published,(EntityPlayerMP)rider);
-        }
-        if (pending != null && (Math.abs(x-pending.centerX) >= size*pending.step/4
-                || Math.abs(z-pending.centerZ) >= size*pending.step/4)) {
-            pending = null;
-            publishedStep = 0;
-        }
-        if (pending == null) {
-            if (step == publishedStep && Math.abs(x-publishedX) < size*step/5 &&
-                    Math.abs(z-publishedZ) < size*step/5) return;
-            pending = new MessageCruiseTerrain(craft.getEntityId(), centerX, centerZ, step);
-            nextPixel = 0;
-            pending.sampleStride = publishedStep == 0 ? 8 : 1;
-        }
-        // First publish a coarse image, then refine it in the same geographic footprint.
-        int stride = pending.sampleStride;
-        int columns = size / stride;
-        int end = Math.min(nextPixel + 512, columns*columns);
-        long started = System.nanoTime();
-        do {
-            int col = nextPixel % columns * stride, row = nextPixel / columns * stride;
-            int px = pending.centerX + (col-size/2)*pending.step;
-            int pz = pending.centerZ + (row-size/2)*pending.step;
-            int color = NavigationService.cruiseColor(craft.world,px,pz,pending.step);
-            for (int r=row; r<row+stride; r++)
-                java.util.Arrays.fill(pending.pixels,r*size+col,r*size+col+stride,color);
-            nextPixel++;
-        } while (nextPixel < end && System.nanoTime()-started < 750000L);
-        if (nextPixel == columns*columns) {
-            published=pending;
-            for (Entity rider:riders) if (rider instanceof EntityPlayerMP) {
-                viewers.add((EntityPlayerMP)rider);
-                PacketHandler.INSTANCE.sendTo(published,(EntityPlayerMP)rider);
-            }
-            publishedX = pending.centerX;
-            publishedZ = pending.centerZ;
-            publishedStep = pending.step;
-            // Forge may encode the message later; refinement needs an independent image.
-            if (stride>1) {
-                pending = new MessageCruiseTerrain(craft.getEntityId(),publishedX,publishedZ,publishedStep);
-                nextPixel = 0;
-                pending.sampleStride = stride==8 ? 2 : 1;
-            } else pending = null;
-        }
+        tiles.update(craft,x,z,height);
     }
 
     void endForLanding() {
@@ -229,10 +206,7 @@ public final class VehicleCruise {
     }
 
     private void clearTerrain() {
-        pending=null;
-        published=null;
-        publishedStep=0;
-        viewers.clear();
+        tiles.clear();
     }
 
     void write(NBTTagCompound tag) {
@@ -247,7 +221,7 @@ public final class VehicleCruise {
         routeZ = tag.getDouble("CruiseRouteZ");
         if (Double.isFinite(routeX) && Double.isFinite(routeZ) && Math.abs(routeX)<=30000000 && Math.abs(routeZ)<=30000000) {
             anchor(craft.posX,craft.posZ);
-            craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+            publishRoute();
         }
     }
 }

@@ -356,7 +356,7 @@ public final class NavigationService {
         }
         return colors;
     }
-    private static int biomeColor(Biome biome){
+    static int biomeColor(Biome biome){
         int color;
             String name=biome.getRegistryName()==null?"":biome.getRegistryName().getResourcePath();
             if(biome instanceof BiomeOcean||biome instanceof BiomeRiver||name.contains("ocean")||name.contains("river"))color=0xff28659b;

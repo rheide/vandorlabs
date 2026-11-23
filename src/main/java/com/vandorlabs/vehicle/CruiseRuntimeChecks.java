@@ -60,6 +60,7 @@ public final class CruiseRuntimeChecks {
         craft=new EntityGroundVehicle(world);
         craft.install(new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null),
                 new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null)),seat,EnumFacing.NORTH,1));
+        require(com.vandorlabs.navigation.CruiseAtlas.forWorld(world).usesDetachedLayers(),"default biome provider has a detached seed worker");
         startX=pilot.posX;
         craft.setPosition(startX,255.9,pilot.posZ);
         world.spawnEntity(craft);
@@ -137,7 +138,9 @@ public final class CruiseRuntimeChecks {
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.detailed()){
             mc.gameSettings.thirdPersonView=0;
             stage=6;ticks=0;
-        }else if(stage==6&&ticks>10){
+        }else if(stage==6&&ticks>10&&CruiseSky.covered()){
+            require(mc.world.provider.getWeatherRenderer()!=null,"local cruise weather interceptor installed");
+            System.out.println("[vandorlabs] cruise atlas covers near, middle and far 3x3 tiles after "+ticks+" client ticks from first detail");
             require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
             if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) verifyJourneyMap(mc);
             mc.gameSettings.thirdPersonView=1;
