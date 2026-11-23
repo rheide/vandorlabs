@@ -15,6 +15,7 @@ import time
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--forge', required=True, type=Path, help='Forge server JAR with its installed libraries')
+    parser.add_argument('--expected-forge', help='Verify the running loader and physical-cruise hooks on this Forge version')
     parser.add_argument('--jar', required=True, type=Path, help='Built standard Vandor Labs JAR')
     parser.add_argument('--java', default='java', help='Java 8 executable')
     parser.add_argument('--run-root', type=Path, help='Parent for a fresh disposable server directory')
@@ -88,6 +89,8 @@ def run_server(args, root, output, owner=None):
         path = output / (phase + '.log')
         with path.open('w') as log:
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
+            if args.expected_forge:
+                checks.append('-Dvandorlabs.forgeMatrixChecks=true')
             if args.vehicle_world_checks:
                 checks.append('-Dvandorlabs.legacyVehicleFixture='+str(root/'testclient/fixtures/legacy-vehicle-controller-2.6.nbt'))
             if args.mekanism_transit:
@@ -128,6 +131,9 @@ def run_server(args, root, output, owner=None):
                 if owner is not None:
                     owner.track_process(proc)
                 wait_for('Done (')
+                if args.expected_forge:
+                    wait_for('Forge Mod Loader version ' + args.expected_forge + ' for Minecraft 1.12.2 loading')
+                    wait_for('forge-cruise-hooks PASS')
                 if args.vehicle_world_checks:
                     wait_for('vehicle-world-compatibility PASS')
                 if args.mekanism_transit:

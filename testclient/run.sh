@@ -6,7 +6,14 @@ mkdir -p "$REPRO_OUT"
 REPRO_OUT=$(readlink -f "$REPRO_OUT")
 cd "$(dirname "$0")/runtime"
 JAVA=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
-CP=$(paste -sd: cp.txt)
+FORGE_VERSION=${VANDOR_LABS_TEST_FORGE_VERSION:-14.23.5.2864}
+FORGE_JAR=${VANDOR_LABS_TEST_FORGE_JAR:-forge/forge-universal-$FORGE_VERSION.jar}
+if [[ ! -f "$FORGE_JAR" ]]; then echo "Forge $FORGE_VERSION JAR missing: $FORGE_JAR" >&2; exit 2; fi
+mapfile -t CLASSPATH_ENTRIES < cp.txt
+for i in "${!CLASSPATH_ENTRIES[@]}"; do
+    if [[ "${CLASSPATH_ENTRIES[$i]}" == forge/forge-universal-*.jar ]]; then CLASSPATH_ENTRIES[$i]=$FORGE_JAR; fi
+done
+CP=$(IFS=:; echo "${CLASSPATH_ENTRIES[*]}")
 # IE uses Forge's Trove 3 collection classes, absent from the minimal vanilla classpath.
 TROVE_JAR=$(find "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" -name trove4j-3.0.3.jar 2>/dev/null | head -n 1)
 # Thaumcraft uses Forge's Scala runtime during client model baking.
@@ -182,6 +189,6 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -cp "$CP" net.minecraft.launchwrapper.Launch \
   --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker \
   --gameDir "$BENCH_GAME_DIR" --assetsDir "$PWD/assets" --assetIndex 1.12 \
-  --username REPROBOT --accessToken duck0000 --version "1.12.2-Forge14.23.5.2864" \
-  --fml.forgeVersion 14.23.5.2864 --fml.mcVersion 1.12.2 --fml.forgeGroup net.minecraftforge \
+  --username REPROBOT --accessToken duck0000 --version "1.12.2-Forge$FORGE_VERSION" \
+  --fml.forgeVersion "$FORGE_VERSION" --fml.mcVersion 1.12.2 --fml.forgeGroup net.minecraftforge \
   --width "${VANDOR_LABS_REPRO_WIDTH:-1280}" --height "${VANDOR_LABS_REPRO_HEIGHT:-720}" "$@"

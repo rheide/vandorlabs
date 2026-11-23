@@ -123,6 +123,8 @@ public class VandorLabs {
             net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
             com.vandorlabs.vehicle.ForeignBuildingChecks.run(world,net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world));
         }
+        if(Boolean.getBoolean("vandorlabs.forgeMatrixChecks"))
+            com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.verifyForgeHooks();
         if(Boolean.getBoolean("vandorlabs.vehicleWorldCompatibilityChecks"))
             com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0));
         if(Boolean.getBoolean("vandorlabs.programmablePlateChecks")){
