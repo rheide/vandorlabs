@@ -33,6 +33,14 @@ public final class CruiseSky {
     private static final int[] parentSpan=new int[13],parentFade=new int[13];
     private static final double[] parentEdge=new double[13];
     private static int parentCount;
+    private static double leadX,leadZ;
+    private static void updateLead(EntityGroundVehicle craft,int step,float yaw){
+        double distance=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.driveSpeed,craft.flightPitch(),step):0;
+        int fx=craft.structure.facing.getFrontOffsetX(),fz=craft.structure.facing.getFrontOffsetZ();
+        double angle=Math.toRadians(yaw);
+        leadX=distance*(fx*Math.cos(angle)-fz*Math.sin(angle));
+        leadZ=distance*(fx*Math.sin(angle)+fz*Math.cos(angle));
+    }
     private static double overlap(Tile tile,double altitude,double margin){
         double interior=coveredRadius[Integer.numberOfTrailingZeros(tile.step)];
         double peak=peaks.getOrDefault(tile,63);
@@ -95,9 +103,10 @@ public final class CruiseSky {
     public static boolean covered(){
         if(!detailed())return false;
         int step=CruiseAtlas.nearStep(owner.cruise.altitude());
+        updateLead(owner,step,owner.rotationYaw);
         for(int scale:CruiseAtlas.scales(step)){
             int span=CruiseAtlas.SIZE*scale;
-            int x=(int)Math.floor(owner.cruise.x()/span),z=(int)Math.floor(owner.cruise.z()/span);
+            int x=(int)Math.floor((owner.cruise.x()+(scale<=step*4?leadX:0))/span),z=(int)Math.floor((owner.cruise.z()+(scale<=step*4?leadZ:0))/span);
             int radius=CruiseAtlas.radius(scale,step);
             for(int i=-radius;i<=radius;i++)for(int j=-radius;j<=radius;j++)
                 if(!tiles.containsKey(new Tile((x+i)*span,(z+j)*span,scale)))return false;
@@ -195,6 +204,7 @@ public final class CruiseSky {
         double z=camera.viewerPosZ+(cruising?owner.cruise.view(false,partial)-physicalZ:0);
         double y=63-altitude-(camera.viewerPosY-physicalY);
         int step=CruiseAtlas.nearStep(altitude);
+        updateLead(owner,step,owner.visualPose(partial).yaw);
         double horizon=CruiseAtlas.horizon(altitude);
         double scale=Math.max(32,mc.gameSettings.renderDistanceChunks*12)/horizon;
         // Scale in eye space. Real and seed coastlines then share a sightline, including
@@ -230,7 +240,8 @@ public final class CruiseSky {
                 List<Tile> ancestors=parents.get(t);
                 boolean fade=ancestors!=null;
                 int radius=CruiseAtlas.radius(t.step,step);
-                if(fade&&(dx>=radius*span||dz>=radius*span||dx+span<=-radius*span||dz+span<=-radius*span))continue;
+                double lodX=dx-(radius==2?leadX:0),lodZ=dz-(radius==2?leadZ:0);
+                if(fade&&(lodX>=radius*span||lodZ>=radius*span||lodX+span<=-radius*span||lodZ+span<=-radius*span))continue;
                 if(!skyFrustum.isBoxInFrustum(dx,y-63,dz,dx+span,y+192,dz+span))continue;
                 mc.getTextureManager().bindTexture(tiles.get(t));
                 BufferBuilder b=Tessellator.getInstance().getBuffer();
@@ -303,7 +314,7 @@ public final class CruiseSky {
         // The next coarser tile extends underneath this entire tile. Feather the level
         // change around the aircraft so individual square tile boundaries stay invisible.
         double distance=Math.max(Math.abs(x),Math.abs(z));
-        double detail=detail(distance,span,fadeRadius);
+        double detail=detail(fadeRadius==2?Math.max(Math.abs(x-leadX),Math.abs(z-leadZ)):distance,span,fadeRadius);
         double radius=Math.sqrt(x*x+z*z)/horizon;
         double visibility=Math.max(0,Math.min(1,(1-radius)/.14));
         double weight=opacity*visibility;

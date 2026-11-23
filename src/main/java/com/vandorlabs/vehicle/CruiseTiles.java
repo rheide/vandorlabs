@@ -7,11 +7,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import java.util.*;
 
-/** Track delivery per rider, prioritizing coverage directly under the aircraft at each scale. */
+/** Track delivery per rider, keeping horizon coverage under the pilot and moving the two finest layers ahead at cruise speed. */
 final class CruiseTiles {
     private final Map<EntityPlayerMP,Set<Tile>> sent=new WeakHashMap<>();
     private List<Tile> footprint=Collections.emptyList();
-    private int lastX,lastZ,lastStep;
+    private int lastX,lastZ,lastStep,lastAheadX,lastAheadZ;
     void clear(){sent.clear();footprint=Collections.emptyList();lastStep=0;}
     void update(EntityGroundVehicle craft,double x,double z,double altitude){
         List<Entity> riders=craft.getPassengers();
@@ -20,7 +20,14 @@ final class CruiseTiles {
         int step=CruiseAtlas.nearStep(altitude);
         int size=CruiseAtlas.SIZE*step;
         int tx=(int)Math.floor(x/size),tz=(int)Math.floor(z/size);
-        if(tx!=lastX||tz!=lastZ||step!=lastStep){
+        double yaw=Math.toRadians(craft.rotationYaw);
+        double forecast=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.driveSpeed,craft.flightPitch(),step):0;
+        int fx=craft.structure.facing.getFrontOffsetX(),fz=craft.structure.facing.getFrontOffsetZ();
+        double aheadX=x+forecast*(fx*Math.cos(yaw)-fz*Math.sin(yaw));
+        double aheadZ=z+forecast*(fx*Math.sin(yaw)+fz*Math.cos(yaw));
+        int ax=(int)Math.floor(aheadX/size),az=(int)Math.floor(aheadZ/size);
+        if(tx!=lastX||tz!=lastZ||step!=lastStep||ax!=lastAheadX||az!=lastAheadZ){
+            lastAheadX=ax;lastAheadZ=az;
             lastX=tx;lastZ=tz;lastStep=step;
             footprint=new ArrayList<>(68);
             int[] levels=CruiseAtlas.scales(step);
@@ -28,7 +35,8 @@ final class CruiseTiles {
                 for(int scale:levels){
                     if(radius>CruiseAtlas.radius(scale,step))continue;
                     int span=CruiseAtlas.SIZE*scale;
-                    int baseX=(int)Math.floor(x/span),baseZ=(int)Math.floor(z/span);
+                    boolean detail=scale<=step*4;
+                    int baseX=(int)Math.floor((detail?aheadX:x)/span),baseZ=(int)Math.floor((detail?aheadZ:z)/span);
                     for(int i=-radius;i<=radius;i++)for(int j=-radius;j<=radius;j++){
                         if(Math.max(Math.abs(i),Math.abs(j))==radius)
                             footprint.add(new Tile((baseX+i)*span,(baseZ+j)*span,scale));

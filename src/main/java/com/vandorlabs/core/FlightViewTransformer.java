@@ -31,7 +31,20 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             super.visitMethodInsn(INVOKESTATIC,TELEPORT,"detach","(Lnet/minecraft/entity/Entity;)V",false);
                             return;
                         }
+                        if(beacon && method.equals("doRender") && op==INVOKESTATIC && owner.equals("java/lang/Math")
+                                && id.equals("abs") && desc.equals("(D)D")){
+                            super.visitMethodInsn(INVOKESTATIC,GEO,"beaconAngleDifference",desc,false);
+                            return;
+                        }
                         super.visitMethodInsn(op,owner,id,desc,itf);
+                        if(beacon && method.equals("doRender") && Boolean.getBoolean("vandorlabs.cruisePhysicalChecks")
+                                && owner.equals("java/lang/String") && id.equals("format") && desc.equals("(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;")){
+                            super.visitInsn(DUP);
+                            super.visitMethodInsn(INVOKESTATIC,"com/vandorlabs/client/CruiseWaypointChecks","formatted","(Ljava/lang/String;)V",false);
+                        }
+                        if(beacon && method.equals("doRender") && owner.equals("net/minecraft/entity/Entity")
+                                && (id.equals("func_70079_am") || id.equals("getRotationYawHead")) && desc.equals("()F"))
+                            super.visitMethodInsn(INVOKESTATIC,GEO,"beaconYaw","(F)F",false);
                         if ((beacon && method.equals("doRender") && owner.equals("net/minecraft/entity/Entity")
                                 || distances && method.equals("getDistanceTo") && owner.equals("net/minecraft/entity/player/EntityPlayer"))
                                 && (id.equals("func_174791_d") || id.equals("getPositionVector")))

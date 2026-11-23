@@ -3,7 +3,8 @@ package com.vandorlabs.physics;
 /** Loader-independent, arcade flight envelope. Mass is measured in stone-block units. */
 public final class FlightEnvelope {
     public static final int WORLD_CEILING = 256;
-    public static final int CRUISE_ALTITUDE = 512;
+    public static final int CRUISE_ALTITUDE = 320;
+    public static final int DESCENT_BRAKING_ALTITUDE = 512;
     public static final int MAX_ALTITUDE = 10000;
     public static final int REENTRY_ALTITUDE = 200;
     public static final double TAKEOFF_SPEED = .32;
@@ -78,8 +79,8 @@ public final class FlightEnvelope {
 
     /** Shed the fraction of excess airspeed corresponding to the descent through this band. */
     public static double descentSpeed(double speed, double altitude, double drop) {
-        if (drop <= 0 || speed <= LOW_SPEED || altitude - drop >= CRUISE_ALTITUDE) return speed;
-        double remaining = Math.min(altitude, CRUISE_ALTITUDE) - WORLD_CEILING;
+        if (drop <= 0 || speed <= LOW_SPEED || altitude - drop >= DESCENT_BRAKING_ALTITUDE) return speed;
+        double remaining = Math.min(altitude, DESCENT_BRAKING_ALTITUDE) - WORLD_CEILING;
         if (remaining <= 0) return LOW_SPEED;
         double fraction = Math.max(0, altitude - drop - WORLD_CEILING) / remaining;
         return LOW_SPEED + (speed - LOW_SPEED) * fraction;

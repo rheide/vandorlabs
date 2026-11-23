@@ -93,6 +93,7 @@ final class CruisePhysicalChecks {
             advance(2);
         }else if(stage==2&&wait>=5){
             if(steps<SWEEP/STEP){
+                if(steps==35)com.vandorlabs.client.CruiseWaypointChecks.check(mc);
                 if(physical()&&steps>12&&steps<60)samplePhysicalMotion(mc);
                 work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::step);
             }else{
@@ -308,7 +309,7 @@ final class CruisePhysicalChecks {
         arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
             arrivalX+=24;
-            require(craft.cruise.move(24,511-craft.cruise.altitude(),0,18,-32,25),"dive through the cruise boundary");
+            require(craft.cruise.move(24,craft.cruise.handoffAltitude()-1-craft.cruise.altitude(),0,18,-32,25),"dive through the cruise boundary");
         }else if("teleport".equals(EXIT)) {
             int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
                 "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);

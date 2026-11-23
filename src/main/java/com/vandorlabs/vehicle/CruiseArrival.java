@@ -27,15 +27,14 @@ final class CruiseArrival {
         "getOrCreateEntry","func_187302_c",int.class,int.class);
     final double x,z;
     private final WorldServer world;
-    private final boolean generate;
     private final PlayerChunkMap watches;
     private final List<ChunkPos> footprint=new ArrayList<>(), prepare=new ArrayList<>();
     private final Map<EntityPlayerMP,List<PlayerChunkMapEntry>> added=new IdentityHashMap<>();
     private int next;
 
-    CruiseArrival(WorldServer world,double x,double z,AxisAlignedBB hull,boolean generate) {
+    CruiseArrival(WorldServer world,double x,double z,AxisAlignedBB hull) {
         this.world=world;
-        this.x=x;this.z=z;this.generate=generate;
+        this.x=x;this.z=z;
         watches=world.getPlayerChunkMap();
         int cx=section(x),cz=section(z);
         int minX=Math.min(cx-1,section(hull.minX)),maxX=Math.max(cx+1,section(hull.maxX));
@@ -43,7 +42,7 @@ final class CruiseArrival {
         // The perimeter allows vanilla to populate and light the inner footprint.
         for(int xx=minX-1;xx<=maxX+1;xx++)for(int zz=minZ-1;zz<=maxZ+1;zz++) {
             ChunkPos column=new ChunkPos(xx,zz);
-            if(generate)prepare.add(column);
+            prepare.add(column);
             if(xx>=minX&&xx<=maxX&&zz>=minZ&&zz<=maxZ)footprint.add(column);
         }
         prepare.sort(Comparator.comparingInt(column->Math.max(Math.abs(column.x-cx),Math.abs(column.z-cz))));
@@ -70,10 +69,9 @@ final class CruiseArrival {
             return true;
         });
         for(ChunkPos column:footprint) {
-            Chunk chunk=generate?world.getChunkProvider().getLoadedChunk(column.x,column.z):
-                CruiseResidentReanchor.loaded(world,column.x,column.z);
+            Chunk chunk=world.getChunkProvider().getLoadedChunk(column.x,column.z);
             if(chunk==null) {
-                if(generate && next==prepare.size())next=0;
+                if(next==prepare.size())next=0;
                 ready=false;
                 continue;
             }

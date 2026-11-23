@@ -295,10 +295,6 @@ case "${1:-}" in
             PREFIX=cruise-physical
             export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cruisePhysicalChecks=true"
-        elif [ "$TARGET" = cruise-resident ]; then
-            PREFIX=cruise-resident
-            export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
-            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cruiseResidentChecksOnly=true"
         elif [ "$TARGET" = maxwell-cruise ]; then
             PREFIX=maxwell-cruise
             export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
@@ -1124,11 +1120,6 @@ PYIMAGE
     if [ "$TARGET" = cruise-physical ]; then
         grep -q "cruise-physical PASS" "$RUN_OUT/client.log"
         exit $?
-    fi
-    if [ "$TARGET" = cruise-resident ]; then
-        grep -q "cruise-resident PASS" "$RUN_OUT/client.log"
-        echo "Resident cruise checks passed: $RUN_OUT"
-        exit 0
     fi
     if [ "$TARGET" = maxwell-cruise ]; then
         grep -q "maxwell-cruise PASS" "$RUN_OUT/client.log" && test -s "$RUN_OUT/maxwell-cruise.png"

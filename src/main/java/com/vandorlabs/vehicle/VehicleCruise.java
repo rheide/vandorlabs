@@ -27,8 +27,7 @@ public final class VehicleCruise {
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
-    private CruiseArrival arrival,resident;
-    private int residentSince;
+    private CruiseArrival arrival;
     private double arrivalAltitude;
     private final CruiseTiles tiles=new CruiseTiles();
     private final CruiseGeography geography=new CruiseGeography();
@@ -98,21 +97,18 @@ public final class VehicleCruise {
             VehiclePose pose=new VehiclePose(routeX,craft.posY,routeZ,yaw,pitch,bank,craft.structure.facing);
             AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
                 routeX-craft.posX,0,routeZ-craft.posZ));
-            closeResident();
             arrivalAltitude=height;
-            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1),true);
+            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1));
             publishRoute();
             return finishArrival(yaw,pitch,bank);
         }
-        boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);
-        if (!cruising || residentHop || craft.ticksExisted % 3 == 0) {
+        if (!cruising || craft.ticksExisted % 3 == 0) {
             publishRoute();
         }
         boolean physical=BlockAvailability.cruiseCoordinates()==BlockAvailability.CruiseCoordinates.PHYSICAL
                 && CruiseTracking.ready(craft);
         if(!cruising)relocate(craft.posX,SKY_OFFSET+height,craft.posZ);
         if(physical) {
-            closeResident();
             if(!projected()) {
                 projection(true);
                 craft.snapPosition(routeX,SKY_OFFSET+height,routeZ,craft.rotationYaw);
@@ -121,38 +117,10 @@ public final class VehicleCruise {
         } else if(projected()) {
             projection(false);
             relocate(anchorX,SKY_OFFSET+height,anchorZ,true);
-        } else if(cruising&&!moveToResident(residentHop,SKY_OFFSET+height,yaw,pitch,bank))
+        } else if(cruising)
             craft.setPosition(craft.posX,SKY_OFFSET+height,craft.posZ);
         updateTerrain(routeX, routeZ, height);
         return true;
-    }
-
-    private boolean moveToResident(boolean candidate,double y,float yaw,float pitch,float bank) {
-        if(resident==null) {
-            if(!candidate)return false;
-            VehiclePose target=new VehiclePose(routeX,y,routeZ,yaw,pitch,bank,craft.structure.facing);
-            AxisAlignedBB hull=craft.flightBounds(target).union(craft.getEntityBoundingBox().offset(
-                routeX-craft.posX,0,routeZ-craft.posZ));
-            resident=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1),false);
-            residentSince=craft.ticksExisted;
-        }
-        if(craft.ticksExisted-residentSince>20||!CruiseResidentReanchor.footprintReady(
-                craft,resident.x,y,resident.z,yaw,pitch,bank)) {
-            closeResident();
-            return false;
-        }
-        VehiclePose target=new VehiclePose(resident.x,y,resident.z,yaw,pitch,bank,craft.structure.facing);
-        if(!resident.ready(craft,target))return false;
-        anchor(resident.x,resident.z);
-        relocate(resident.x,y,resident.z,true,true);
-        closeResident();
-        return true;
-    }
-
-    private void closeResident() {
-        if(resident==null)return;
-        resident.close();
-        resident=null;
     }
 
     private boolean finishArrival(float yaw,float pitch,float bank) {
@@ -177,7 +145,6 @@ public final class VehicleCruise {
     }
 
     void cancelArrival() {
-        closeResident();
         if(arrival==null)return;
         arrival.close();
         arrival=null;

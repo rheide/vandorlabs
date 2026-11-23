@@ -13,12 +13,11 @@ public final class BlockAvailability {
     private static final Map<String,Boolean> ENABLED=new HashMap<>();
     private static int vehicleMaxBlocks=4096;
     private static int vehicleMaxArticulationPoints=7;
-    public enum CruiseCoordinates { ANCHORED, RESIDENT, PHYSICAL }
+    public enum CruiseCoordinates { ANCHORED, PHYSICAL }
     private static CruiseCoordinates cruiseCoordinates=CruiseCoordinates.ANCHORED;
     private static int cruiseHandoffAltitude=FlightEnvelope.CRUISE_ALTITUDE;
     public static int cruiseHandoffAltitude(){return cruiseHandoffAltitude;}
     public static CruiseCoordinates cruiseCoordinates(){return cruiseCoordinates;}
-    public static boolean reanchorResidentCruise(){return cruiseCoordinates==CruiseCoordinates.RESIDENT;}
     public static int vehicleMaxArticulationPoints(){return vehicleMaxArticulationPoints;}
     public static int vehicleMaxBlocks(){return vehicleMaxBlocks;}
     private BlockAvailability() {}
@@ -36,16 +35,13 @@ public final class BlockAvailability {
                 com.vandorlabs.vehicle.VehicleArticulation.MAX_JOINTS,
                 "Maximum independent hinge points allowed in new vehicle assemblies and attachments. Default 7 permits eight articulated segments; 0 allows rigid vehicles only. Rigid/parallel couplers and closed loops do not count. Lowering this does not prevent saved vehicles loading or parking. Other geometry/data limits still apply. Restart required.");
         cruiseHandoffAltitude=config.getInt("cruiseHandoffAltitude","vehicles",FlightEnvelope.CRUISE_ALTITUDE,
-                FlightEnvelope.WORLD_CEILING,FlightEnvelope.CRUISE_ALTITUDE,
+                FlightEnvelope.WORLD_CEILING,FlightEnvelope.DESCENT_BRAKING_ALTITUDE,
                 "Altitude where Overworld flight finishes blending and stops normal player chunk tracking. Lower values shorten the band. 256 switches directly to seed terrain. Restart required.");
-        boolean legacyResident=config.hasKey("vehicles","reanchorResidentCruise")
-                && config.get("vehicles","reanchorResidentCruise",false).getBoolean();
-        String selected=config.getString("cruiseCoordinates","vehicles",legacyResident?"resident":"anchored",
-                "High Flight coordinates: anchored (default), resident (hop only to loaded terrain), or physical (geographic F3 X/Z with one supported pilot). Other mods can load terrain at physical coordinates. F3 Y includes the sky offset and observers away from the anchor may not see the craft. Restart required.",
-                new String[]{"anchored","resident","physical"});
-        if("physical".equalsIgnoreCase(selected))cruiseCoordinates=CruiseCoordinates.PHYSICAL;
-        else if("resident".equalsIgnoreCase(selected))cruiseCoordinates=CruiseCoordinates.RESIDENT;
-        else cruiseCoordinates=CruiseCoordinates.ANCHORED;
+        String selected=config.getString("cruiseCoordinates","vehicles","anchored",
+                "High Flight coordinates: anchored (default) or physical (geographic F3 X/Z). Other mods can load terrain at physical coordinates. Restart required.",
+                new String[]{"anchored","physical"});
+        cruiseCoordinates="physical".equalsIgnoreCase(selected)?CruiseCoordinates.PHYSICAL:CruiseCoordinates.ANCHORED;
+        if("resident".equalsIgnoreCase(selected))config.get("vehicles","cruiseCoordinates","anchored").set("anchored");
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)

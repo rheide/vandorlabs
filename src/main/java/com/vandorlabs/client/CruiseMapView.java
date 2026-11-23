@@ -29,6 +29,20 @@ public final class CruiseMapView {
         net.minecraft.client.renderer.entity.RenderManager camera=Minecraft.getMinecraft().getRenderManager();
         return new Vec3d(x(camera.viewerPosX),y(camera.viewerPosY),z(camera.viewerPosZ));
     }
+    /** JourneyMap tests the head yaw for auto-hide, while the cockpit rotates the camera with the airframe. */
+    public static float beaconYaw(float headYaw) {
+        Minecraft mc=Minecraft.getMinecraft();
+        EntityGroundVehicle craft=mounted();
+        if(craft==null||mc.gameSettings.debugCamEnable)return headYaw;
+        float partial=mc.getRenderPartialTicks();
+        Vec3d look=mc.player.getLook(partial);
+        double[] world=craft.pilotView(craft.visualPose(partial)).vector(look.x,look.y,look.z);
+        float heading=(float)Math.toDegrees(Math.atan2(-world[0],world[2]));
+        return mc.gameSettings.thirdPersonView==2?heading+180:heading;
+    }
+    public static double beaconAngleDifference(double delta) {
+        return Math.abs(mounted()==null?delta:net.minecraft.util.math.MathHelper.wrapDegrees(delta));
+    }
     public static Vec3d viewPosition(Vec3d value) {
         EntityGroundVehicle c=mounted();
         return c==null?value:value.addVector(c.cruise.projected()?0:c.cruise.view(true,Minecraft.getMinecraft().getRenderPartialTicks())-c.posX,c.flightAltitude()-c.posY,
