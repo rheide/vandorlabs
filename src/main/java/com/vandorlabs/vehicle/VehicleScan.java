@@ -406,8 +406,8 @@ public final class VehicleScan {
                 if(tile instanceof TileEntityCockpit){
                     TileEntityCockpit cockpit=(TileEntityCockpit)tile;
                     for(BlockPos member:cockpit.data().cells(p,cockpit.facing()))if(!member.equals(p)){
-                        require(world.isBlockLoaded(member),"Cockpit touches an unloaded chunk.");TileEntity part=world.getTileEntity(member);
-                        require(part instanceof TileEntityCockpitPart && com.vandorlabs.cockpit.CockpitAssembly.root(world,member)==cockpit,"Incomplete cockpit reservation.");enqueueMember(member);
+                        require(world.isBlockLoaded(member),"Cockpit touches an unloaded chunk.");
+                        require(com.vandorlabs.cockpit.CockpitAssembly.root(world,member)==cockpit,"Incomplete cockpit reservation at "+member+".");enqueueMember(member);
                     }
                 }else if(tile instanceof TileEntityCockpitPart){TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(world,p);require(cockpit!=null,"Orphaned cockpit reservation.");enqueueMember(cockpit.getPos());}
                 if(block instanceof BlockPilotSeat) {

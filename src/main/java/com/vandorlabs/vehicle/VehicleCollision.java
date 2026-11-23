@@ -43,15 +43,15 @@ public final class VehicleCollision {
     public VehicleCollision(VehicleWorld view) {this(capture(view),false);}
     private VehicleCollision(VehicleWorld view,boolean reference) {this(capture(view),reference);}
     static Raw capture(VehicleWorld view){return capture(view,false);}
-    static Raw capture(VehicleWorld view,boolean omitModularGear){return capture(view,omitModularGear,null);}
-    static Map<Integer,VehicleCollision> flightHull(EntityGroundVehicle craft){
+    static Raw capture(VehicleWorld view,boolean omitModularGear){return capture(view,omitModularGear,null,false);}
+    static Map<Integer,VehicleCollision> flightHull(EntityGroundVehicle craft,boolean gearOnly){
         Map<Integer,List<AxisAlignedBB>> byBody=new LinkedHashMap<>();
-        capture(craft.view,false,byBody);
+        capture(craft.view,false,byBody,gearOnly);
         Map<Integer,VehicleCollision> result=new LinkedHashMap<>();
         byBody.forEach((body,boxes)->result.put(body,prepare(new Raw(boxes,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2,0,null,true))));
         return result;
     }
-    private static Raw capture(VehicleWorld view,boolean omitModularGear,Map<Integer,List<AxisAlignedBB>> flightBodies){
+    private static Raw capture(VehicleWorld view,boolean omitModularGear,Map<Integer,List<AxisAlignedBB>> flightBodies,boolean gearOnly){
         long profileStart=PROFILE?System.nanoTime():0;
         long diagnostic=view.craft==null?0:VehicleAnimationDiagnostics.start(view.craft);
         String diagnosticSide=diagnostic==0?null:view.parent.isRemote?"client/":"server/";
@@ -59,7 +59,7 @@ public final class VehicleCollision {
         Set<BlockPos> canopyOwners=new HashSet<>();boolean complete=true;
         AxisAlignedBB query=view.structure.bounds.grow(16);
         for(VehicleStructure.Cell c:view.structure.cells) {
-            if(flightBodies!=null&&VehicleFlightMotion.landingGear(view,c))continue;
+            if(flightBodies!=null&&VehicleFlightMotion.landingGear(view,c)!=gearOnly)continue;
             if(omitModularGear&&c.state.getBlock() instanceof com.vandorlabs.gear.GearBlock){
                 net.minecraft.tileentity.TileEntity member=view.getTileEntity(c.pos);
                 com.vandorlabs.gear.GearTileEntity root=member instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)member).loadedController():null;
