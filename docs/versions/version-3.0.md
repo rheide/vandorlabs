@@ -76,7 +76,7 @@ Choose **Channel status** in the Redstone row editor to display the strongest re
 
 ## Split and diagonal displays
 
-On Forge, turn on **Split display** and choose **Redstone (Half)** for **Top** or **Bottom**. Each half has its own four-row editor and can share a display with artwork or a vehicle instrument. A Programmable Diagonal Screen also offers **Profile** on **Displays**. **Full** keeps the original wedge, and **Shallow** keeps the 45° angle on a half-height rear wedge and fits the complete image at its original proportions. Both choices are saved with the configured screen. [Screen configuration guide](../frames-and-displays.md)
+On Forge, turn on **Split display** and choose **Redstone (Half)** for **Top** or **Bottom**. Each half has its own four-row editor and can share a display with artwork or a vehicle instrument. A Programmable Diagonal Screen also offers **Profile** on **Displays**. **Full** keeps the original wedge, and **Shallow** lowers the same full-width 45° display by two pixels. Both choices are saved with the configured screen. [Screen configuration guide](../frames-and-displays.md)
 
 ## Minecraft 1.21.1
 

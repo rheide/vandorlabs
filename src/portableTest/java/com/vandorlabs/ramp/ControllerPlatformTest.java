@@ -285,17 +285,18 @@ public final class ControllerPlatformTest {
                 if(slope)slopedFaces++;
                 for(ScreenHousingMesh.Vertex v:face.vertices){
                     double height=upper?16-v.y:v.y;
-                    check(v.z>=8&&v.z<=16&&height>=0&&height<=8,"Shallow housing stays in rear half");
-                    if(slope)close(height,v.z-8,"housing angle equals translated Full face");
+                    check(v.z>=2&&v.z<=16&&height>=0&&height<=14,"clipped casing stays inside cell");
+                    if(slope)close(height,v.z-2,"housing angle equals translated Full face");
                 }
             }
             check(slopedFaces==1,"single inclined Shallow backing face");
             ScreenSurface.Quad image=ScreenSurface.diagonal(upper,true),original=ScreenSurface.diagonal(upper,false);
             close(image.ny,original.ny,"Full and Shallow pitch match");close(image.nz,original.nz,"Full and Shallow depth normal match");
-            double width=image.topRight.x-image.topLeft.x;
-            close(width,10,"centered, ten-pixel Shallow display");
-            close(Math.abs(image.topLeft.z-image.bottomLeft.z)/width,
-                  Math.abs(original.topLeft.z-original.bottomLeft.z)/16,"image has uniform width and height scale");
+            for(int corner=0;corner<4;corner++){
+                close(image.vertices[corner].x,original.vertices[corner].x,"full display width");
+                close(image.vertices[corner].z,original.vertices[corner].z,"full display depth");
+                close(image.vertices[corner].y,original.vertices[corner].y+(upper?2:-2),"rigid vertical translation");
+            }
         }
         int slopes=0;
         for (ScreenHousingMesh.Face face:invertedDiagonal.quads) {

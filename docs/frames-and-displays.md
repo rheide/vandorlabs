@@ -37,9 +37,8 @@ off retains the selections for later reuse.
 
 For a Programmable Diagonal Screen, choose **Profile** on **Displays**. **Full**
 uses the original full-block wedge. **Shallow** lowers the same 45° face by
-half a block and removes the portion in front of the floor intersection. The
-rear half contains the wedge. The complete image fits on the smaller face with
-the same proportions. Invert the screen to mirror the shape against a ceiling. The profile is saved with the placed screen and its configured item.
+two pixels and clips the front of the casing at the floor. Both profiles have
+the same full-width display, including its diagonal length. Invert the screen to mirror the shape against a ceiling. The profile is saved with the placed screen and its configured item.
 
 Display artwork and playback controls stay on the **Display** or **Controls**
 page. Programmable Glass and Portholes, including diagonal variants, show playback and speed directly on **Glass** when Display artwork is selected; plain glass hides these controls. Housing artwork and its layout controls are on **Sides**. Channel trigger

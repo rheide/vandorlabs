@@ -70,11 +70,16 @@ public final class CockpitModels {
         return model;
     }
     public static IBakedModel baked(ResourceLocation id,int skin){
-        if(skin<0)return baked(id);
-        String key=id+"/"+skin;
+        return baked(id,skin,false);
+    }
+    public static IBakedModel baked(ResourceLocation id,int skin,boolean throttleOn){
+        if(skin<0&&!throttleOn)return baked(id);
+        String key=id+"/"+skin+"/"+throttleOn;
         return SKINS.computeIfAbsent(key,k->{
-            String texture=com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(skin);
-            IModel raw=RAW.get(id).retexture(com.google.common.collect.ImmutableMap.of("#sidewall",texture));
+            com.google.common.collect.ImmutableMap.Builder<String,String> materials=com.google.common.collect.ImmutableMap.builder();
+            if(skin>=0)materials.put("#sidewall",com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(skin));
+            if(throttleOn)materials.put("#amber","vandorlabs:blocks/thruster_controls/32px/cyan");
+            IModel raw=RAW.get(id).retexture(materials.build());
             return raw.bake(raw.getDefaultState(),DefaultVertexFormats.ITEM,location->Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
         });
     }

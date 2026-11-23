@@ -80,7 +80,8 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
     @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos){
         if(!shallow(world,pos))return FULL_BLOCK_AABB;
         boolean upper=state.getValue(INVERTED);
-        return PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(0,upper?.5:0,.5,1,upper?1:.5,1),state.getValue(FACING));
+        double drop=com.vandorlabs.render.ScreenSurface.DIAGONAL_DROP/16D;
+        return PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(0,upper?drop:0,drop,1,upper?1:1-drop,1),state.getValue(FACING));
     }
 
     @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end){
