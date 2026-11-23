@@ -308,17 +308,29 @@ final class VehicleFlightClientChecks {
             if(frame<18)return false;
             need(Math.abs(heldBank)>10&&Math.abs(MathHelper.wrapDegrees(craft.flightBank()-heldBank))<2,
                     "neutral roll control holds the selected bank; held="+heldBank+" current="+craft.flightBank());
-            mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),511.7,14,0)).get();
+            mc.getIntegratedServer().addScheduledTask(()->{
+                // The two rolls can take the pilot well away from the original runway.
+                // Keep the watched horizontal position while arranging the boundary climb.
+                EntityGroundVehicle actual=server(mc);
+                stageAttitude(actual,14,0);
+                actual.setPosition(actual.posX,FlightEnvelope.CRUISE_ALTITUDE-.3,actual.posZ);
+            }).get();
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
         if(stage==11){
-            if(!craft.cruise.active()||craft.flightAltitude()<=512){need(frame<120,"powered S climb crosses Y=512");return false;}
+            if(!craft.cruise.active()||craft.flightAltitude()<=FlightEnvelope.CRUISE_ALTITUDE){
+                if(frame>=120){
+                    String actual=mc.getIntegratedServer().callFromMainThread(()->flightState(server(mc))).get();
+                    need(false,"powered S climb crosses the cruise boundary; client "+flightState(craft)+" server "+actual);
+                }
+                return false;
+            }
             need(Double.isInfinite(craft.groundClearance()),"cruise does not query ground clearance");
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 VehicleFlightReadout readout=actual.flightReadout();
-                need(actual.cruise.active()&&actual.flightAltitude()>512&&actual.poweredFlight()&&readout.fuel>0,
+                need(actual.cruise.active()&&actual.flightAltitude()>FlightEnvelope.CRUISE_ALTITUDE&&actual.poweredFlight()&&readout.fuel>0,
                         "authoritative crossing happened under powered flight ticks");
                 int reduced=(int)Math.ceil(readout.effectiveMass/FlightEnvelope.takeoffMass(readout.ratedThrust)*15)+2;
                 need(reduced<15,"real fixture can support lower thrust");
@@ -519,11 +531,15 @@ final class VehicleFlightClientChecks {
     }
 
     private static void stagePose(EntityGroundVehicle craft,double altitude,float pitch,float bank){
+        stageAttitude(craft,pitch,bank);
+        craft.setPosition(ORIGIN.getX(),altitude,ORIGIN.getZ()-5);
+    }
+
+    private static void stageAttitude(EntityGroundVehicle craft,float pitch,float bank){
         craft.rotationYaw=0;
         ReflectionHelper.setPrivateValue(EntityGroundVehicle.class,craft,pitch,"flightPitch");
         ReflectionHelper.setPrivateValue(EntityGroundVehicle.class,craft,bank,"flightBank");
         ReflectionHelper.setPrivateValue(EntityGroundVehicle.class,craft,0F,"flightRollRate");
-        craft.setPosition(ORIGIN.getX(),altitude,ORIGIN.getZ()-5);
     }
 
     private static void moveCruise(EntityGroundVehicle craft,double dx,double dy,double dz){
