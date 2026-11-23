@@ -62,11 +62,15 @@ Craft one Rocker Switch with **one stick above one Industrial Alloy Ingot**.
 
 ## Signal-level controls
 
-Thruster Lever (Standard, Twin and Grip) and Wall Slider have four
-positions: Off, Low, Medium and High. Normal right-click cycles their levels;
-Creative-mode shift-right-click configures channels and low/high limits. Defaults
-are 0, 5, 10 and 15. Their numeric outputs drive physical redstone and shared
-channels, including interactive screen sliders and Programmable Trigger blocks.
+Thruster Lever (Standard, Twin and Grip) and Wall Slider have four positions.
+Right-click to cycle Off, Low, Medium, and High, which default to 0, 5, 10,
+and 15. In Creative, Shift + left-click cycles a Thruster Lever backwards.
+Shift + right-click opens the placed control's settings.
+
+On Forge, the Thruster Lever also works aboard an assembled vehicle. Its handle
+moves with each click. Physical and wireless output update once the handle has
+rested for four server ticks, so you can pass intermediate positions without
+sending pulses. Connect its output to adjacent redstone or assign a channel.
 
 Push Button and Rocker Switch share the compact palette and light-like cyan faces.
 Rocker Switch and Wall Slider use compact models reduced by 8%.

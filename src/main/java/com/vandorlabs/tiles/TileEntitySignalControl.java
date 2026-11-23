@@ -8,7 +8,11 @@ import net.minecraft.block.state.IBlockState;
 
 /** Four detents share the normal channel latch; limits are configuration, not live power. */
 public class TileEntitySignalControl extends TileEntityRedstoneChannel {
+    public static final int SETTLE_TICKS=4;
+    private static final String PREVIEW_STEP="ControlPreviewStep";
     private int low=5,high=15,step,baseHeight,baseTilt,tiltDirection;
+    private int pendingStep=-1;
+    private long settleAt;
     public int getControlType(){return world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl?((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).controlType():0;}
     public void configureType(int type){
         if(world==null || world.isRemote || type<0 || type>2)return;
@@ -40,8 +44,17 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     public static int levelForStep(int value,int low,int high){return SignalControlData.levelForStep(value,low,high);}
     public int levelForStep(int value){return levelForStep(value,low,high);}
     public int getStep(){
-        if(getRedstoneChannels().isEmpty())return step;
-        return stepForLevel(getOutputLevel(),low,high);
+        return pendingStep>=0?pendingStep:outputStep();
+    }
+    private int outputStep(){return getRedstoneChannels().isEmpty()?step:stepForLevel(getOutputLevel(),low,high);}
+    public void requestStep(boolean reverse){
+        pendingStep=(getStep()+(reverse?3:1))%4;
+        settleAt=world.getTotalWorldTime()+SETTLE_TICKS;
+    }
+    public int ticksUntilSettled(){return pendingStep<0?0:(int)Math.max(0,settleAt-world.getTotalWorldTime());}
+    public int settleStep(){
+        if(pendingStep<0||ticksUntilSettled()>0)return -1;
+        int next=pendingStep;pendingStep=-1;return next;
     }
     public static int stepForLevel(int level,int low,int high){
         return SignalControlData.stepForLevel(level,low,high);
@@ -49,11 +62,12 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     @Override public int getOutputLevel(){return getRedstoneChannels().isEmpty()?levelForStep(step):super.getOutputLevel();}
     public void configureLimits(int low,int high){
         if(!validLimits(low,high))return;
-        int selected=getStep();this.low=low;this.high=high;markDirty();
+        int selected=outputStep();this.low=low;this.high=high;markDirty();
         setStep(selected);
     }
     public void setStep(int value){
         if(value<0 || value>3)return;
+        pendingStep=-1;
         step=value;
         if(getRedstoneChannels().isEmpty())super.setLocalOn(value>0);
         else RedstoneChannels.latchLevelChanged(this,levelForStep(value));
@@ -73,13 +87,18 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     @Override public void setLocalOn(boolean on){setStep(on?3:0);}
     @Override public void setRedstoneChannels(ChannelList channels){
         if(getRedstoneChannels().equals(channels))return;
-        int previous=getOutputLevel(),selected=getStep();
+        int previous=getOutputLevel(),selected=outputStep();
         super.setRedstoneChannels(channels);
         if(channels.isEmpty())setStep(selected);
         else if(previous>0)RedstoneChannels.latchLevelChanged(this,previous);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);writeMount(tag);tag.setInteger(SignalControlData.LOW,low);tag.setInteger(SignalControlData.HIGH,high);tag.setInteger(SignalControlData.STEP,step);return tag;
+    }
+    @Override public NBTTagCompound getUpdateTag(){
+        NBTTagCompound tag=super.getUpdateTag();
+        if(pendingStep>=0)tag.setInteger(PREVIEW_STEP,pendingStep);
+        return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
@@ -89,7 +108,10 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         int savedLow=SignalControlData.savedLow(tag.hasKey(SignalControlData.LOW),tag.getInteger(SignalControlData.LOW)),savedHigh=SignalControlData.savedHigh(tag.hasKey(SignalControlData.HIGH),tag.getInteger(SignalControlData.HIGH));
         if(validLimits(savedLow,savedHigh)){low=savedLow;high=savedHigh;}
         step=SignalControlData.savedStep(tag.getInteger(SignalControlData.STEP));
-        if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
+        if(world!=null&&(world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world).isRemote){
+            pendingStep=tag.hasKey(PREVIEW_STEP,3)?SignalControlData.savedStep(tag.getInteger(PREVIEW_STEP)):-1;
+            world.markBlockRangeForRenderUpdate(pos,pos);
+        }
     }
     public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasSelectableType())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger(SignalControlData.LOW,low);tag.setInteger(SignalControlData.HIGH,high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
 }

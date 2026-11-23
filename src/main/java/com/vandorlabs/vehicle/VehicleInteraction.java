@@ -65,6 +65,9 @@ public final class VehicleInteraction {
                 || target.hit.action==VehicleSelection.Action.COCKPIT
                 || target.hit.action==VehicleSelection.Action.BOARD);
     }
+    public static boolean reversibleThruster(EntityPlayer player,Target target){
+        return player.isCreative()&&target!=null&&target.craft.view!=null&&VehicleSignals.thruster(target.craft.view,target.hit.cell.pos);
+    }
     private static boolean canopyAction(Target target){
         com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(target.craft.view,target.hit.cell.pos);
         return tile!=null&&(tile.owner().opening()||tile.owner().large.hasDisplay());
@@ -78,6 +81,14 @@ public final class VehicleInteraction {
         if(!(raw instanceof EntityGroundVehicle) || raw.isDead || !raw.getUniqueID().equals(packet.token))return;
         Target target=pointed(player);
         if(target==null || target.craft!=raw || !target.hit.cell.pos.equals(packet.origin))return;
+        if(packet.flag){
+            if(reversibleThruster(player,target)&&!target.craft.ownershipBlocked&&!target.craft.transferInProgress){
+                try{VehicleService.carriedPermission(player,target.craft,new BlockPos(target.craft.toWorld(target.hit.local.hitVec,target.hit.cell.pos)));}
+                catch(IllegalArgumentException denied){return;}
+                target.craft.signals.stepThruster(target.hit.cell.pos,true);
+            }
+            return;
+        }
         if(!supported(player,target) || target.craft.ownershipBlocked || target.craft.structure==null)return;
         // Keep Forge interaction cancellation and held-item semantics after our
         // surface reach check, without vanilla's unrelated entity-origin gate.

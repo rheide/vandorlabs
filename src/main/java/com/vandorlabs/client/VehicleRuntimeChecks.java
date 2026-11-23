@@ -214,13 +214,13 @@ public final class VehicleRuntimeChecks {
             require(state.getValue(BlockPropulsionLight.POWERED) && !state.getValue(BlockPropulsionLight.PARTICLES),"driving overrides redstone without particle stream");
             require(((TileEntityRedstoneLight)local.getTileEntity(at)).getBrightness()==12,"propulsion brightness ramp ignores signal settings");
         }
-        // Render detents are an overlay: saved control settings and channel latches survive parking.
+        // The lever detent remains visible regardless of propulsion or motion.
         for(String id:BlockSignalControl.TYPES){
             BlockSignalControl control=(BlockSignalControl)Block.getBlockFromName("vandorlabs:"+id);
             IBlockState state=control.getDefaultState();BlockPos at=new BlockPos(31,31,31);
             TileEntitySignalControl tile=new TileEntitySignalControl();NBTTagCompound tag=new NBTTagCompound();tag.setInteger("ControlStep",3);tile.readFromNBT(tag);tile.setWorld(local);tile.setPos(at);local.tiles.put(at,tile);
-            local.propulsionLevel=0;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==0,"vehicle throttle idle detent: "+id);
-            local.propulsionLevel=5;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==1,"vehicle throttle low detent: "+id);
+            local.propulsionLevel=0;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==3,"stopped vehicle retains selected detent: "+id);
+            local.propulsionLevel=5;require(control.getActualState(state,local,at).getValue(BlockSignalControl.LEVEL)==3,"moving vehicle retains selected detent: "+id);
             require(tile.writeToNBT(new NBTTagCompound()).getInteger("ControlStep")==3,"vehicle throttle preserves configured detent: "+id);local.tiles.remove(at);
         }
         require(decoded.write().equals(expected.write()),"brightness overlay leaves stored settings unchanged");

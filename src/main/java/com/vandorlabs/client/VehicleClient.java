@@ -43,22 +43,27 @@ public final class VehicleClient {
                 && ((EntityGroundVehicle)mc.player.getRidingEntity()).hover && !mc.gameSettings.keyBindSprint.isKeyDown())
             event.getMovementInput().sneak=false;
     }
-    private static boolean sendInteraction() {
+    private static boolean sendInteraction(boolean reverse) {
         Minecraft mc=Minecraft.getMinecraft();
         if(mc.currentScreen!=null || mc.player==null || mc.world==null || mc.player.isSpectator())return false;
+        if(reverse&&(!mc.player.isCreative()||!mc.player.isSneaking()&&!mc.gameSettings.keyBindSneak.isKeyDown()))return false;
         VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);
-        if(!VehicleInteraction.supported(mc.player,target))return false;
+        if(reverse?!VehicleInteraction.reversibleThruster(mc.player,target):!VehicleInteraction.supported(mc.player,target))return false;
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.INTERACT);
-        packet.entity=target.craft.getEntityId();packet.token=target.craft.getUniqueID();packet.origin=target.hit.cell.pos;
-        com.vandorlabs.navigation.NavigationVehicle.predict(mc.player,target.craft,target.hit.cell.pos);PacketHandler.INSTANCE.sendToServer(packet);return true;
+        packet.entity=target.craft.getEntityId();packet.token=target.craft.getUniqueID();packet.origin=target.hit.cell.pos;packet.flag=reverse;
+        if(!reverse)com.vandorlabs.navigation.NavigationVehicle.predict(mc.player,target.craft,target.hit.cell.pos);
+        PacketHandler.INSTANCE.sendToServer(packet);return true;
     }
     /** Consume the physical click before vanilla can emit duplicate main/offhand use packets. */
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)
     public void interact(net.minecraftforge.client.event.MouseEvent event) {
         Minecraft mc=Minecraft.getMinecraft();
-        if(!event.isButtonstate() || event.getButton()!=mc.gameSettings.keyBindUseItem.getKeyCode()+100
-                || mc.currentScreen!=null || mc.player==null || mc.world==null || mc.player.isSpectator())return;
-        if(sendInteraction())event.setCanceled(true);
+        if(!event.isButtonstate())return;
+        if(event.getButton()==mc.gameSettings.keyBindUseItem.getKeyCode()+100&&sendInteraction(false))event.setCanceled(true);
+        else if(event.getButton()==mc.gameSettings.keyBindAttack.getKeyCode()+100&&sendInteraction(true))event.setCanceled(true);
+    }
+    @SubscribeEvent public void attackEmpty(net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickEmpty event){
+        if(event.getEntityPlayer()==Minecraft.getMinecraft().player)sendInteraction(true);
     }
     /** Keyboard bindings and controller-generated clicks use Forge's ordinary use events. */
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)
@@ -70,7 +75,7 @@ public final class VehicleClient {
                 || event instanceof net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific))return;
         if(!event.getWorld().isRemote || event.getHand()!=net.minecraft.util.EnumHand.MAIN_HAND
                 || event.getEntityPlayer()!=Minecraft.getMinecraft().player)return;
-        if(sendInteraction() && event.isCancelable()) {
+        if(sendInteraction(false) && event.isCancelable()) {
             event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);
         }
     }

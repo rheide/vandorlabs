@@ -34,6 +34,7 @@ public final class VehicleWorld extends World {
     private final Map<Long,Chunk> chunks=new HashMap<>();
     public BlockPos origin=BlockPos.ORIGIN;
     public int propulsionLevel;
+    private int controlAppearance;
     public net.minecraft.util.math.Vec3d propulsionMotion=net.minecraft.util.math.Vec3d.ZERO;
     public boolean hover;
     public int tileRevision;
@@ -51,11 +52,12 @@ public final class VehicleWorld extends World {
         if(speed>.002)propulsionMotion=new net.minecraft.util.math.Vec3d(c*dx+s*dz,dy,-s*dx+c*dz);
         return speed;
     }
-    /** Cache key changes only when a directional group switches, not on every velocity sample. */
+    /** Visible propulsion groups and carried lever positions determine the moving mesh key. */
     public int propulsionAppearance(){
         return propulsionLevel|(hover?16:0)|(propulsionMotion.x>.002?32:propulsionMotion.x<-.002?64:0)
                 |(propulsionMotion.y>.002?128:propulsionMotion.y<-.002?256:0)|(propulsionMotion.z>.002?512:propulsionMotion.z<-.002?1024:0);
     }
+    void controlAppearanceChanged(){controlAppearance++;}
     public int propulsionBrightness(BlockPos pos,int configured) {
         VehicleStructure.Cell cell=structure.at(pos);
         if(cell==null || !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return configured;
