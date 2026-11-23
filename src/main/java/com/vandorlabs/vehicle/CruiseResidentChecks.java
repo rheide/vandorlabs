@@ -37,6 +37,8 @@ final class CruiseResidentChecks {
     private static WorldServer world;
     private static Future<?> work;
     private static int stage,ticks,idleSaves,arrivalTicks;
+    private static long descendTick;
+    private static double firstArrivalY;
     private static double departure, residentX, wildernessX, originZ;
 
     private CruiseResidentChecks() {}
@@ -61,6 +63,9 @@ final class CruiseResidentChecks {
             advance(2);
         }else if(stage==2&&client.player.getRidingEntity() instanceof EntityGroundVehicle
             && Math.abs(client.player.posX-residentX)<4 && Math.abs(client.player.getRidingEntity().posX-residentX)<1){
+            EntityGroundVehicle local=(EntityGroundVehicle)client.player.getRidingEntity();
+            require(local.isAddedToWorld()&&local.addedToChunk&&local.chunkCoordX==chunk(residentX)
+                &&client.world.getEntityByID(local.getEntityId())==local,"resident hop reindexes the actual client craft");
             work=client.getIntegratedServer().addScheduledTask(CruiseResidentChecks::crossWilderness);
             advance(3);
         }else if(stage==3&&ticks>=35&&idleSaves==0){
@@ -72,24 +77,32 @@ final class CruiseResidentChecks {
             work=client.getIntegratedServer().addScheduledTask(CruiseResidentChecks::verify);
             advance(4);
         }else if(stage==4&&REENTRY){
-            work=client.getIntegratedServer().addScheduledTask(()->require(craft.cruise.move(0,255-craft.cruise.altitude(),0),
-                    "request reentry from the last resident anchor"));
+            work=client.getIntegratedServer().addScheduledTask(()->{
+                descendTick=world.getTotalWorldTime();
+                require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"request reentry from the last resident anchor");
+            });
             advance(5);
         }else if(stage==5){
             if(client.player.posY>=300)return false;
             require(client.player.getRidingEntity() instanceof EntityGroundVehicle,"resident reentry keeps the actual client mounted");
             EntityGroundVehicle local=(EntityGroundVehicle)client.player.getRidingEntity();
             if(local.cruise.active()||Math.abs(local.posX-wildernessX)>=1)return false;
-            require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null&&local.addedToChunk,
+            require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null&&local.addedToChunk
+                &&local.isAddedToWorld()&&client.world.getEntityByID(local.getEntityId())==local,
                 "resident reentry retains the exact mounted and indexed client aircraft");
             require(client.world.getChunkProvider().getLoadedChunk(chunk(wildernessX),chunk(originZ))!=null,
                 "resident destination terrain arrives before lower-altitude movement");
-            if(++arrivalTicks<20||local.posY>=256)return false;
+            if(arrivalTicks++==0)firstArrivalY=local.posY;
+            if(arrivalTicks<20||local.posY>=256||local.posY>=firstArrivalY-.5)return false;
+            double clientY=local.posY;
             work=client.getIntegratedServer().addScheduledTask(()->{
                 require(!craft.cruise.active()&&craft.posY<256&&pilot.getRidingEntity()==craft
                     &&craft.chunkCoordX==chunk(wildernessX)&&!generated(residentX+FAR/2,originZ),
                     "resident reentry continues beneath the ceiling without generating the route midpoint");
-                System.out.println("[vandorlabs][cruise-resident] prepared descent after actual resident hop, mountedTicks="+arrivalTicks);
+                int elapsed=(int)(world.getTotalWorldTime()-descendTick);
+                require(elapsed<120&&Math.abs(clientY-craft.posY)<4,"resident client descent remains synchronized and prompt");
+                System.out.println("[vandorlabs][cruise-resident] prepared descent after actual resident hop, mountedTicks="
+                    +arrivalTicks+" serverTicks="+elapsed);
             });
             advance(6);
         }else if(stage==4||stage==6){

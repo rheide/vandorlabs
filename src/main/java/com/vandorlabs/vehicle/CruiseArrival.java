@@ -18,21 +18,24 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-/** A committed arrival keeps its old anchor until the rider has been sent the local terrain. */
+/** Prepare local terrain and watches before moving the client away from its current anchor. */
 final class CruiseArrival {
     private static final int CHUNKS_PER_TICK=4;
     private static final long LOAD_BUDGET_NANOS=4_000_000;
     private static final Map<WorldServer,Budget> BUDGETS=new WeakHashMap<>();
     private static final Method WATCH_ENTRY=ReflectionHelper.findMethod(PlayerChunkMap.class,
         "getOrCreateEntry","func_187302_c",int.class,int.class);
+    final double x,z;
     private final WorldServer world;
+    private final boolean generate;
     private final PlayerChunkMap watches;
     private final List<ChunkPos> footprint=new ArrayList<>(), prepare=new ArrayList<>();
     private final Map<EntityPlayerMP,List<PlayerChunkMapEntry>> added=new IdentityHashMap<>();
     private int next;
 
-    CruiseArrival(WorldServer world,double x,double z,AxisAlignedBB hull) {
+    CruiseArrival(WorldServer world,double x,double z,AxisAlignedBB hull,boolean generate) {
         this.world=world;
+        this.x=x;this.z=z;this.generate=generate;
         watches=world.getPlayerChunkMap();
         int cx=section(x),cz=section(z);
         int minX=Math.min(cx-1,section(hull.minX)),maxX=Math.max(cx+1,section(hull.maxX));
@@ -40,7 +43,7 @@ final class CruiseArrival {
         // The perimeter allows vanilla to populate and light the inner footprint.
         for(int xx=minX-1;xx<=maxX+1;xx++)for(int zz=minZ-1;zz<=maxZ+1;zz++) {
             ChunkPos column=new ChunkPos(xx,zz);
-            prepare.add(column);
+            if(generate)prepare.add(column);
             if(xx>=minX&&xx<=maxX&&zz>=minZ&&zz<=maxZ)footprint.add(column);
         }
         prepare.sort(Comparator.comparingInt(column->Math.max(Math.abs(column.x-cx),Math.abs(column.z-cz))));
@@ -65,7 +68,8 @@ final class CruiseArrival {
             return true;
         });
         for(ChunkPos column:footprint) {
-            Chunk chunk=world.getChunkProvider().getLoadedChunk(column.x,column.z);
+            Chunk chunk=generate?world.getChunkProvider().getLoadedChunk(column.x,column.z):
+                CruiseResidentReanchor.loaded(world,column.x,column.z);
             if(chunk==null) {next=0;return false;}
             if(!chunk.isTerrainPopulated())ready=false;
             for(Entity rider:riders)if(rider instanceof EntityPlayerMP) {
