@@ -138,6 +138,7 @@ public final class CruiseSky {
             GlStateManager.disableLighting();
             GlStateManager.color(1,1,1,1);
             // Larger tiles cover the horizon while finer ones arrive and during altitude transitions.
+            net.minecraft.util.math.Vec3d fog=mc.world.getFogColor(partial);
             for(Tile t:renderOrder){
                 int span=t.step*MessageCruiseTerrain.SIZE;
                 double dx=t.x-x,dz=t.z-z;
@@ -146,18 +147,23 @@ public final class CruiseSky {
                 if(fade&&(dx>=span||dz>=span||dx<=-2*span||dz<=-2*span))continue;
                 mc.getTextureManager().bindTexture(tiles.get(t));
                 BufferBuilder b=Tessellator.getInstance().getBuffer();
-                b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
                 byte[] heights=elevations.get(t);
                 int divisions=heights==null?8:MessageCruiseTerrain.HEIGHT_GRID-1;
-                for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
-                    vertex(b,dx,dz,span,col,row,divisions,y,opacity,fade,heights);
-                    vertex(b,dx,dz,span,col,row+1,divisions,y,opacity,fade,heights);
-                    vertex(b,dx,dz,span,col+1,row+1,divisions,y,opacity,fade,heights);
-                    vertex(b,dx,dz,span,col+1,row,divisions,y,opacity,fade,heights);
+                // Composite atmosphere under each tile on its own mesh so distant ridges
+                // never protrude through a flat fog plane. Only pure haze fades into the sky.
+                for(int pass=0;pass<2;pass++){
+                    boolean atmosphere=pass==0;
+                    if(atmosphere)GlStateManager.disableTexture2D();else GlStateManager.enableTexture2D();
+                    b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX_COLOR);
+                    for(int row=0;row<divisions;row++)for(int col=0;col<divisions;col++){
+                        vertex(b,dx,dz,span,col,row,divisions,y,opacity,fade,heights,horizon,atmosphere,fog);
+                        vertex(b,dx,dz,span,col,row+1,divisions,y,opacity,fade,heights,horizon,atmosphere,fog);
+                        vertex(b,dx,dz,span,col+1,row+1,divisions,y,opacity,fade,heights,horizon,atmosphere,fog);
+                        vertex(b,dx,dz,span,col+1,row,divisions,y,opacity,fade,heights,horizon,atmosphere,fog);
+                    }
+                    Tessellator.getInstance().draw();
                 }
-                Tessellator.getInstance().draw();
             }
-            haze(mc,partial,horizon,y,opacity);
         }finally{
             GlStateManager.matrixMode(GL11.GL_PROJECTION);
             GlStateManager.popMatrix();
@@ -169,37 +175,20 @@ public final class CruiseSky {
             GL11.glDepthRange(0,1);GlStateManager.depthMask(true);
         }
     }
-    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double y,double opacity,boolean fade,byte[] heights){
+    private static void vertex(BufferBuilder b,double dx,double dz,int span,int col,int row,int divisions,double y,double opacity,boolean fade,byte[] heights,double horizon,boolean atmosphere,net.minecraft.util.math.Vec3d fog){
         double u=col/(double)divisions,v=row/(double)divisions,x=dx+u*span,z=dz+v*span;
         // The next coarser tile extends underneath this entire tile. Feather the level
         // change around the aircraft so individual square tile boundaries stay invisible.
         double detail=fade?Math.max(0,Math.min(1,(1-Math.max(Math.abs(x),Math.abs(z))/span)*2.5)):1;
-        int alpha=(int)Math.round(255*opacity*detail);
+        double radius=Math.sqrt(x*x+z*z)/horizon;
+        double visibility=Math.max(0,Math.min(1,(1-radius)/.14));
+        double total=opacity*detail*visibility;
+        double clear=Math.max(0,Math.min(1,(.86-radius)/.8));
+        double surface=total*clear*clear;
+        double alpha=atmosphere?(total>=1?1:(total-surface)/(1-surface)):surface;
+        int r=atmosphere?(int)(255*fog.x):255,g=atmosphere?(int)(255*fog.y):255,blue=atmosphere?(int)(255*fog.z):255;
         double ground=heights==null?0:((heights[row*MessageCruiseTerrain.HEIGHT_GRID+col]&255)-63)*detail;
-        b.pos(x,y+ground,z).tex(u,v).color(255,255,255,alpha).endVertex();
-    }
-    /** Tint the distant surface after drawing opaque land and water. Fading the base
-     * texture itself reveals stars through the ocean whenever there is no coarser tile. */
-    private static void haze(Minecraft mc,float partial,double horizon,double y,double opacity){
-        net.minecraft.util.math.Vec3d fog=mc.world.getFogColor(partial);
-        int r=(int)(255*fog.x),g=(int)(255*fog.y),blue=(int)(255*fog.z);
-        BufferBuilder b=Tessellator.getInstance().getBuffer();
-        GlStateManager.disableTexture2D();
-        try{
-            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_COLOR);
-            for(int row=-12;row<12;row++)for(int col=-12;col<12;col++){
-                hazeVertex(b,col,row,horizon,y,opacity,r,g,blue);
-                hazeVertex(b,col,row+1,horizon,y,opacity,r,g,blue);
-                hazeVertex(b,col+1,row+1,horizon,y,opacity,r,g,blue);
-                hazeVertex(b,col+1,row,horizon,y,opacity,r,g,blue);
-            }
-            Tessellator.getInstance().draw();
-        }finally{GlStateManager.enableTexture2D();}
-    }
-    private static void hazeVertex(BufferBuilder b,int col,int row,double horizon,double y,double opacity,int r,int g,int blue){
-        double distance=Math.sqrt(col*col+row*row)/8;
-        double clear=Math.max(0,Math.min(1,(1-distance)/.94));
-        b.pos(col*horizon/8,y,row*horizon/8).color(r,g,blue,(int)(255*opacity*(1-clear*clear))).endVertex();
+        b.pos(x,y+ground,z).tex(u,v).color(r,g,blue,(int)Math.round(255*alpha)).endVertex();
     }
     private CruiseSky(){}
 }
