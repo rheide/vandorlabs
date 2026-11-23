@@ -70,9 +70,9 @@ final class HoverRuntimeChecks {
             craft.hoverTarget=altitude;craft.rotationYaw=priorYaw;
             require(craft.structure.exhaustCells.size()==2,"movement exhaust includes impulse and vertical thrusters only");
             for(VehicleStructure.Cell cell:craft.structure.exhaustCells){String name=cell.state.getBlock().getRegistryName().getResourcePath();require(!name.startsWith("antigravity_plate")&&!name.startsWith("repulsor_array"),"passive lift blocks do not emit forward-movement particles");}
-            craft.flightInput(player,(byte)1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY>altitude+1,"vertical input ascends");
+            craft.flightInput(player,(byte)1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY>altitude+2.5,"vertical input reaches the faster ascent rate");
             craft.flightInput(player,(byte)0,false);for(int i=0;i<40;i++)advance.invoke(craft,true);require(Math.abs(craft.posY-craft.hoverTarget)<.001,"released vertical input holds selected height");
-            double raised=craft.posY;craft.flightInput(player,(byte)-1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY<raised-1,"vertical input descends");
+            double raised=craft.posY;craft.flightInput(player,(byte)-1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY<raised-2.5,"vertical input reaches the faster descent rate");
             craft.flightInput(player,(byte)0,false);
             NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.readFromNBT(saved);require(restored.hover && restored.view.hover && Math.abs(restored.hoverTarget-craft.hoverTarget)<1e-6,"entity save restores Hover and altitude target");restored.setDead();
             craft.autopilotControls((byte)1,(byte)1,false);craft.flightInput(player,(byte)1,false);for(int i=0;i<8;i++)advance.invoke(craft,true);
