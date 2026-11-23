@@ -34,6 +34,8 @@ final class CruisePhysicalChecks {
     private static final String RESTART=System.getenv("VANDOR_LABS_CRUISE_PHASE");
     private static final String EXIT=System.getenv("VANDOR_LABS_PHYSICAL_EXIT");
     private static final String MODE=System.getenv().getOrDefault("VANDOR_LABS_REENTRY_MODE","physical");
+    private static final int BAND_HANDOFF=Integer.parseInt(System.getenv().getOrDefault("VANDOR_LABS_BAND_ROUTE_HANDOFF","0"));
+    private static final int BAND_STEPS=96,BAND_STRIDE=6,BAND_HEIGHT=384;
     private static final String ANCHOR_FIXTURE="PhysicalCruiseFixture";
     private static final Audit AUDIT=new Audit();
     private static EntityGroundVehicle craft;
@@ -68,6 +70,7 @@ final class CruisePhysicalChecks {
             net.minecraftforge.common.config.Configuration config=new net.minecraftforge.common.config.Configuration(file);
             config.load();
             config.get("vehicles","cruiseCoordinates","anchored").set(MODE);
+            if(BAND_HANDOFF!=0)config.get("vehicles","cruiseHandoffAltitude",512).set(BAND_HANDOFF);
             config.save();
             BlockAvailability.load(file);
             require(BlockAvailability.cruiseCoordinates().name().equalsIgnoreCase(MODE),
@@ -81,6 +84,11 @@ final class CruisePhysicalChecks {
                 advance(1);
             }
         }else if(stage==1&&wait>15&&mc.player.getRidingEntity() instanceof EntityGroundVehicle){
+            if(BAND_HANDOFF!=0){
+                work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::startBand);
+                advance(6);
+                return false;
+            }
             work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::start);
             advance(2);
         }else if(stage==2&&wait>=5){
@@ -127,6 +135,16 @@ final class CruisePhysicalChecks {
                     +" serverY="+craft.posY+" clientY="+clientY+" active="+craft.cruise.active()
                     +" pitch="+craft.flightPitch()+" bank="+craft.flightBank()+" motionY="+craft.motionY));
             }
+        }else if(stage==6){
+            if(steps<BAND_STEPS){
+                work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::moveInBand);
+            }else if(wait>BAND_STEPS+30){
+                require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"pilot still mounted during band travel");
+                EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
+                require(local.cruise.handoffAltitude()==BAND_HANDOFF,"server handoff setting reached mounted client");
+                work=mc.getIntegratedServer().addScheduledTask(CruisePhysicalChecks::finishBand);
+                advance(5);
+            }
         }else if(stage==3||stage==5){
             System.out.println("[vandorlabs] cruise-physical PASS");
             return true;
@@ -156,6 +174,36 @@ final class CruisePhysicalChecks {
         require(pilot.startRiding(craft,true),"real pilot mounts");
         craft.hover=true;
         craft.hoverTarget=511.9;
+    }
+
+    private static void startBand(){
+        require(BAND_HANDOFF>=256&&BAND_HANDOFF<=512,"supported band setting");
+        require(!generated(startX+BAND_STEPS*BAND_STRIDE,startZ),"fresh destination before band travel");
+        craft.setPosition(startX,BAND_HEIGHT,startZ);
+        NBTTagCompound state=new NBTTagCompound();
+        state.setByte("MaxwellFlightPhase",(byte)3);
+        craft.readFlightMode(state);
+        MinecraftForge.EVENT_BUS.register(AUDIT);
+    }
+
+    /** Move the real mounted watch origin six blocks per sample at a constant geographic altitude. */
+    private static void moveInBand(){
+        double rise=BAND_HEIGHT-craft.flightAltitude();
+        if(!craft.cruise.move(BAND_STRIDE,rise,0))craft.setPosition(startX+(steps+1)*BAND_STRIDE,BAND_HEIGHT,startZ);
+        craft.updatePassenger(pilot);
+        world.updateEntityWithOptionalForce(craft,false);
+        world.getMinecraftServer().getPlayerList().serverUpdateMovingPlayer(pilot);
+        VehicleNetwork.state(craft,true);
+        steps++;
+    }
+
+    private static void finishBand(){
+        MinecraftForge.EVENT_BUS.unregister(AUDIT);
+        boolean high=BAND_HEIGHT>BAND_HANDOFF;
+        require(craft.cruise.active()==high,"band travel selects the configured tracking mode");
+        require(high?AUDIT.loads.isEmpty():!AUDIT.loads.isEmpty(),"expected native wilderness column activity");
+        System.out.println("[vandorlabs][flight-band] handoff="+BAND_HANDOFF+" altitude="+BAND_HEIGHT+
+                " distance="+(BAND_STRIDE*BAND_STEPS)+" freshRouteLoads="+AUDIT.loads.size());
     }
 
     private static void resume(Minecraft mc){
@@ -337,7 +385,7 @@ final class CruisePhysicalChecks {
 
         private boolean remote(ChunkEvent event){
             double x=event.getChunk().x*16.0,z=event.getChunk().z*16.0;
-            return event.getWorld()==world && x>=startX+1024 && x<=remoteX+SWEEP+1024 && Math.abs(z-startZ)<=1024;
+            return event.getWorld()==world && x>=startX+(BAND_HANDOFF!=0?256:1024) && x<=remoteX+SWEEP+1024 && Math.abs(z-startZ)<=1024;
         }
         @SubscribeEvent public void load(ChunkEvent.Load event){
             if(!remote(event))return;
