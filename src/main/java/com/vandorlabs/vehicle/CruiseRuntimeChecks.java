@@ -40,7 +40,10 @@ public final class CruiseRuntimeChecks {
 
         @SubscribeEvent public void fly(net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent event){
             if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END||routeSteps<=0)return;
-            require(craft.cruise.move(64,routeSteps>32?48:-16,0),"moving high-speed route");
+            boolean climbing=routeSteps>32;
+            require(craft.cruise.move(64,climbing?48:-16,0),"moving high-speed route");
+            craft.applyFlightPose(new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw,
+                    climbing?55:-55,craft.structure.facing));
             routeSteps--;
         }
 
@@ -273,7 +276,11 @@ public final class CruiseRuntimeChecks {
                     mc.getConnection().handleEntityTeleport(tracker);
                     double jump=mounted.visualPose(.25F).y-before;
                     require(Math.abs(jump)<1e-6,"vanilla tracker moved an in-flight camera between frames by "+jump+" blocks");
-                    if(climb>0)climbSamples++;else diveSamples++;
+                    float pitch=mounted.visualPose(1).pitch;
+                    boolean firstClimb=climb>0&&pitch>40&&climbSamples++==0;
+                    boolean firstDive=climb<0&&pitch< -40&&diveSamples++==0;
+                    if(firstClimb||firstDive)ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,
+                            mc.displayHeight,mc.getFramebuffer()),"png",new File(out,firstClimb?"cruise-steep-climb.png":"cruise-steep-dive.png"));
                 }
                 double early=mounted.cruise.view(true,.05F),late=mounted.cruise.view(true,.8F);
                 if(late>early&&late-early<192)smoothSamples++;
@@ -282,6 +289,7 @@ public final class CruiseRuntimeChecks {
             if(routeSteps==0){
                 require(climbSamples>=1&&diveSamples>=1,"interpolated both vertical directions: climb="+climbSamples+" dive="+diveSamples);
                 require(smoothSamples>=4,"geographic route updated between tick boundaries, samples="+smoothSamples);
+                System.out.println("[vandorlabs] steep cruise camera PASS climb="+climbSamples+" dive="+diveSamples+" accepted tracker displacement=0");
                 require(groundSamples*5>=transitTicks*4,"seed ground coverage during high-speed movement "+groundSamples+"/"+transitTicks);
                 System.out.println("[vandorlabs] moving seed atlas ground="+groundSamples+"/"+transitTicks+" interpolated="+smoothSamples);
                 work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::finishLeg);stage=2;
