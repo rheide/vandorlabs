@@ -15,7 +15,7 @@ import java.nio.FloatBuffer;
 final class CockpitRedstoneRenderChecks {
     static void run(Minecraft mc,File output)throws Exception{
         TileEntityCockpit tile=new TileEntityCockpit();tile.setWorld(mc.world);
-        java.lang.reflect.Method rows=TECockpit.class.getDeclaredMethod("rows",TileEntityCockpit.class,CockpitData.Surface.class);rows.setAccessible(true);
+        java.lang.reflect.Method rows=TECockpit.class.getDeclaredMethod("rows",TileEntityCockpit.class,CockpitData.Surface.class,TileEntityCockpit.Display.class,boolean.class);rows.setAccessible(true);
         for(CockpitData.Surface plane:tile.data().surfaces)if(plane.id.equals("screen_left")||plane.id.equals("screen_right"))for(int count:new int[]{3,6}){
             tile.display(plane.id).rows=count;
             for(int i=0;i<count;i++){TileEntityCockpit.Control control=tile.control(plane.id+"/"+i);control.label="MMMM";control.kind=i%3==1?1:i%3==2?2:0;control.level=15;}
@@ -47,7 +47,7 @@ final class CockpitRedstoneRenderChecks {
             frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.multMatrix(camera);
             GlStateManager.clearColor(0,0,0,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);
             Tessellator.getInstance().getBuffer().setTranslation(dirty?123:0,dirty?456:0,dirty?789:0);
-            rows.invoke(null,tile,plane);
+            rows.invoke(null,tile,plane,tile.display(plane.id),false);
             return net.minecraft.util.ScreenShotHelper.createScreenshot(width,height,frame);
         }finally{
             Tessellator.getInstance().getBuffer().setTranslation(0,0,0);GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);
