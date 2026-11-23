@@ -8,6 +8,7 @@ import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketEntityMetadata;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -115,9 +116,8 @@ public final class VehicleCruise {
         arrival=null;
         endForLanding();
         craft.applyFlightPose(new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw,pitch,bank,craft.structure.facing));
-        relocate(routeX,y,routeZ,true);
+        relocate(routeX,y,routeZ,true,true);
         prepared.close();
-        VehicleNetwork.state(craft);
         return true;
     }
 
@@ -166,7 +166,11 @@ public final class VehicleCruise {
 
     private void relocate(double x, double y, double z) { relocate(x,y,z,false); }
 
-    private void relocate(double x, double y, double z, boolean residentHop) {
+    private void relocate(double x, double y, double z, boolean moveWatches) {
+        relocate(x,y,z,moveWatches,false);
+    }
+
+    private void relocate(double x,double y,double z,boolean moveWatches,boolean arrival) {
         // The spatial index unions previous/current render bounds. A teleport has no swept path.
         craft.prevPosX = craft.lastTickPosX = x;
         craft.prevPosY = craft.lastTickPosY = y;
@@ -174,13 +178,21 @@ public final class VehicleCruise {
         craft.setPosition(x,y,z);
         craft.view.origin = new BlockPos(craft);
         WorldServer world=(WorldServer)craft.world;
-        if (residentHop) world.updateEntityWithOptionalForce(craft,false);
+        if (moveWatches) world.updateEntityWithOptionalForce(craft,false);
+        if(arrival) {
+            // Destination chunks have already been sent. Move the client craft out of its
+            // old chunk before updateMovingPlayer queues the old column's unload packet.
+            SPacketEntityMetadata metadata=new SPacketEntityMetadata(craft.getEntityId(),craft.getDataManager(),true);
+            for(Entity rider:craft.getPassengers())if(rider instanceof EntityPlayerMP)
+                ((EntityPlayerMP)rider).connection.sendPacket(metadata);
+            VehicleNetwork.state(craft);
+        }
         for (Entity rider : craft.getPassengers()) {
             craft.updatePassenger(rider);
             if (rider instanceof EntityPlayerMP) {
                 EntityPlayerMP player = (EntityPlayerMP)rider;
                 player.connection.setPlayerLocation(player.posX,player.posY,player.posZ,player.rotationYaw,player.rotationPitch);
-                if (residentHop) {
+                if (moveWatches) {
                     world.updateEntityWithOptionalForce(player,false);
                     world.getPlayerChunkMap().updateMovingPlayer(player);
                 }

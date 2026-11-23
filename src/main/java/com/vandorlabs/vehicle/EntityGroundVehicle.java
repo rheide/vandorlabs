@@ -271,7 +271,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         nextPrediction=new Control(sequence,f,s,b,flightSprint);
         forward=f;strafe=s;brake=b;
     }
-    private boolean clientProjectedMotion;
+    private boolean clientProjectedMotion,clientCruiseMotion;
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
         if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
@@ -285,12 +285,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         long priorTick=lastServerTick;
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
-        boolean projected=world.isRemote&&cruise.projected();
+        boolean cruiseActive=world.isRemote&&cruise.active();
+        boolean arriving=clientCruiseMotion&&!cruiseActive&&posY-p.y>2048;
+        clientCruiseMotion=cruiseActive;
+        boolean projected=cruiseActive&&cruise.projected();
         boolean continuous=projected&&clientProjectedMotion&&priorTick!=Long.MIN_VALUE&&Math.abs(p.y-posY)<2048;
         clientProjectedMotion=projected;
         if(!continuous&&longPositionChange(p.x,p.y,p.z)){
             flightPitch=targetPitch=p.flightPitch;flightBank=targetBank=p.flightBank;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
             snapPosition(p.x,p.y,p.z,p.yaw);
+            if(arriving&&isAddedToWorld())world.updateEntityWithOptionalForce(this,false);
             for(Entity passenger:getPassengers())updatePassenger(passenger);
             return;
         }
