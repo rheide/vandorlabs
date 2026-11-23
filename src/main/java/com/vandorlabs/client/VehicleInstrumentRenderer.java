@@ -145,14 +145,14 @@ final class VehicleInstrumentRenderer {
     /** Transparent flight symbology. The centre stays clear at the horizon. */
     private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed,boolean frontGlass){
         final int green=0xff8dffbf;
-        double x=frontGlass?45:64,y=height*(frontGlass?.35:.5),angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
+        double x=frontGlass?45:64,y=height*(frontGlass?.35:.38),angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         RedstoneScreenRenderer.bindWhite();
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(7,BlockSurfaceFormat.get());
         for(int mark=-90;mark<=90;mark+=10){
-            double offset=(pitch-mark)*height/(frontGlass?130:76);
-            if(Math.abs(offset)>height*(frontGlass?.09:.25))continue;
+            double offset=(pitch-mark)*height/(frontGlass?130:120);
+            if(Math.abs(offset)>height*(frontGlass?.09:.13))continue;
             double cx=x+nx*offset,cy=y+ny*offset,span=mark==0?(frontGlass?12:22):7;
             line(b,cx-ny*span,cy+nx*span,cx-ny*3,cy+nx*3,1,.03,green);
             line(b,cx+ny*3,cy-nx*3,cx+ny*span,cy-nx*span,1,.03,green);
@@ -163,16 +163,26 @@ final class VehicleInstrumentRenderer {
         line(b,x+2,y,x+7,y,1,.04,POINTER);
         Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        double headingX=frontGlass?83:64,headingY=height*(frontGlass?.29:.19);
-        double speedX=frontGlass?44:22,altX=frontGlass?84:106;
-        double valueY=height*(frontGlass?.66:.5);
-        label(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),headingX,headingY,34,1,green);
-        label(font,"SPD",speedX,valueY-9,32,.8F,green);
-        label(font,Math.round(speed)+" m/s",speedX,valueY,34,1,green);
-        label(font,"ALT",altX,valueY-9,32,.8F,green);
-        label(font,Math.round(altitude)+" m",altX,valueY,34,1,green);
-        label(font,String.format(Locale.ROOT,"%+.0f°",pitch),headingX,height*(frontGlass?.38:.76),32,.85F,green);
+        double headingX=frontGlass?83:64,headingY=height*(frontGlass?.29:.26);
+        double speedX=frontGlass?44:28,altX=frontGlass?84:100;
+        double valueY=height*(frontGlass?.66:.43);
+        hudLabel(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),headingX,headingY,34,1,green);
+        hudLabel(font,"SPD",speedX,valueY-9,32,.8F,green);
+        hudLabel(font,Math.round(speed)+" m/s",speedX,valueY,34,1,green);
+        hudLabel(font,"ALT",altX,valueY-9,32,.8F,green);
+        hudLabel(font,Math.round(altitude)+" m",altX,valueY,34,1,green);
+        hudLabel(font,String.format(Locale.ROOT,"%+.0f°",pitch),headingX,height*(frontGlass?.38:.54),32,.85F,green);
         GlStateManager.color(1,1,1,1);
+    }
+
+    private static void hudLabel(FontRenderer font,String text,double x,double y,double width,float scale,int color){
+        // A one-pixel keyline keeps the projected text readable against snow and bright cloud.
+        final int shadow=0xff18362a;
+        label(font,text,x-.65,y,width,scale,shadow);
+        label(font,text,x+.65,y,width,scale,shadow);
+        label(font,text,x,y-.65,width,scale,shadow);
+        label(font,text,x,y+.65,width,scale,shadow);
+        label(font,text,x,y,width,scale,color);
     }
 
     private static void attitude(BufferBuilder b,double x,double y,double r,double pitch,double bank) {
