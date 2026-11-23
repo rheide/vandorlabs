@@ -84,6 +84,7 @@ final class CockpitMechanismRuntimeChecks {
             require(((net.minecraft.item.ItemBlock)stack.getItem()).canPlaceBlockOnSide(world,clicked,back,player,stack),"client rear cockpit placement accepted");
             require(player.interactionManager.processRightClickBlock(player,world,stack,net.minecraft.util.EnumHand.MAIN_HAND,clicked,back,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"rear canopy placement without rear clearance "+id+"/"+facing+"/"+height);
             TileEntityCanopy shell=TileEntityCanopy.at(world,rear.up());require(shell!=null,"canopy back aligned with cockpit back");shell=shell.constituent();
+            if(id.equals("long_canopy"))headroom(tile,shell,player);
             for(BlockPos cell:shell.cells())require(cell.subtract(rear).getX()*back.getDirectionVec().getX()+cell.subtract(rear).getZ()*back.getDirectionVec().getZ()<=0,"shell does not extend behind cockpit");
             world.destroyBlock(shell.constituent().getPos(),false);require(world.getBlockState(wall).getBlock()==net.minecraft.init.Blocks.STONE,"rear wall retained");world.setBlockToAir(wall);
             require(CockpitAssembly.root(world,rear.up())==tile,"cockpit restored after aligned canopy removal");
@@ -106,7 +107,6 @@ final class CockpitMechanismRuntimeChecks {
             require(CockpitAssembly.boxes(tile.getWorld(),anchor).equals(body),"shared raised cockpit collision retained");
             require(CockpitAssembly.root(tile.getWorld(),anchor)==tile,"shared cell resolves cockpit controls");
             TileEntityCanopy shell=TileEntityCanopy.at(tile.getWorld(),anchor);
-            if(id.equals("long_canopy"))headroom(tile,shell,player);
             CockpitCanopyInteractionChecks.configuration(tile,shell,player);
             if(shell.opening()){
                 shell.targetOpen=true;shell.progress=shell.previous=1;
@@ -127,20 +127,23 @@ final class CockpitMechanismRuntimeChecks {
             com.vandorlabs.entity.EntityChairSeat mount=new com.vandorlabs.entity.EntityChairSeat(
                     tile.getWorld(),tile.getPos(),tile.seatHeight());
             Vec3d feet=mount.cockpitRiderPosition(player,0);
+            java.util.List<com.vandorlabs.canopy.CanopyMesh.Face> glassFaces=new java.util.ArrayList<>();
+            for(com.vandorlabs.canopy.CanopyMesh.Face face:roof.faces())
+                if(face.glazing||"glass".equals(face.baseMaterial))glassFaces.add(face);
             int samples=0;
             double nearest=Double.POSITIVE_INFINITY;
             for(double x:new double[]{-.24,0,.24})for(double z:new double[]{-.24,0,.24}){
                 Vec3d base=feet.addVector(x,.8,z);
-                RayTraceResult glass=roof.trace(base,base.addVector(0,2,0));
+                RayTraceResult glass=com.vandorlabs.canopy.CanopyMesh.trace(glassFaces,"posed",roof.width(),0,
+                        roof.facing(),roof.getPos(),base,base.addVector(0,2,0));
                 if(glass!=null){
                     nearest=Math.min(nearest,glass.hitVec.y-feet.y-player.height);
                     samples++;
                 }
             }
-            if(samples>0){
-                require(nearest>=0,"head penetrates Long Angled canopy by "+(-nearest)+" at "+roof.getPos()+" facing "+tile.facing());
-                System.out.println("[vandorlabs] cockpit headroom PASS "+tile.facing()+" samples="+samples+" clearance="+nearest);
-            }
+            require(samples>0,"head is under the aligned windshield");
+            require(nearest>=0,"head penetrates Long Angled canopy by "+(-nearest)+" at "+roof.getPos()+" facing "+tile.facing());
+            System.out.println("[vandorlabs] cockpit headroom PASS "+tile.facing()+" samples="+samples+" clearance="+nearest);
         }finally{roof.large.angle=before;}
     }
     private static void sliders(TileEntityCockpit tile,EntityPlayerMP player){
