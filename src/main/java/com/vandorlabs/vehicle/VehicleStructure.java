@@ -260,10 +260,28 @@ public final class VehicleStructure {
     /** Raw ownership comparison for exact copies, without vehicle parking/legacy normalization. */
     /** Exact immutable comparison without building two complete serialized NBT trees. */
     public boolean sameSnapshot(VehicleStructure other){
+        return sameSnapshot(other,false);
+    }
+    boolean sameParkingPreview(VehicleStructure other){return sameSnapshot(other,true);}
+    private boolean sameSnapshot(VehicleStructure other,boolean parkingPreview){
         if(this==other)return true;
         if(other==null||displayOnly!=other.displayOnly||gearCount!=other.gearCount||facing!=other.facing||!seat.equals(other.seat)||cells.size()!=other.cells.size())return false;
-        for(int i=0;i<cells.size();i++){Cell a=cells.get(i),b=other.cells.get(i);if(a!=b&&(!a.pos.equals(b.pos)||a.state!=b.state||!a.sameTileData(b)))return false;}
+        for(int i=0;i<cells.size();i++){
+            Cell a=cells.get(i),b=other.cells.get(i);
+            if(a==b)continue;
+            if(!a.pos.equals(b.pos)||a.state!=b.state)return false;
+            if(!a.sameTileData(b)&&!(parkingPreview&&maxwellCells.contains(a)&&sameMaxwellPreview(a,b)))return false;
+        }
         return true;
+    }
+    private static boolean sameMaxwellPreview(Cell a,Cell b){
+        NBTTagCompound before=a.tileData(),after=b.tileData();
+        if(before==null||after==null)return false;
+        // The final, frozen snapshot still retains the drive's current fuel and throttle.
+        for(String key:new String[]{"MaxwellFuel","MaxwellBurnUnits","MaxwellActiveLevel","NavigationScreenOn"}){
+            before.removeTag(key);after.removeTag(key);
+        }
+        return com.vandorlabs.surface.TextureJoinMigration.same(before,after);
     }
     public boolean matchesExact(World world,BlockPos origin){
         for(Cell cell:cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at)||world.getBlockState(at)!=cell.state)return false;TileEntity tile=world.getTileEntity(at);

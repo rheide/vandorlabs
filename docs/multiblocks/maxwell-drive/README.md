@@ -50,6 +50,8 @@ Join the pillar tops with a continuous rectangular rim. Leave the middle of the 
 
 Right-click the Core to form the drive and reserve the frame volume. If assembly fails, check the reported frame cell and clear the interior.
 
+An already placed Fluiduct next to an inlet connects as soon as the drive forms.
+
 ![Maxwell Drive: assembled fuel inlets and gauge](step-4.png)
 
 The assembled drive shown here has fuel in its tank.

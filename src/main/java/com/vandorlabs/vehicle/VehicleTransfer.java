@@ -119,6 +119,13 @@ public final class VehicleTransfer {
     private static void hold(Work work,EntityGroundVehicle entity){if(work!=null){if(work.held==null){work.beforeStructure=entity.structure;work.beforeCollision=entity.collision;}work.held=entity;entity.setTransferInProgress(true);}}
     /** Keep a queued read-only parking preflight stable; release follows the existing queue lifecycle. */
     static void holdForPreflight(EntityGroundVehicle entity){Work work=ACTIVE.get();if(work==null)throw new IllegalStateException("Parking preflight requires a queued transfer");hold(work,entity);}
+    static void holdForParkingGeometry(EntityGroundVehicle entity){
+        Work work=ACTIVE.get();
+        if(work!=null&&work.held!=entity){
+            if(entity.transferInProgress)throw new IllegalArgumentException("Wait for the current vehicle transfer.");
+            hold(work,entity);
+        }
+    }
     static void deferPreflight(){throw DEFERRED;}
     private static void release(Work work){
         TransferCoordinator.release(work.world,work);

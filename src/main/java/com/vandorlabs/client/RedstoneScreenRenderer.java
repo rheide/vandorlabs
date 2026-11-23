@@ -90,9 +90,12 @@ final class RedstoneScreenRenderer {
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot);
         ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile,RedstoneScreenInteractions.surface(state,tile,slot));
+        drawVehicle(tile,q,height,VehicleInstrument.forChoice(tile.getSurfaceTexture(slot)));
+    }
+    static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad q,int height,VehicleInstrument instrument){
         FloatBuffer transform=MATRICES.get(q);if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
-        drawVehicleSelection(VehicleInstrument.forChoice(tile.getSurfaceTexture(slot)),tile.getWorld(),tile.getPos(),height);
+        drawVehicleSelection(instrument,tile.getWorld(),tile.getPos(),height);
         GlStateManager.popMatrix();
     }
     static void drawVehicleSelection(VehicleInstrument instrument, net.minecraft.world.World world,

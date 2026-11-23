@@ -24,6 +24,10 @@ import java.util.*;
 /** Real picker packets must change both rendered and interactive surface modes. */
 public final class ScreenModeTransitionRuntimeChecks {
     private static final BlockPos POS=new BlockPos(160,100,160);
+    private static final LiveGallery SPLIT_GALLERY=new LiveGallery("shot_split_vehicle_status",POS)
+            .shot("in-world",.5,-1.12,-1.8,0,0);
+    private static final LiveGallery INSTRUMENT_GALLERY=new LiveGallery("shot_split_vehicle_instruments",POS)
+            .shot("in-world",.5,-1.12,-1.8,0,0);
     private static final List<Block> blocks=new ArrayList<>();private static final List<Integer> slots=new ArrayList<>();
     private static int scenario,stage,frame,total;
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("screen mode: "+message+" scenario="+scenario+" stage="+stage);}
@@ -74,9 +78,11 @@ public final class ScreenModeTransitionRuntimeChecks {
         return (HousingTextureList)field(field(gui,name),"list");
     }
     private static void choose(Minecraft mc,int sentinel)throws Exception{
-        GuiScreen gui=mc.currentScreen;
-        HousingTextureList list=pickerList(gui);List<?> rows=(List<?>)field(list,"rows");
-        if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(mc,-100002);
+        choose(mc.currentScreen,pickerList(mc.currentScreen),sentinel);
+    }
+    private static void choose(GuiScreen gui,HousingTextureList list,int sentinel)throws Exception{
+        List<?> rows=(List<?>)field(list,"rows");
+        if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(gui,list,-100002);
         int index=rows.indexOf(sentinel),count=(Integer)field(list,"count");require(index>=0,"picker contains requested live surface");
         int scroll=Math.max(0,index-count+1);Field f=HousingTextureList.class.getDeclaredField("scroll");f.setAccessible(true);f.setInt(list,scroll);
         mouse(gui,(Integer)field(list,"x")+4,(Integer)field(list,"y")+(index-scroll)*HousingTextureList.ROW_HEIGHT+10);
@@ -109,6 +115,65 @@ public final class ScreenModeTransitionRuntimeChecks {
                     "actual reverse picker packet restores exclusive Status mode")).get();
             TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);
             require(client.hasVehicleStatus(slot())&&!client.hasRedstoneScreen(slot()),"client receives exclusive Status mode after reverse transition");
+            if(scenario==0){
+                button(mc.currentScreen,3007);
+                FrameAppearancePane pane=(FrameAppearancePane)field(mc.currentScreen,"framePane");
+                choose(mc.currentScreen,pane.picker(),VehicleInstrument.STATUS.choice);
+                button(mc.currentScreen,3006);
+                choose(mc.currentScreen,pane.picker(),VehicleInstrument.STATUS.choice);
+                next();return false;
+            }
+            return advance(mc,output);
+        }
+        if(stage==7&&frame>10){
+            mc.getIntegratedServer().addScheduledTask(()->{
+                TileEntityAnimatedScreenSelector tile=tile(mc);
+                require(tile.hasSplitVehiclePanel(0)&&FrameAppearance.statusSplit(tile.frameAppearance.splitTop)
+                        &&FrameAppearance.statusSplit(tile.frameAppearance.splitBottom),"both Half Status picker packets persist independently");
+                FrameAppearance loaded=new FrameAppearance();loaded.read(tile.writeToNBT(new NBTTagCompound()));
+                require(loaded.split&&FrameAppearance.statusSplit(loaded.splitTop)&&FrameAppearance.statusSplit(loaded.splitBottom),"both Half Status choices survive tile serialization");
+                require(splitParkHit(tile,.335)==1&&splitParkHit(tile,.835)==1,"independent Park ray targets on the top and bottom Status halves");
+            }).get();
+            VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_split_vehicle_status_picker.png");
+            mc.player.closeScreen();
+            next();return false;
+        }
+        if(stage==8&&SPLIT_GALLERY.tick(mc,output)){
+            mc.gameSettings.hideGUI=false;
+            open(mc);next();return false;
+        }
+        if(stage==9&&frame>8&&picker(mc)){
+            FrameAppearancePane pane=(FrameAppearancePane)field(mc.currentScreen,"framePane");
+            choose(mc.currentScreen,pane.picker(),VehicleInstrument.ATTITUDE.choice);
+            button(mc.currentScreen,3006);
+            choose(mc.currentScreen,pane.picker(),VehicleInstrument.AIRSPEED.choice);
+            next();return false;
+        }
+        if(stage==10&&frame>8){
+            mc.getIntegratedServer().addScheduledTask(()->{
+                TileEntityAnimatedScreenSelector tile=tile(mc);
+                FrameAppearance loaded=new FrameAppearance();loaded.read(tile.writeToNBT(new NBTTagCompound()));
+                require(loaded.split&&loaded.splitTop==VehicleInstrument.ATTITUDE.choice&&loaded.splitBottom==VehicleInstrument.AIRSPEED.choice,
+                        "mixed compact dial selections persist independently");
+                require(tile.hasSplitVehiclePanel(0)&&!tile.hasVehicleStatusControls(0)&&splitParkHit(tile,.335)==-1&&splitParkHit(tile,.835)==-1,
+                        "read-only compact gauges never dispatch Status actions");
+            }).get();
+            VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_split_vehicle_instruments_picker.png");
+            mc.player.closeScreen();
+            next();return false;
+        }
+        if(stage==11&&INSTRUMENT_GALLERY.tick(mc,output)){
+            mc.gameSettings.hideGUI=false;
+            System.out.println("[vandorlabs][reprolab] split-status-picker PASS real top and bottom picks; saved dual Status and mixed Attitude/Airspeed; independent ray targets and world renders");
+            return advance(mc,output);
+        }
+        return false;
+    }
+    private static int splitParkHit(TileEntityAnimatedScreenSelector tile,double y){
+        return RedstoneScreenInteractions.statusAction(tile.getWorld().getBlockState(tile.getPos()),tile,0,
+                new net.minecraft.util.math.Vec3d(.74,y,-1),new net.minecraft.util.math.Vec3d(.74,y,.1));
+    }
+    private static boolean advance(Minecraft mc,File output)throws Exception{
             if(++scenario==blocks.size()){
                 mc.player.closeScreen();
                 VehicleStatusRenderChecks.instruments(mc,output);
@@ -116,7 +181,6 @@ public final class ScreenModeTransitionRuntimeChecks {
                 return true;
             }
             prepare(mc);
-        }
         return false;
     }
 }

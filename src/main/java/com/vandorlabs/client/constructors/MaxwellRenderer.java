@@ -39,7 +39,7 @@ final class MaxwellRenderer {
         UniversalConstructorModelCache.getByKey(BODY).emitScaled(buffer, x, y, z, front, spec.width, spec.depth,
                 light, 1, widthScale, widthScale, depthScale);
         UniversalConstructorModelCache.getByKey(level == 0 ? IDLE : ACTIVE).emitScaled(buffer, x, y, z, front,
-                spec.width, spec.depth, FULL_LIGHT, level == 0 ? .35F : .4F + level * .04F,
+                spec.width, spec.depth, level == 0 ? light : FULL_LIGHT, level == 0 ? .35F : .4F + level * .04F,
                 widthScale, widthScale, depthScale);
 
         // The TESR is based at the rotated model origin; instruments use actual block positions.
