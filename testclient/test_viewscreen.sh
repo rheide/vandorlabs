@@ -689,7 +689,7 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = control-mount-settings ]; then
-        for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts thruster-lever-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Control mount settings checks passed: $RUN_OUT"
         exit 0
     fi
@@ -1125,6 +1125,7 @@ PYIMAGE
     fi
     if [ "$TARGET" = maxwell-drive ]; then
         grep -q "maxwell-runtime PASS" "$RUN_OUT/client.log"
+        grep -q "maxwell-block-burn PASS" "$RUN_OUT/client.log"
         grep -q "maxwell-drive PASS" "$RUN_OUT/client.log"
         test -s "$RUN_OUT/shot_maxwell-assembly-front.png"
         exit 0

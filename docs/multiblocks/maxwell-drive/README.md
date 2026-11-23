@@ -66,6 +66,8 @@ Right-click the formed drive or use the Configurizer to open its **Engine** and 
 - **Activation: Redstone ON** uses the stronger of the physical input and any assigned receiving channel. **Activation: Redstone OFF** inverts that signal.
 - **Signal: Digital** applies full thrust when the effective signal is positive. **Signal: Analog** scales thrust and consumption from 0 to 15. Full throttle uses 1 mB every 10 seconds and produces a yellow-white afterburner plume.
 
+An active redstone input consumes fuel at the same rate in **Block** mode. At full throttle the **Engine** tab shows one whole millibucket less every 200 server ticks. The front bars show coarser changes in the tank level.
+
 A redstone command can burn fuel when the drive is parked, for example to test the exhaust before flight. Vehicles can use several drives. Their weight contributes to takeoff and altitude limits.
 
 On Forge, reducing an analog signal in flight lowers the supported altitude. The aircraft retains forward speed and lowers its nose until the remaining thrust can support its altitude. If every drive stops, it glides before landing or returning to Hover where equipped. See [Flight controls and recovery](../../versions/version-3.0.md#taking-off).
