@@ -333,12 +333,15 @@ final class CanopyDisplayRuntimeChecks {
             VehicleInstrument expected=side?side():main();
             require(tile.faces().stream().anyMatch(face->face.sideGlass==side&&face.display==expected),"selected choice reaches exact posed pane");
         }
-        List<java.util.Map<Vec3d,double[]>> edges=java.util.Arrays.asList(new java.util.HashMap<>(),new java.util.HashMap<>());
+        List<java.util.Map<Vec3d,double[]>> edges=java.util.Arrays.asList(new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>());
         for(CanopyMesh.Face face:tile.baseFaces()){
             if(face.display==null)continue;
+            boolean horizontal=true;
+            for(Vec3d point:face.vertices)if(Math.abs(point.y-face.vertices[0].y)>1e-6)horizontal=false;
+            int pane=face.sideGlass?(horizontal?2:1):0;
             for(int i=0;i<face.vertices.length;i++){
                 double[] uv=face.uv[i];
-                double[] previous=edges.get(face.sideGlass?1:0).putIfAbsent(face.vertices[i],uv);
+                double[] previous=edges.get(pane).putIfAbsent(face.vertices[i],uv);
                 require(previous==null||Math.abs(previous[0]-uv[0])+Math.abs(previous[1]-uv[1])<1e-7,
                         "the pane UV remains continuous at authored shared vertices");
             }
