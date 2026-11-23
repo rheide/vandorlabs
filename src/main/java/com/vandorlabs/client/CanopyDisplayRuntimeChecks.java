@@ -70,7 +70,7 @@ final class CanopyDisplayRuntimeChecks {
         if(stage==0){
             prepare(mc);next(1);return false;
         }
-        if(stage>=10)return carried(mc,output);
+        if(stage>=10&&stage<20)return carried(mc,output);
         TileEntityCanopy tile=TileEntityCanopy.at(mc.world,position());
         if(tile==null)return false;
         tile=tile.owner();
@@ -109,7 +109,18 @@ final class CanopyDisplayRuntimeChecks {
         }
         if(stage==6&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,main(),false)){
             if(main()==VehicleInstrument.HUD)checkHud(tile);
-            shot(mc,output,"main");aim(mc,tile,true);next(7);return false;
+            shot(mc,output,"main");
+            if(main()==VehicleInstrument.HUD){
+                Vec3d eye=variant==2?new Vec3d(1.5,1.5,2.6):new Vec3d(.5,.59,2.2);
+                Vec3d target=variant==2?new Vec3d(1.5,1.55,0):new Vec3d(.5,.70,.8);
+                Vec3d anchor=new Vec3d(tile.getPos());
+                placeCamera(mc,CanopyMesh.rotate(target,tile.facing()).add(anchor),CanopyMesh.rotate(eye,tile.facing()).add(anchor));
+                next(20);return false;
+            }
+            aim(mc,tile,true);next(7);return false;
+        }
+        if(stage==20&&ticks>12&&aligned(mc)){
+            shot(mc,output,"pilot-hud");aim(mc,tile,true);next(7);return false;
         }
         if(stage==7&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,side(),true)){
             shot(mc,output,"side");
@@ -233,7 +244,7 @@ final class CanopyDisplayRuntimeChecks {
 
     private static BlockPos position(){return FIRST.east(variant*16);}
     private static boolean joined(){return variant==KINDS.length-1;}
-    private static VehicleInstrument main(){return variant==1||variant==2?VehicleInstrument.HUD:CHOICES[variant%CHOICES.length];}
+    private static VehicleInstrument main(){return joined()?VehicleInstrument.STATUS:variant==1||variant==2?VehicleInstrument.HUD:CHOICES[variant%CHOICES.length];}
     private static VehicleInstrument side(){return CHOICES[(variant+2)%CHOICES.length];}
     private static void next(int value){stage=value;ticks=0;}
     private static void require(boolean ok,String message){

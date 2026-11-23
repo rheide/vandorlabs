@@ -28,13 +28,17 @@ final class VehicleInstrumentRenderer {
     private VehicleInstrumentRenderer() {}
 
     static void draw(VehicleInstrument instrument, World world, BlockPos pos, int height) {
+        draw(instrument,world,pos,height,false);
+    }
+
+    static void draw(VehicleInstrument instrument,World world,BlockPos pos,int height,boolean frontGlass){
         EntityGroundVehicle craft = world instanceof VehicleWorld ? ((VehicleWorld)world).craft : null;
         if (craft == null || craft.structure == null) {
             TileEntity controller = VehicleStatus.controller(world, pos);
             double altitude = controller == null ? pos.getY() : controller.getPos().getY();
             EnumFacing facing = controller == null ? EnumFacing.NORTH : world.getBlockState(controller.getPos())
                     .getValue(com.vandorlabs.blocks.BlockVehicleController.FACING);
-            drawFace(instrument,height,0,0,heading(facing,0),altitude,0,0);
+            drawFace(instrument,height,0,0,heading(facing,0),altitude,0,0,frontGlass);
             return;
         }
         VehiclePose pose = craft.visualPose(Minecraft.getMinecraft().getRenderPartialTicks());
@@ -42,7 +46,7 @@ final class VehicleInstrumentRenderer {
                 : ((VehicleWorld)world).parent.getActualHeight() - craft.structure.bounds.maxY - 1;
         double projected = craft.flightReadout().projectedSpeed(ceiling) * 20;
         drawFace(instrument,height,pose.pitch,pose.bank,heading(craft.structure.facing,pose.yaw),
-                craft.flightAltitude(),Math.abs(craft.driveSpeed)*20,projected);
+                craft.flightAltitude(),Math.abs(craft.driveSpeed)*20,projected,frontGlass);
     }
 
     private static double heading(EnumFacing face, double yaw) {
@@ -51,8 +55,13 @@ final class VehicleInstrumentRenderer {
 
     static void drawFace(VehicleInstrument instrument, int height, double pitch, double bank, double heading,
                          double altitude, double speed, double projectedMax) {
+        drawFace(instrument,height,pitch,bank,heading,altitude,speed,projectedMax,false);
+    }
+
+    private static void drawFace(VehicleInstrument instrument,int height,double pitch,double bank,double heading,
+                                 double altitude,double speed,double projectedMax,boolean frontGlass){
         if(instrument==VehicleInstrument.HUD){
-            drawHud(height,pitch,bank,heading,altitude,speed);
+            drawHud(height,pitch,bank,heading,altitude,speed,frontGlass);
             return;
         }
         boolean compact = height < 96;
@@ -134,32 +143,35 @@ final class VehicleInstrumentRenderer {
     }
 
     /** Transparent flight symbology. The centre stays clear at the horizon. */
-    private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed){
+    private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed,boolean frontGlass){
         final int green=0xff8dffbf;
-        double y=height*.5,angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
+        double x=frontGlass?45:64,y=height*(frontGlass?.35:.5),angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         RedstoneScreenRenderer.bindWhite();
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(7,BlockSurfaceFormat.get());
         for(int mark=-90;mark<=90;mark+=10){
-            double offset=(pitch-mark)*height/76;
-            if(Math.abs(offset)>height*.25)continue;
-            double cx=64+nx*offset,cy=y+ny*offset,span=mark==0?22:9;
+            double offset=(pitch-mark)*height/(frontGlass?130:76);
+            if(Math.abs(offset)>height*(frontGlass?.09:.25))continue;
+            double cx=x+nx*offset,cy=y+ny*offset,span=mark==0?(frontGlass?12:22):7;
             line(b,cx-ny*span,cy+nx*span,cx-ny*3,cy+nx*3,1,.03,green);
             line(b,cx+ny*3,cy-nx*3,cx+ny*span,cy-nx*span,1,.03,green);
         }
-        line(b,57,y,62,y,1,.04,POINTER);
-        line(b,62,y,64,y+2,1,.04,POINTER);
-        line(b,64,y+2,66,y,1,.04,POINTER);
-        line(b,66,y,71,y,1,.04,POINTER);
+        line(b,x-7,y,x-2,y,1,.04,POINTER);
+        line(b,x-2,y,x,y+2,1,.04,POINTER);
+        line(b,x,y+2,x+2,y,1,.04,POINTER);
+        line(b,x+2,y,x+7,y,1,.04,POINTER);
         Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        label(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),64,height*.19,38,1,green);
-        label(font,"SPD",20,y-10,34,.75F,green);
-        label(font,Math.round(speed)+" m/s",20,y,35,.85F,green);
-        label(font,"ALT",108,y-10,34,.75F,green);
-        label(font,Math.round(altitude)+" m",108,y,35,.85F,green);
-        label(font,String.format(Locale.ROOT,"%+.0f°",pitch),64,height*.76,35,.8F,green);
+        double headingX=frontGlass?83:64,headingY=height*(frontGlass?.29:.19);
+        double speedX=frontGlass?44:22,altX=frontGlass?84:106;
+        double valueY=height*(frontGlass?.66:.5);
+        label(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),headingX,headingY,34,1,green);
+        label(font,"SPD",speedX,valueY-9,32,.8F,green);
+        label(font,Math.round(speed)+" m/s",speedX,valueY,34,1,green);
+        label(font,"ALT",altX,valueY-9,32,.8F,green);
+        label(font,Math.round(altitude)+" m",altX,valueY,34,1,green);
+        label(font,String.format(Locale.ROOT,"%+.0f°",pitch),headingX,height*(frontGlass?.38:.76),32,.85F,green);
         GlStateManager.color(1,1,1,1);
     }
 
