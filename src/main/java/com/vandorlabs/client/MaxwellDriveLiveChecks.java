@@ -37,10 +37,10 @@ final class MaxwellDriveLiveChecks {
     private static final BlockPos TRANSMITTER = ROOT.add(-3,0,3);
     private static final double X = CONTACT.getX() + .5, Z = CONTACT.getZ() - 2.5;
     private static final LiveGallery GALLERY = new LiveGallery("shot_maxwell", ROOT)
-            .shot("afterburner-rear", 1.5, 0, 7.4, 180, 0)
             .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
             .shot("scaled-front", 30.5, 2.9, -15, 0, 0)
-            .shot("scaled-inlets", 20, 7, -8, -37, 21);
+            .shot("scaled-inlets", 20, 7, -8, -37, 21)
+            .shot("afterburner-rear", 1.5, 0, 7.4, 180, 0);
     private static final LiveGallery SHUTDOWN = new LiveGallery("shot_maxwell", ROOT)
             .shot("inactive-nozzle",1.5,0,7.4,180,0);
     private static Future<?> setup;
