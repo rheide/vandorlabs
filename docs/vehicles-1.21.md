@@ -42,7 +42,7 @@ to raise the nose. **W** lowers it and **A/D** steer. Above Y=256 the pilot sees
 seed map of the Overworld and the instruments follow the aircraft’s geographic
 coordinates. The departure area stays loaded while occupied. Terrain along the
 route can stay unloaded until the craft descends at its destination. An aircraft
-with sufficient thrust reaches Y=10,000 and up to 75 blocks per tick. If thrust
+with sufficient thrust reaches Y=10,000 and up to 15 blocks per tick (300 m/s). If thrust
 falls below takeoff requirements in high cruise, a hover-capable craft levels
 out around Y=200, or above higher terrain. A Maxwell-only craft lands.
 

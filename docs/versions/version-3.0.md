@@ -45,13 +45,15 @@ In the server’s `config/vandorlabs-blocks.cfg`, choose `cruiseCoordinates` und
 
 Use the altimeter for flight altitude. F3 Y includes the cruise sky offset. Physical cruise supports one controlling pilot. Additional passengers can board before cruise for anchored group travel, or after descent. The aircraft also falls back to anchored travel when the server or pilot’s client lacks compatible tracking hooks.
 
+Two pilots can follow the same route independently. In high flight, Minecraft tracks other aircraft through the real chunk watches. Sharing geographic route coordinates alone does not guarantee that another aircraft is visible or in the right formation position.
+
 With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Creating a waypoint at your current position uses the geographic coordinates and flight altitude. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
 
 A vanilla or JourneyMap teleport releases the rider. When the last pilot teleports away, the aircraft stops and lands below its current geographic position. This loads the aircraft’s landing site as well as the player’s teleport destination.
 
 ![Seed-colored coastlines viewed from a Pilot Seat above the Overworld](../images/gallery/maxwell-overworld-cruise.png)
 
-Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 50 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling.
+Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 10 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling.
 
 One full 3 × 3 × 4 drive supports 512 effective weight units at takeoff. Larger drives scale by volume. Above Y=256, multiply the takeoff thrust requirement by `1 + 24 × (Y − 256) / (100,000 − Y)`. For example, twice the takeoff thrust reaches about **Y=4,246**. Reaching **Y=10,000** takes about **3.60 times** the takeoff thrust.
 

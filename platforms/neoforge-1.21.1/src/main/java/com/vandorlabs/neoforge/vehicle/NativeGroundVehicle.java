@@ -853,7 +853,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         int phase = data.getByte("FlightPhase"), launch = data.getByte("LaunchTicks");
         var route = NativeVehicleCruise.Route.read(data);
         if (face < 2 || face > 5 || mode < TAXI || mode > FLIGHT || !Double.isFinite(speed)
-                || Math.abs(speed) > FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)
+                || Math.abs(speed) > 75 // Maximum encodable airspeed in previously released snapshots.
                 || !Double.isFinite(hoverTarget) || !Float.isFinite(pitch) || Math.abs(pitch) > FlightEnvelope.MAX_PITCH
                 || mode != FLIGHT && (phase != NO_FLIGHT || pitch != 0 || launch != 0 || route != null)
                 || data.contains("PilotAssignment") && !data.hasUUID("PilotAssignment")
@@ -863,6 +863,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
                 || data.contains("LaunchTicks") && !data.contains("LaunchTicks", Tag.TAG_BYTE)) {
             throw new IllegalArgumentException("Invalid native vehicle pose");
         }
+        if(mode==FLIGHT)speed=Math.min(speed,FlightEnvelope.MAX_CRUISE_SPEED);
         var blocks = NativeTransferSnapshot.read(registries, data.getCompound("Blocks"), NativeVehicleStructure.LIMITS, tag -> Map.of());
         var pilot = BlockPos.of(data.getLong("Pilot"));
         var facing = Direction.from3DDataValue(face);
