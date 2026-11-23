@@ -43,39 +43,48 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
         try{
             GlStateManager.translate(x+.5,y,z+.5);GlStateManager.rotate(facing==EnumFacing.EAST?-90:facing==EnumFacing.WEST?90:facing==EnumFacing.SOUTH?180:0,0,1,0);GlStateManager.translate(-.5,0,-.5);
             GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
-            for(CockpitData.Surface plane:tile.data().surfaces){TileEntityCockpit.Display screen=tile.display(plane.id);boolean blank=screen.texture<0||!screen.active;double[] uv=blank?new double[]{0,1,0,1}:TEAnimatedScreenSelector.bindCockpit(tile,screen);if(blank)GlStateManager.disableTexture2D();
-                BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-                PlaneCache cache=PLANES.computeIfAbsent(plane,PlaneCache::new);
-                for(int corner=0;corner<4;corner++){double[] p=UV_CORNERS[corner];Vec3d v=cache.corners[corner];float colorValue=blank?0:1;buffer.pos(v.x,v.y+("screen".equals(plane.role)?-.75*tile.screens(partial):0),v.z+(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard")?tile.seatSlide(partial):0)).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(colorValue,colorValue,colorValue,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
-                Tessellator.getInstance().draw();
-                if(blank)GlStateManager.enableTexture2D();
-                if(screen.active&&screen.texture<=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE){GlStateManager.pushMatrix();if("screen".equals(plane.role))GlStateManager.translate(0,-.75*tile.screens(partial),0);else if(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard"))GlStateManager.translate(0,0,tile.seatSlide(partial));
-                if(screen.active&&screen.texture==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane);
-                VehicleInstrument instrument=VehicleInstrument.forChoice(screen.texture);
-                if(instrument!=null)vehicle(tile,plane,instrument);GlStateManager.popMatrix();}
+            for(CockpitData.Surface surface:tile.data().surfaces){
+                TileEntityCockpit.Display screen=tile.display(surface.id);
+                if(screen.split){
+                    panel(tile,surface.half(false),screen,false,partial);
+                    panel(tile,surface.half(true),screen,true,partial);
+                }else panel(tile,surface,screen,false,partial);
             }
         }finally{
             GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.bindTexture(oldTexture);GlStateManager.setActiveTexture(oldActive);
             if(lighting)GlStateManager.enableLighting();else GlStateManager.disableLighting();if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();if(blend)GlStateManager.enableBlend();else GlStateManager.disableBlend();GlStateManager.color(color.get(0),color.get(1),color.get(2),color.get(3));
         }
     }
-    private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane,VehicleInstrument instrument){
-        int height=instrument==VehicleInstrument.STATUS?("touch".equals(plane.role)?64:128)
+    private static void panel(TileEntityCockpit tile,CockpitData.Surface plane,TileEntityCockpit.Display screen,boolean bottom,float partial){
+        int choice=screen.choice(bottom);
+        boolean blank=choice<0||!screen.active;double[] uv=blank?new double[]{0,1,0,1}:TEAnimatedScreenSelector.bindDisplay(tile,choice,screen.active,screen.animated,screen.speed);if(blank)GlStateManager.disableTexture2D();
+                BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+                PlaneCache cache=PLANES.computeIfAbsent(plane,PlaneCache::new);
+                for(int corner=0;corner<4;corner++){double[] p=UV_CORNERS[corner];Vec3d v=cache.corners[corner];float colorValue=blank?0:1;buffer.pos(v.x,v.y+("screen".equals(plane.role)?-.75*tile.screens(partial):0),v.z+(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard")?tile.seatSlide(partial):0)).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(colorValue,colorValue,colorValue,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
+                Tessellator.getInstance().draw();
+                if(blank)GlStateManager.enableTexture2D();
+                if(screen.active&&choice<=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE){GlStateManager.pushMatrix();if("screen".equals(plane.role))GlStateManager.translate(0,-.75*tile.screens(partial),0);else if(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard"))GlStateManager.translate(0,0,tile.seatSlide(partial));
+                if(screen.active&&choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane,screen,bottom);
+                VehicleInstrument instrument=VehicleInstrument.forChoice(choice);
+                if(instrument!=null)vehicle(tile,plane,instrument,screen.split);GlStateManager.popMatrix();}
+    }
+    private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane,VehicleInstrument instrument,boolean split){
+        int height=instrument==VehicleInstrument.STATUS?(split||"touch".equals(plane.role)?64:128)
                 :new com.vandorlabs.cockpit.CockpitScreenLayout(plane,0).height;
         FloatBuffer matrix=matrix(plane,128,height);
         GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);
         RedstoneScreenRenderer.drawVehicleSelection(instrument,tile.getWorld(),tile.getPos(),height);
         GlStateManager.popMatrix();
     }
-    private static void rows(TileEntityCockpit tile,CockpitData.Surface plane){
-        com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(plane,tile.display(plane.id).rows);
+    private static void rows(TileEntityCockpit tile,CockpitData.Surface plane,TileEntityCockpit.Display screen,boolean bottom){
+        com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(plane,screen.count(bottom));
         GlStateManager.pushMatrix();
         try{
             GlStateManager.multMatrix(matrix(plane,128,layout.height));GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             RedstoneScreenRenderer.bindWhite();BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             RedstoneScreenRenderer.rect(buffer,0,0,128,layout.height,0,0xff071018);
             for(int row=0;row<layout.rows;row++){
-                TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=layout.widgetTop(row);
+                TileEntityCockpit.Control c=tile.control(plane.id+"/"+((bottom?3:0)+row));int y=layout.widgetTop(row);
                 RedstoneScreenRenderer.rect(buffer,4,layout.top(row)+1,124,layout.bottom(row)-1,.01,0xff1c2b37);
                 if(c.kind==3)RedstoneScreenRenderer.battery(buffer,y,c.level);
                 else if(c.kind==1){for(int i=0;i<4;i++)RedstoneScreenRenderer.rect(buffer,61+i*15,y+1,74+i*15,y+9,.02,c.sliderLevel(i)<=c.level?0xff46d4b5:0xff33434d);}
@@ -84,7 +93,7 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
             Tessellator.getInstance().draw();net.minecraft.client.gui.FontRenderer font=Minecraft.getMinecraft().fontRenderer;
             if(layout.rows==0)RedstoneScreenRenderer.text(font,"No controls",8,layout.height/2-4,0xb8c8d0);
             for(int row=0;row<layout.rows;row++){
-                TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=layout.widgetTop(row);
+                TileEntityCockpit.Control c=tile.control(plane.id+"/"+((bottom?3:0)+row));int y=layout.widgetTop(row);
                 RedstoneScreenRenderer.text(font,font.trimStringToWidth(c.label,c.kind==1?50:86),8,y+1,0xffffff);
                 if(c.kind!=1&&c.kind!=3)RedstoneScreenRenderer.text(font,c.level>0?"ON":c.kind==2?"GO":"OFF",100,y+1,c.level>0?0x082419:0xe0e8ef);
             }

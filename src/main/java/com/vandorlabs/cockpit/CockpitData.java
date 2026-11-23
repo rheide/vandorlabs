@@ -91,6 +91,15 @@ public final class CockpitData {
         public final double offset;
         Surface(JsonObject e){id=e.get("id").getAsString();role=e.get("role").getAsString();origin=vector(e.getAsJsonArray("origin_blocks"));u=vector(e.getAsJsonArray("u_vector_blocks"));v=vector(e.getAsJsonArray("v_vector_blocks"));normal=vector(e.getAsJsonArray("normal"));offset=e.get("overlay_offset_blocks").getAsDouble();}
         Surface(Surface source,int height){id=source.id;role=source.role;origin=new Vec3d(source.origin.x,chairY(source.origin.y,height),source.origin.z);u=source.u;v=source.v;normal=source.normal;offset=source.offset;}
+        private Surface[] halves;
+        private Surface(Surface source,boolean bottom){
+            id=source.id;role=source.role;u=source.u;v=source.v.scale(.5);normal=source.normal;offset=source.offset;
+            origin=bottom?source.origin:source.origin.add(v);
+        }
+        public synchronized Surface half(boolean bottom){
+            if(halves==null)halves=new Surface[]{new Surface(this,false),new Surface(this,true)};
+            return halves[bottom?1:0];
+        }
         public Vec3d point(double x,double y){return origin.add(u.scale(x)).add(v.scale(y)).add(normal.scale(offset));}
         /** Returns normalized artwork coordinates for a front-side ray hit. */
         public double[] hit(Vec3d start,Vec3d end){

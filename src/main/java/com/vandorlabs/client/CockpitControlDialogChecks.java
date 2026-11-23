@@ -27,6 +27,26 @@ final class CockpitControlDialogChecks {
                 look(mc,eye.add(new Vec3d(tile.getPos())),target.add(new Vec3d(tile.getPos())));GuiCockpit gui=new GuiCockpit(container);
                 require(page.getInt(gui)==3,"new dialog starts on leftmost Screen tab "+part.getKey());
             }
+            GuiCockpit displays=new GuiCockpit(container);displays.setWorldAndResolution(mc,854,480);
+            int displayIndex=page.getInt(displays)-2;
+            TileEntityCockpit.Display screen=tile.displays.get(displayIndex);
+            java.util.List<GuiButton> options=(java.util.List<GuiButton>)buttons.get(displays);
+            GuiButton split=options.stream().filter(b->b.id==35).findFirst().get();displays.mouseClicked(split.x+1,split.y+1,0);
+            require(screen.split,"real split button enables two screen surfaces");
+            GuiButton half=options.stream().filter(b->b.id==36).findFirst().get();displays.mouseClicked(half.x+1,half.y+1,0);
+            GuiButton blank=options.stream().filter(b->b.id==33).findFirst().get();displays.mouseClicked(blank.x+1,blank.y+1,0);
+            require(screen.bottomTexture==-1&&screen.texture!=-1,"bottom selection keeps top");
+            for(String model:new String[]{"cockpit","cockpit_single"}){
+                for(com.vandorlabs.client.cockpits.CockpitModels.Part part:com.vandorlabs.client.cockpits.CockpitModels.rig(model).parts){
+                    if(!part.id.startsWith("throttle_"))continue;
+                    for(boolean on:new boolean[]{false,true}){
+                        net.minecraft.client.renderer.block.model.IBakedModel baked=com.vandorlabs.client.cockpits.CockpitModels.baked(part.modelResource,-1,on);
+                        java.util.Set<String> names=new java.util.HashSet<>();
+                        for(net.minecraft.client.renderer.block.model.BakedQuad q:baked.getQuads(null,null,0))names.add(q.getSprite().getIconName());
+                        require(names.contains(on?"vandorlabs:blocks/thruster_controls/32px/cyan":"vandorlabs:models/cockpits/amber"),"knob artwork "+model+" "+part.id+" on="+on+" "+names);
+                    }
+                }
+            }
             TileEntityCockpit.Control throttle=tile.control("throttle_left");int index=tile.controls.indexOf(throttle);
             for(int[] size:new int[][]{{854,480},{480,270}}){
                 GuiCockpit gui=new GuiCockpit(container);page.setInt(gui,2+tile.displays.size()+index);gui.setWorldAndResolution(mc,size[0],size[1]);
@@ -36,7 +56,7 @@ final class CockpitControlDialogChecks {
                 gui.mouseClicked(low.x+2,low.y+2,0);require(throttle.min==6,"left click increases low limit");gui.mouseClicked(low.x+2,low.y+2,1);require(throttle.min==5,"right click decreases low limit");
                 gui.drawScreen(0,0,0);javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"cockpit-throttle-dialog-"+size[0]+".png"));
             }
-            DocumentationRenderCapture.capture(output,"cockpit-throttle-layout",2,2.15,28,-28,1,.65,.1,frame->{tile.setThrottleCount(frame==0?1:2);com.vandorlabs.client.cockpits.CockpitRenderer.renderAnimated(tile.modelId(),0,0,0,net.minecraft.util.EnumFacing.NORTH,0x00f000f0,id->tile.visualDetent(id,0),tile.sideTexture(),tile.getHeight());});
+            DocumentationRenderCapture.capture(output,"cockpit-throttle-layout",2,2.15,28,-28,1,.65,.1,frame->{tile.setThrottleCount(frame==0?1:2);com.vandorlabs.client.cockpits.CockpitRenderer.renderAnimated(tile.modelId(),0,0,0,net.minecraft.util.EnumFacing.NORTH,0x00f000f0,id->id.startsWith("throttle_")?frame*3:tile.visualDetent(id,0),tile.sideTexture(),tile.getHeight());});
         }finally{mc.player.setPosition(original.x,original.y,original.z);mc.player.rotationYaw=yaw;mc.player.rotationPitch=pitch;mc.displayGuiScreen(previous);}
         System.out.println("[vandorlabs][reprolab] cockpit-control-dialog PASS leftmost initial Screen tab, four-step limits, left/right cycling and single/twin model captures");
     }

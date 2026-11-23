@@ -44,6 +44,17 @@ final class CockpitRuntimeChecks {
                 }
                 TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");require(copy.sideTexture()==14,"casing material saved independently");
                 for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==2,"independent screen persistence");
+                for(CockpitData.Surface surface:tile.data().surfaces)if("screen".equals(surface.role)){
+                    TileEntityCockpit.Display display=tile.display(surface.id);int original=display.texture;
+                    display.split=true;display.texture=com.vandorlabs.screen.VehicleInstrument.AIRSPEED.choice;
+                    display.bottomTexture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;display.bottomRows=2;
+                    TileEntityCockpit.Control target=tile.control(surface.id+"/3");target.kind=0;target.level=0;
+                    Vec3d p=surface.point(.5,.38);require(tile.use(CockpitData.rotate(p.add(surface.normal.scale(.25)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.25)),facing)),"split bottom hit");
+                    require(target.level>0,"split activates bottom bank");
+                    NBTTagCompound packed=display.write();display.split=false;display.bottomTexture=-1;display.read(packed);
+                    require(display.split&&display.bottomTexture==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&display.texture==com.vandorlabs.screen.VehicleInstrument.AIRSPEED.choice,"saved split banks");
+                    display.split=false;display.texture=original;
+                }
                 // Older kits used a different surface order and lacked the center keyboard.
                 NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());
                 net.minecraft.nbt.NBTTagList oldScreens=new net.minecraft.nbt.NBTTagList();
