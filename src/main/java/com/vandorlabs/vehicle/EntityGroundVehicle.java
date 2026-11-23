@@ -800,12 +800,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double ceiling=Math.min(flightReadout.maximumAltitude(),flightMotion.ceiling(rotationYaw,flightPitch,flightBank));
         boolean gliding=flightPhase==GLIDING_FLIGHT;
         boolean limited=altitude>ceiling+.02;
+        boolean flare=false;
         if(!cruise.active()&&(gliding||!flightReadout.canFly())
                 && (gliding&&canResumeHover()&&altitude<=FlightEnvelope.REENTRY_ALTITUDE
                     || groundClearance()<=1.5+Math.min(4,driveSpeed*.8))){
-            beginFlightRecovery(canResumeHover()?RETURN_HOVER:RECOVER_FLIGHT);
-            advanceFlightDescent();
-            return;
+            if(canResumeHover()||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)){
+                beginFlightRecovery(canResumeHover()?RETURN_HOVER:RECOVER_FLIGHT);
+                advanceFlightDescent();
+                return;
+            }
+            flare=true;
         }
 
         landedFromFlight=false;onGround=false;
@@ -819,6 +823,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         float pitch=AircraftAttitude.pitch(flightPitch,(float)(elevator*Math.cos(roll)));
         float yaw=rotationYaw+AircraftAttitude.coordinatedTurn(roll,response)+(float)(elevator*Math.sin(roll));
         if(gliding||limited)pitch=AircraftAttitude.recoveryPitch(flightPitch,pitch,Math.max(0,altitude-ceiling),gliding);
+        if(flare){
+            pitch=(float)approach(flightPitch,-4,2.25);
+            bank=AircraftAttitude.levelBank(flightBank);
+            roll=Math.toRadians(bank);
+            yaw=rotationYaw;
+        }
         if(launching){
             pitch=initialClimb<=2?3:0;bank=0;yaw=rotationYaw;initialClimb--;
         }
