@@ -92,6 +92,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean cruisingRecovery;
     private int initialClimb;
     private float flightPitch,targetPitch,flightBank,targetBank,flightRollRate;
+    private float flightViewYaw=Float.NaN;
     private final VehicleFlightReadout.Sampler flightSampler=new VehicleFlightReadout.Sampler();
     private VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
     private final VehicleFlightMotion flightMotion=new VehicleFlightMotion(this);
@@ -108,6 +109,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     /** Signed degrees, positive when the right wing dips. */
     public float flightBank(){return flightBank;}
     public boolean flightTilted(){return flightPitch!=0||flightBank!=0;}
+    float flightViewYaw(){return flightViewYaw;}
+    public float pilotViewReference(VehiclePose pose){return Float.isFinite(flightViewYaw)?flightViewYaw:pose.yaw;}
+    public com.vandorlabs.physics.RigidTransform pilotView(VehiclePose pose){return pose.viewRotation(pilotViewReference(pose));}
+
     int flightPhase(){return flightPhase;}
     boolean flightLandedState(){return landedFromFlight;}
     public double flightAltitude(){return cruise.altitude();}
@@ -128,6 +133,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!hover&&(!hasGroundContact()||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)))
             throw new IllegalArgumentException("Takeoff requires ground contact and extended Taxi landing gear.");
         flightPhase=hover?POWERED_FLIGHT:TAKEOFF_ROLL;
+        flightViewYaw=hover?MathHelper.wrapDegrees(rotationYaw):Float.NaN;
         flightPitch=flightBank=flightRollRate=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
         serverInputs.clear();forward=strafe=0;brake=false;
         taxiReturnPending=false;
@@ -158,6 +164,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     private boolean canResumeHover(){return VehicleFlight.canHover(structure)&&structure.activeThruster();}
     private void beginFlightRecovery(int phase){
+        if(phase==RETURN_HOVER&&flightPhase!=RETURN_HOVER)driveSpeed*=Math.cos(Math.toRadians(flightPitch));
         flightPhase=phase;
         cruisingRecovery|=cruise.active()||flightAltitude()>FlightEnvelope.WORLD_CEILING;
     }
@@ -169,11 +176,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         velocityChanged=true;fallDistance=0;
     }
     void writeFlightMode(NBTTagCompound tag){
-        if(flightPhase!=NO_FLIGHT){tag.setByte("MaxwellFlightPhase",(byte)flightPhase);tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);if(flightBank!=0)tag.setFloat("MaxwellFlightBank",flightBank);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
+        if(flightPhase!=NO_FLIGHT){tag.setByte("MaxwellFlightPhase",(byte)flightPhase);tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);if(flightBank!=0)tag.setFloat("MaxwellFlightBank",flightBank);if(Float.isFinite(flightViewYaw))tag.setFloat("MaxwellFlightViewYaw",flightViewYaw);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
     }
     void readFlightMode(NBTTagCompound tag){
         flightPhase=MathHelper.clamp(tag.getByte("MaxwellFlightPhase"),NO_FLIGHT,GLIDING_FLIGHT);
         flightRollRate=0;
+        float savedViewYaw=tag.hasKey("MaxwellFlightViewYaw",5)?tag.getFloat("MaxwellFlightViewYaw"):rotationYaw;
+        flightViewYaw=flying()?MathHelper.wrapDegrees(Float.isFinite(savedViewYaw)?savedViewYaw:rotationYaw):Float.NaN;
         if(flightPhase==NO_FLIGHT){flightPitch=flightBank=flightRollRate=0;landedFromFlight=cruisingRecovery=false;return;}
         double savedSpeed=tag.getDouble("MaxwellFlightSpeed");float savedPitch=tag.getFloat("MaxwellFlightPitch");
         driveSpeed=Double.isFinite(savedSpeed)?MathHelper.clamp(savedSpeed,0,FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)):0;
@@ -276,7 +285,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         forward=f;strafe=s;brake=b;
     }
     private boolean clientProjectedMotion;
-    public void authoritative(VehicleNetwork.Packet p) {
+    public void authoritative(VehicleNetwork.Packet p) {authoritative(p,null);}
+    public void authoritative(VehicleNetwork.Packet p,EntityPlayer localPlayer) {
         if(p.serverTick<lastServerTick||p.serverTick==lastServerTick&&!p.reindex)return;
         if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
         if(view!=null&&!couplerScopeReady())return;
@@ -284,6 +294,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
         int oldPhase=flightPhase;
+        if(localPlayer!=null&&localPlayer.getRidingEntity()==this&&Float.isFinite(flightViewYaw)&&!Float.isFinite(p.flightViewYaw))
+            releasePilotView(localPlayer,p.yaw);
+        flightViewYaw=p.flightViewYaw;
         flightPhase=p.flightPhase;flightReadout=p.flightReadout;landedFromFlight=p.flightLanded;
         if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}
         long priorTick=lastServerTick;
@@ -331,8 +344,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     Vec3d interactionLook(Vec3d look){
         VehiclePose pose=world.isRemote?visualPose(1):flightPose();
-        if(!pose.tilted())return look;
-        double[] direction=pose.viewRotation().vector(look.x,look.y,look.z);
+        if(!pose.tilted()&&!Float.isFinite(flightViewYaw))return look;
+        double[] direction=pilotView(pose).vector(look.x,look.y,look.z);
         return new Vec3d(direction[0],direction[1],direction[2]);
     }
     private Vec3d seatPosition(VehiclePose pose,Entity passenger,float partial,double eye) {
@@ -760,6 +773,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         if(driveSpeed>=FlightEnvelope.TAKEOFF_SPEED&&forward<0){
             flightPhase=POWERED_FLIGHT;
+            flightViewYaw=MathHelper.wrapDegrees(rotationYaw);
             double length=structure.facing.getAxis()==EnumFacing.Axis.X?structure.bounds.maxX:structure.bounds.maxZ;
             initialClimb=Math.max(5,2+(int)Math.ceil(length*.5*Math.sin(Math.toRadians(3))/.17));
             applyFlightPose(new VehiclePose(posX,posY,posZ,rotationYaw,0,structure.facing));
@@ -787,7 +801,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!cruise.active()&&(gliding||!flightReadout.canFly())
                 && (gliding&&canResumeHover()&&altitude<=FlightEnvelope.REENTRY_ALTITUDE
                     || groundClearance()<=1.5+Math.min(4,driveSpeed*.8))){
-            beginFlightRecovery(RECOVER_FLIGHT);
+            beginFlightRecovery(canResumeHover()?RETURN_HOVER:RECOVER_FLIGHT);
             advanceFlightDescent();
             return;
         }
@@ -843,12 +857,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
 
     private void advanceFlightDescent(){
-        motionX=motionZ=0;
-        driveSpeed=approach(driveSpeed,0,Math.max(.09,driveSpeed/15));
         double altitude=flightAltitude();
         flightRollRate=0;
         boolean resumeHover=flightPhase!=RETURN_TAXI&&canResumeHover();
         double target=resumeHover?(cruisingRecovery?FlightEnvelope.REENTRY_ALTITUDE:altitude):0;
+        if(flightPhase==RETURN_HOVER&&resumeHover&&!cruise.active()&&altitude<=target+.01){
+            advanceHoverApproach();
+            return;
+        }
+        motionX=motionZ=0;
+        driveSpeed=approach(driveSpeed,0,Math.max(.09,driveSpeed/15));
         if(cruise.active()){
             motionY=Math.max(-Math.min(3,.26+altitude/3500),target-altitude);
             moveFlight(0,motionY,0,rotationYaw,(float)approach(flightPitch,0,1.5),AircraftAttitude.levelBank(flightBank));
@@ -888,9 +906,41 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
     }
 
-    private void finishFlight(boolean toHover) {
+    private void advanceHoverApproach(){
+        driveSpeed=approach(driveSpeed,0,.04+.045*driveSpeed);
+        double yaw=Math.toRadians(rotationYaw),cos=Math.cos(yaw),sin=Math.sin(yaw);
+        EnumFacing front=structure.facing;
+        motionX=(front.getFrontOffsetX()*cos-front.getFrontOffsetZ()*sin)*driveSpeed;
+        motionZ=(front.getFrontOffsetX()*sin+front.getFrontOffsetZ()*cos)*driveSpeed;
+        double rise=Math.max(0,world.getActualHeight()-structure.bounds.maxY-posY);
+        motionY=Math.min(rise,approach(motionY,0,.08));
+        if(motionY<0)motionY=Math.max(motionY,-groundClearance());
+        float pitch=(float)approach(flightPitch,0,1.5);
+        float bank=AircraftAttitude.levelBank(flightBank);
+        if(moveFlight(motionX,motionY,motionZ,rotationYaw,pitch,bank)!=VehicleFlightMotion.Result.MOVED){
+            beginFlightRecovery(RECOVER_FLIGHT);
+            driveSpeed=motionX=motionY=motionZ=0;
+            return;
+        }
+        if(!flightTilted()&&driveSpeed<=HOVER_CRUISE_SPEED&&Math.abs(motionY)<.025)
+            finishFlight(true,driveSpeed);
+    }
+
+    private void releasePilotView(Entity player,float yaw){
+        float offset=MathHelper.wrapDegrees(yaw-flightViewYaw);
+        player.rotationYaw+=offset;
+        player.prevRotationYaw+=offset;
+        player.setRotationYawHead(player.getRotationYawHead()+offset);
+    }
+
+    private void finishFlight(boolean toHover) {finishFlight(toHover,0);}
+    private void finishFlight(boolean toHover,double carrySpeed) {
+        if(Float.isFinite(flightViewYaw))for(Entity passenger:getPassengers())
+            if(passenger instanceof EntityPlayer)releasePilotView(passenger,rotationYaw);
+        flightViewYaw=Float.NaN;
         flightPhase=NO_FLIGHT;landedFromFlight=false;cruisingRecovery=false;flightPitch=flightBank=flightRollRate=0;hover=toHover;view.hover=toHover;
         holdHoverPosition();
+        driveSpeed=carrySpeed;
         if(toHover)VehicleLandingGear.refreshSignals(this);
     }
     public double cruiseSpeed(){

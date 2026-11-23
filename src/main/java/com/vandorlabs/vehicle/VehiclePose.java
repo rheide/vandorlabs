@@ -20,12 +20,12 @@ public final class VehiclePose {
     }
     public boolean tilted(){return pitch!=0||bank!=0;}
 
-    /** Apply the aircraft's tilt to a world-aligned mouse direction or rider. */
-    public RigidTransform viewRotation(){
-        if(!tilted())return RigidTransform.IDENTITY;
+    /** Map mouse input from its reference heading into the current aircraft frame. */
+    RigidTransform viewRotation(float referenceYaw){
+        if(!tilted()&&yaw==referenceYaw)return RigidTransform.IDENTITY;
         double hx=facing.getFrontOffsetX(),hz=facing.getFrontOffsetZ();
         return RigidTransform.rotation(0,1,0,-yaw).then(RigidTransform.rotation(-hz,0,hx,pitch))
-                .then(RigidTransform.rotation(hx,0,hz,bank)).then(RigidTransform.rotation(0,1,0,yaw));
+                .then(RigidTransform.rotation(hx,0,hz,bank)).then(RigidTransform.rotation(0,1,0,referenceYaw));
     }
 
     RigidTransform transform(double px,double pz){

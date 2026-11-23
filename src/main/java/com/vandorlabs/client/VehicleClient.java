@@ -137,7 +137,7 @@ public final class VehicleClient {
             if(p.type==VehicleNetwork.TILE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).view!=null)VehicleSignals.apply((EntityGroundVehicle)raw,p);return;}
             if(p.type==VehicleNetwork.CANOPIES){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleCanopies.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
-            if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null){EntityGroundVehicle craft=(EntityGroundVehicle)raw;craft.authoritative(p);if(!craft.couplerScopeReady()){receive(p);VehicleNetwork.request(craft);}}return;}
+            if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null){EntityGroundVehicle craft=(EntityGroundVehicle)raw;craft.authoritative(p,mc.player);if(!craft.couplerScopeReady()){receive(p);VehicleNetwork.request(craft);}}return;}
             if(p.type!=VehicleNetwork.PREVIEW && p.type!=VehicleNetwork.SNAPSHOT)return;
             if(p.total<=0 || p.total>VehicleStructure.MAX_NBT_BYTES || p.offset<0 || p.data.length==0 || p.offset>p.total-p.data.length)return;
             incoming.values().removeIf(i->System.currentTimeMillis()-i.created>10000);
@@ -224,12 +224,13 @@ public final class VehicleClient {
         GlStateManager.translate(at.x-(rider.lastTickPosX+(rider.posX-rider.lastTickPosX)*partial),
                 at.y-(rider.lastTickPosY+(rider.posY-rider.lastTickPosY)*partial),
                 at.z-(rider.lastTickPosZ+(rider.posZ-rider.lastTickPosZ)*partial));
-        if(pose.tilted()){
+        float referenceYaw=craft.pilotViewReference(pose);
+        if(pose.tilted()||referenceYaw!=pose.yaw){
             GlStateManager.translate(event.getX(),event.getY(),event.getZ());
             GlStateManager.rotate(-pose.yaw,0,1,0);
             GlStateManager.rotate(pose.pitch,-pose.facing.getFrontOffsetZ(),0,pose.facing.getFrontOffsetX());
             GlStateManager.rotate(pose.bank,pose.facing.getFrontOffsetX(),0,pose.facing.getFrontOffsetZ());
-            GlStateManager.rotate(pose.yaw,0,1,0);
+            GlStateManager.rotate(referenceYaw,0,1,0);
             GlStateManager.translate(-event.getX(),-event.getY(),-event.getZ());
         }
     }
@@ -266,8 +267,8 @@ public final class VehicleClient {
                 mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial+mc.player.getEyeHeight(),
                 mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*partial);
         Vec3d look=Vec3d.fromPitchYaw(event.getPitch(),event.getYaw()-180);
-        if(pose.tilted()){
-            com.vandorlabs.physics.RigidTransform tilt=pose.viewRotation();
+        com.vandorlabs.physics.RigidTransform tilt=e.pilotView(pose);
+        if(tilt!=com.vandorlabs.physics.RigidTransform.IDENTITY){
             double rawYaw=Math.toRadians(event.getYaw()),rawPitch=Math.toRadians(event.getPitch());
             double[] up=tilt.vector(Math.sin(rawYaw)*Math.sin(rawPitch),Math.cos(rawPitch),-Math.cos(rawYaw)*Math.sin(rawPitch));
             double[] forward=tilt.vector(look.x,look.y,look.z);
@@ -293,7 +294,7 @@ public final class VehicleClient {
             RayTraceResult hit=mc.world.rayTraceBlocks(start,start.add(away.scale(cameraDistance)),false,true,false);
             if(hit!=null)distance=Math.min(distance,Math.max(0,start.distanceTo(hit.hitVec)-.1));
         }
-        double adjustment=pose.tilted()?distance-PlacedSeatCamera.vanillaArm(mc,vanillaEye,front):Math.max(0,distance-4);
+        double adjustment=tilt!=com.vandorlabs.physics.RigidTransform.IDENTITY?distance-PlacedSeatCamera.vanillaArm(mc,vanillaEye,front):Math.max(0,distance-4);
         GlStateManager.translate(0,0,(front?1:-1)*adjustment);
     }
     private static Vec3d cameraAxes(Vec3d direction,float heading,float elevation){
