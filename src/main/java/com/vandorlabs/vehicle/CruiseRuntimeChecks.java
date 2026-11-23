@@ -1,4 +1,5 @@
 package com.vandorlabs.vehicle;
+import com.vandorlabs.navigation.CruiseAtlas;
 
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.client.CruiseSky;
@@ -147,7 +148,22 @@ public final class CruiseRuntimeChecks {
         require(transitChunks.loads==0,"loaded "+transitChunks.loads+" transit chunks before descent");
     }
 
+    private static void checkForecast(){
+        int fine=8,span=CruiseAtlas.SIZE*fine;
+        double x=-1,z=1;
+        double atSpeed=CruiseAtlas.forecastDistance(15,0,fine);
+        require(atSpeed==span&&CruiseAtlas.forecastDistance(0,0,fine)==0
+                &&CruiseAtlas.forecastDistance(2,60,fine)<121,"bounded horizontal flight forecast");
+        java.util.List<CruiseAtlas.Tile> ahead=CruiseTiles.footprint(x,z,fine,x+atSpeed,z);
+        require(ahead.size()==68&&new java.util.HashSet<>(ahead).size()==68,"fixed unique seed tile budget");
+        require(ahead.contains(new CruiseAtlas.Tile(2*span,0,fine))&&!ahead.contains(new CruiseAtlas.Tile(-3*span,0,fine))
+                &&ahead.contains(new CruiseAtlas.Tile(-span,0,fine)),"fine coverage ahead, behind and under the aircraft");
+        require(CruiseTiles.footprint(x,z,fine,x-atSpeed,z).contains(new CruiseAtlas.Tile(-4*span,0,fine)),
+                "reversing heading reverses the detail footprint across negative coordinates");
+    }
+
     private static void place(Minecraft mc){
+        checkForecast();
         EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
         WorldServer world=pilot.getServerWorld();
         BlockPos seat=BlockPos.ORIGIN;

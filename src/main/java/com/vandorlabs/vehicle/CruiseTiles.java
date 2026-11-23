@@ -29,20 +29,7 @@ final class CruiseTiles {
         if(tx!=lastX||tz!=lastZ||step!=lastStep||ax!=lastAheadX||az!=lastAheadZ){
             lastAheadX=ax;lastAheadZ=az;
             lastX=tx;lastZ=tz;lastStep=step;
-            footprint=new ArrayList<>(68);
-            int[] levels=CruiseAtlas.scales(step);
-            for(int radius=0;radius<=2;radius++)
-                for(int scale:levels){
-                    if(radius>CruiseAtlas.radius(scale,step))continue;
-                    int span=CruiseAtlas.SIZE*scale;
-                    boolean detail=scale<=step*4;
-                    int baseX=(int)Math.floor((detail?aheadX:x)/span),baseZ=(int)Math.floor((detail?aheadZ:z)/span);
-                    for(int i=-radius;i<=radius;i++)for(int j=-radius;j<=radius;j++){
-                        if(Math.max(Math.abs(i),Math.abs(j))==radius)
-                            footprint.add(new Tile((baseX+i)*span,(baseZ+j)*span,scale));
-                    }
-                }
-
+            footprint=footprint(x,z,step,aheadX,aheadZ);
         }
         CruiseAtlas atlas=CruiseAtlas.forWorld(craft.world);
         for(Entity rider:riders)if(rider instanceof EntityPlayerMP){
@@ -61,4 +48,20 @@ final class CruiseTiles {
             }
         }
     }
+    static List<Tile> footprint(double x,double z,int step,double aheadX,double aheadZ){
+        List<Tile> result=new ArrayList<>(68);
+        int[] levels=CruiseAtlas.scales(step);
+        for(int ring=0;ring<=2;ring++)for(int scale:levels){
+            if(ring>CruiseAtlas.radius(scale,step))continue;
+            int span=CruiseAtlas.SIZE*scale;
+            boolean detail=scale<=step*4;
+            int cx=(int)Math.floor((detail?aheadX:x)/span),cz=(int)Math.floor((detail?aheadZ:z)/span);
+            for(int i=-ring;i<=ring;i++)for(int j=-ring;j<=ring;j++){
+                if(Math.max(Math.abs(i),Math.abs(j))==ring)
+                    result.add(new Tile((cx+i)*span,(cz+j)*span,scale));
+            }
+        }
+        return result;
+    }
+
 }
