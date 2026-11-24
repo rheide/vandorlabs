@@ -61,11 +61,44 @@ final class HoverClientRuntimeChecks {
             require(!heavy.setHover(true),"64 carried iron blocks overload this craft");
             ((net.minecraft.tileentity.TileEntityChest)heavy.view.getTileEntity(store)).clear();
             require(heavy.setHover(true),"unloading the chest immediately permits Hover");
+            double lightResponse=verticalResponse(heavy);
             heavy.setDead();
+            EntityGroundVehicle laden=new EntityGroundVehicle(world);
+            laden.install(loaded);
+            ((net.minecraft.tileentity.TileEntityChest)laden.view.getTileEntity(store)).setInventorySlotContents(0,new net.minecraft.item.ItemStack(Blocks.IRON_BLOCK,40));
+            require(laden.setHover(true),"40 iron blocks remain within the same lift capacity");
+            double ladenResponse=verticalResponse(laden);
+            require(lightResponse>ladenResponse*2,"cargo reduces lift, descent and braking acceleration");
+            System.out.printf(java.util.Locale.ROOT,"[vandorlabs] hover-response PASS empty %.1f weight %.4f blocks/tick^2, loaded %.1f weight %.4f, capacity %d%n",
+                    heavy.flightReadout().mass,lightResponse,laden.flightReadout().mass,ladenResponse,capacity);
+            laden.setDead();
             cells.remove(cells.size()-1);
             System.out.println("[vandorlabs] hover-weight PASS overload, exact capacity, cargo removal and immediate entry retry");
             EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,1));craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());craft.setTransferInProgress(true);require(world.spawnEntity(craft),"fixture spawn");id=craft.getUniqueID();player.setPositionAndUpdate(ORIGIN.getX()-2,ORIGIN.getY()+2,ORIGIN.getZ());
         }).get();
+    }
+    private static double verticalResponse(EntityGroundVehicle craft){
+        double y=ORIGIN.getY()+8;
+        craft.setPosition(ORIGIN.getX(),y,ORIGIN.getZ());
+        double response=0;
+        for(int direction:new int[]{1,-1}){
+            craft.motionY=0;
+            craft.hoverTarget=y+direction*30;
+            double start=craft.posY;
+            craft.onUpdate();
+            double gain=(craft.posY-start)*direction;
+            require(gain>0&&gain<EntityGroundVehicle.HOVER_VERTICAL_SPEED,"bounded first step toward selected altitude");
+            if(direction==1)response=gain;
+            else require(Math.abs(gain-response)<1e-8,"same load response on descent");
+            for(int i=0;i<20;i++)craft.onUpdate();
+            double speed=craft.motionY*direction;
+            require(Math.abs(speed-EntityGroundVehicle.HOVER_VERTICAL_SPEED)<1e-8,"both loads reach vertical cruise speed");
+            craft.hoverTarget=craft.posY;
+            craft.onUpdate();
+            require(Math.abs(speed-craft.motionY*direction-response)<1e-8,"altitude hold brakes at measured load response");
+            craft.setPosition(ORIGIN.getX(),y,ORIGIN.getZ());
+        }
+        return response;
     }
     private static void next(){stage++;frame=0;}
     private static void tap(Minecraft mc){if(frame==0 || frame==4)key(mc.gameSettings.keyBindJump,true);if(frame==2 || frame==6)key(mc.gameSettings.keyBindJump,false);}

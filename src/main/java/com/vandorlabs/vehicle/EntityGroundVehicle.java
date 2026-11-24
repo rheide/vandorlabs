@@ -1073,9 +1073,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         motionX=(front.getFrontOffsetX()*c-front.getFrontOffsetZ()*s)*driveSpeed;
         motionZ=(front.getFrontOffsetX()*s+front.getFrontOffsetZ()*c)*driveSpeed;
         if(hover){
-            if(!autopilot.enabled() && active && world.getTotalWorldTime()-verticalAt<=10)hoverTarget+=vertical*HOVER_VERTICAL_SPEED;
-            hoverTarget=MathHelper.clamp(hoverTarget,1,world.getHeight()-structure.bounds.maxY);
-            motionY=MathHelper.clamp((hoverTarget-posY)*.3,-HOVER_VERTICAL_SPEED,HOVER_VERTICAL_SPEED);
+            int command=active&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10?vertical:0;
+            advanceHoverHeight(command);
         }else motionY=Math.max(-.5,motionY-.04);
         if(!(articulation.active()?articulation.loaded(posX,posY,posZ,motionX,motionY,motionZ,rotationYaw):collision.loaded(world,posX,posY,posZ,motionX,motionY,motionZ,rotationYaw))){motionX=motionY=motionZ=0;return;}
         double y=collision.clip(world,this,posX,posY,posZ,motionY,1,rotationYaw);
@@ -1097,6 +1096,29 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(x!=motionX)motionX=0;if(z!=motionZ)motionZ=0;if(y!=motionY)motionY=0;
         setPosition(posX+x,posY+y,posZ+z);view.origin=new BlockPos(posX,posY,posZ);
         velocityChanged=true;fallDistance=0;
+    }
+    private void advanceHoverHeight(int command){
+        double capacity=VehicleFlight.hoverCapacity(structure);
+        double mass=flightReadout.mass>0?flightReadout.mass:hoverAdmissionMass;
+        double load=capacity>0&&mass>0?Math.min(1,mass/capacity):1;
+        double acceleration=.030+.105*(1-load);
+        double top=world.getHeight()-structure.bounds.maxY;
+        if(command!=0)hoverTarget=command>0?top:1;
+        hoverTarget=MathHelper.clamp(hoverTarget,1,top);
+        double delta=hoverTarget-posY;
+        double distance=Math.abs(delta);
+        // Solve the discrete stopping distance. A run of n ticks at speeds
+        // v, v-a, ... covers n*v - a*n*(n-1)/2 blocks.
+        int ticks=Math.max(1,(int)Math.ceil((Math.sqrt(1+8*distance/acceleration)-1)*.5));
+        double targetSpeed=Math.min(HOVER_VERTICAL_SPEED,distance/ticks+acceleration*(ticks-1)*.5);
+        motionY=approach(motionY,Math.copySign(targetSpeed,delta),acceleration);
+        motionY=MathHelper.clamp(motionY,Math.min(0,1-posY),Math.max(0,top-posY));
+        if(command!=0){
+            // Latch the natural stopping point for key release or a lost input packet.
+            int stopTicks=(int)Math.ceil(Math.abs(motionY)/acceleration);
+            double travel=stopTicks*(Math.abs(motionY)-acceleration*(stopTicks-1)*.5);
+            hoverTarget=MathHelper.clamp(posY+Math.copySign(travel,motionY),1,top);
+        }
     }
     private static double approach(double current,double target,double amount){return current<target?Math.min(target,current+amount):Math.max(target,current-amount);}
 }
