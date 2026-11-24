@@ -79,7 +79,15 @@ public final class VehicleStackChecks {
         for(int x=1;x<=3;x++)childLift.add(new VehicleStructure.Cell(child.add(x,2,2).subtract(origin),lift.getDefaultState(),null));
         VehicleStructure onlyChildLift=new VehicleStructure(childLift,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);new VehicleWorld(world,onlyChildLift);require(!VehicleFlight.canHover(onlyChildLift),"three child lift blocks contribute zero outer Hover lift");
         for(int x=1;x<=3;x++)childLift.add(new VehicleStructure.Cell(outer.add(x,1,2).subtract(origin),lift.getDefaultState(),null));
-        VehicleStructure outerLift=new VehicleStructure(childLift,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);new VehicleWorld(world,outerLift);require(VehicleFlight.canHover(outerLift),"three active outer lift blocks still enable Hover");
+        VehicleStructure outerLift=new VehicleStructure(childLift,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);new VehicleWorld(world,outerLift);
+        require(VehicleFlight.hoverCapacity(outerLift)==108 && !VehicleFlight.canHover(outerLift),
+                "three outer plates cannot support the gross weight of both loaded iron decks");
+        Block array=Block.getBlockFromName("vandorlabs:repulsor_array");
+        for(int x=1;x<=3;x++)childLift.add(new VehicleStructure.Cell(outer.add(x,2,2).subtract(origin),array.getDefaultState(),null));
+        VehicleStructure reinforced=new VehicleStructure(childLift,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        new VehicleWorld(world,reinforced);
+        require(VehicleFlight.hoverCapacity(reinforced)==324 && VehicleFlight.canHover(reinforced),
+                "reinforcing the outer deck supports the loaded pair; child plates do not contribute");
         Map<BlockPos,NBTTagCompound> saved=new LinkedHashMap<>();
         for(net.minecraft.tileentity.TileEntity tile:craft.view.tiles.values())if(!craft.structure.isActive(tile.getPos())&&tile instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)tile;if(gear.isController())gear.target(false);saved.put(tile.getPos(),tile.writeToNBT(new NBTTagCompound()));}
         craft.hover=true;for(int tick=0;tick<8;tick++)ModularGearVehicles.tick(craft);
