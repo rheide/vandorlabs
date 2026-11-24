@@ -687,12 +687,17 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             }
             if(released==null)return false;
         }
-        if(!aboard){
-            assignSeat(player,seat);
-            if(!player.startRiding(this)){assignSeat(player,null);return false;}
-        }else assignSeat(player,seat);
+        String riderKey=player.getUniqueID().toString();
+        boolean assigned=dataManager.get(PILOT_SEATS).hasKey(riderKey,4);
+        BlockPos previousSeat=assigned?seatForPassenger(player):null;
+        boolean resuming=!aboard&&cabin.walking(player)&&seat.equals(previousSeat);
+        assignSeat(player,seat);
+        if(!aboard&&!player.startRiding(this)){
+            assignSeat(player,previousSeat);
+            return false;
+        }
         if(displaced!=null)assignSeat(displaced,released);
-        cabin.remove(player);
+        if(!resuming)cabin.remove(player);
         taxiReturnPending=false;
         if(previous!=getControllingPassenger()||previous==player)resetHelmInput();
         updatePassenger(player);
