@@ -40,7 +40,10 @@ public final class CabinCrewChecks {
     private static void need(boolean good,String message){
         if(!good)throw new IllegalStateException("Cabin crew stage="+stage+" ticks="+ticks+" "+message);
     }
-    private static void next(int n){stage=n;ticks=0;}
+    private static void next(int n){
+        if(n>2)System.out.println("[vandorlabs] crew fixture stage "+n);
+        stage=n;ticks=0;
+    }
     private static void order(String text){peer.connection.sendPacket(new SPacketChat(new TextComponentString(PREFIX+text)));}
     private static void forward(Minecraft mc,boolean held){CabinWalkChecks.key(mc.gameSettings.keyBindForward,held);}
     private static EntityGroundVehicle local(Minecraft mc){
@@ -72,7 +75,7 @@ public final class CabinCrewChecks {
     }
 
     static boolean host(Minecraft mc)throws Exception{
-        need(++ticks<1400&&(deadline==0||System.nanoTime()<deadline),"timeout; host="+local(mc)+" feet="+(local(mc)==null?null:local(mc).cabin.position(mc.player,1))+" action="+action);
+        need(++ticks<1400&&(deadline==0||System.nanoTime()<deadline),"timeout; host="+local(mc)+" feet="+(local(mc)==null?null:local(mc).cabin.position(mc.player,1))+" action="+action+" passengerPose="+(host==null?null:VehicleClient.renderedRiderSitting(host.getUniqueID()))+" pilotPose="+(peer==null?null:VehicleClient.renderedRiderSitting(peer.getUniqueID())));
         if(pending!=null){if(!pending.isDone())return false;pending.get();pending=null;}
         EntityGroundVehicle vehicle=local(mc);
         if(stage==0){setup(mc);next(1);}
