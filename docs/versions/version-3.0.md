@@ -2,6 +2,8 @@
 
 For Minecraft 1.12.2, the same Forge JAR runs on Forge 14.23.5.2860 through 14.23.5.2864. The loader accepts later 1.12.2 builds as they are published. [Official Forge builds](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.12.2.html)
 
+Flight Mode is here! Check out this video: https://www.youtube.com/watch?v=GNw-HO6hQWM
+
 ## Maxwell Drive
 
 The Maxwell Drive gives a Forge 1.12.2 vehicle sustained forward thrust. Build a frame **3 × 3 × 4**, **4 × 4 × 5**, **5 × 5 × 7**, **6 × 6 × 8** or **9 × 9 × 12** (width × height × depth). Each drive has a **1,000 mB** tank. Connect a fluid line to the marked inlet on the front or either side. The front gauge shows the remaining fuel.
