@@ -370,7 +370,8 @@ final class CruisePhysicalChecks {
         require(generated(arrivalX,startZ)&&!generated(startX+FAR/2,startZ),
             "the destination is loaded and the route midpoint is still absent");
         System.out.println("[vandorlabs][cruise-arrival] mode="+MODE+" exit="+EXIT+" arrivalX="+arrivalX+
-            " midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" serverTicks="+(world.getTotalWorldTime()-exitTick)
+            " warm="+WARM+" approachTravel="+(arrivalX-approachStartX)+" movingTicks="+movingApproachTicks
+            +" longestApproachWorldTickMs="+(longestWorldTick/1_000_000D)+" midpointUnloaded=true mountedArrivalTicks="+mountedArrivalTicks+" serverTicks="+(world.getTotalWorldTime()-exitTick)
             +" smoothSamples="+smoothSamples+" firstTerrainClientTick="+firstTerrainTick
             +" firstDescentClientTick="+firstDescentTick+" previousBeaconOriginMismatch="+maximumWaypointMismatch);
     }
