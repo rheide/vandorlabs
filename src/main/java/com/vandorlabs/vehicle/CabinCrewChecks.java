@@ -13,7 +13,7 @@ import java.util.List;
 import net.minecraft.network.EnumConnectionState;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.NetworkSystem;
-import net.minecraft.network.login.server.SPacketLoginSuccess;
+import net.minecraft.network.Packet;
 import java.net.InetAddress;
 import java.util.concurrent.Future;
 import net.minecraft.client.Minecraft;
@@ -99,10 +99,12 @@ public final class CabinCrewChecks {
             @Override public void channelRead(ChannelHandlerContext context,Object message)throws Exception{
                 if(message instanceof Channel)((Channel)message).pipeline().addFirst(new ChannelInboundHandlerAdapter(){
                     @Override public void channelActive(ChannelHandlerContext child)throws Exception{
+                        System.out.println("[vandorlabs] loopback crew protocol handler installed");
                         child.pipeline().addAfter("encoder","crewLoginOrdering",new ChannelOutboundHandlerAdapter(){
                             @Override public void write(ChannelHandlerContext out,Object packet,ChannelPromise promise)throws Exception{
                                 io.netty.util.Attribute<EnumConnectionState> protocol=out.channel().attr(NetworkManager.PROTOCOL_ATTRIBUTE_KEY);
-                                if(packet instanceof SPacketLoginSuccess&&protocol.get()==EnumConnectionState.PLAY){
+                                if(packet instanceof Packet && EnumConnectionState.getFromPacket((Packet<?>)packet)==EnumConnectionState.LOGIN && protocol.get()==EnumConnectionState.PLAY){
+                                    System.out.println("[vandorlabs] loopback login ordering "+packet.getClass().getSimpleName());
                                     protocol.set(EnumConnectionState.LOGIN);
                                     try{super.write(out,packet,promise);}finally{protocol.set(EnumConnectionState.PLAY);}
                                 }else super.write(out,packet,promise);
