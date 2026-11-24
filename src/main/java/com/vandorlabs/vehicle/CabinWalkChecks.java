@@ -196,7 +196,7 @@ public final class CabinWalkChecks {
             if(z==5)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,z),Blocks.STONE.getDefaultState(),null));
         }
         cells.add(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null));
-        cells.add(new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
+        cells.add(new VehicleStructure.Cell(crew?new BlockPos(4,1,4):seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
         if(crew)for(BlockPos chair:new BlockPos[]{CabinCrewChecks.CHAIR,CabinCrewChecks.SPARE})
             cells.add(new VehicleStructure.Cell(chair,ModBlocks.PROGRAMMABLE_CHAIR.getDefaultState(),null));
         BlockPos assembly=new BlockPos(player.posX+12,130,player.posZ);

@@ -38,7 +38,7 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 @net.minecraftforge.fml.relauncher.SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class CabinCrewChecks {
-    static final BlockPos CHAIR=new BlockPos(0,1,2), SPARE=new BlockPos(3,1,3);
+    static final BlockPos CHAIR=new BlockPos(4,1,0), SPARE=new BlockPos(3,1,3);
     private static final boolean PHYSICAL=!"anchored".equals(System.getenv("VANDOR_LABS_REENTRY_MODE"));
     private static final String PEER="CrewPeer", PREFIX="[VLCrewFixture] ";
     private static EntityGroundVehicle craft;
