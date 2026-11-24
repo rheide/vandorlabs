@@ -38,7 +38,7 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 @net.minecraftforge.fml.relauncher.SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class CabinCrewChecks {
-    static final BlockPos CHAIR=new BlockPos(4,1,0), SPARE=new BlockPos(3,1,3);
+    static final BlockPos CHAIR=new BlockPos(0,1,2), SPARE=new BlockPos(3,1,3);
     private static final boolean PHYSICAL=!"anchored".equals(System.getenv("VANDOR_LABS_REENTRY_MODE"));
     private static final String PEER="CrewPeer", PREFIX="[VLCrewFixture] ";
     private static EntityGroundVehicle craft;
@@ -71,7 +71,10 @@ public final class CabinCrewChecks {
         Vec3d delta=new Vec3d(seat).addVector(.5,.45,.5).subtract(feet.addVector(0,mc.player.getEyeHeight(),0));
         CabinWalkChecks.look(mc,(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z))));
         VehicleInteraction.Target hit=VehicleInteraction.pointed(mc.player);
-        if(hit==null||hit.hit.action!=VehicleSelection.Action.BOARD||!VehicleSeats.lower(hit.hit.cell.state,hit.hit.cell.pos).equals(seat))return false;
+        if(hit==null||hit.hit.action!=VehicleSelection.Action.BOARD||!VehicleSeats.lower(hit.hit.cell.state,hit.hit.cell.pos).equals(seat)){
+            if((ticks+actionTicks)%50==0)System.out.println("[vandorlabs] crew seat ray from "+feet+" target "+seat+" hit "+(hit==null?"none":hit.hit.cell.pos+" "+hit.hit.action));
+            return false;
+        }
         CabinWalkChecks.click(mc);
         return true;
     }
