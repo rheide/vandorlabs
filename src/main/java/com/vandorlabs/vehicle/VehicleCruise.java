@@ -83,7 +83,9 @@ public final class VehicleCruise {
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);
-        if (height <= handoffAltitude()) {
+        // With the shortest blend a deep hull may have to hold its origin above
+        // the handoff height. Keep the approach alive until it clears or climbs away.
+        if (height <= handoffAltitude() || arrival!=null && dy<=0) {
             boolean entering=arrival==null;
             if(entering)arrival=new CruiseArrival((WorldServer)craft.world);
             publishRoute();

@@ -1,5 +1,7 @@
 package com.vandorlabs.vehicle;
 
+import com.vandorlabs.physics.FlightEnvelope;
+
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.config.BlockAvailability;
 import java.io.File;
@@ -86,7 +88,9 @@ final class CruisePhysicalChecks {
             require("anchored".equals(config.get("vehicles","cruiseCoordinates","anchored").getString())
                     &&!config.hasKey("vehicles","reanchorResidentCruise"),"retired selection rewritten on disk");
             config.get("vehicles","cruiseCoordinates","anchored").set(MODE);
-            if(BAND_HANDOFF!=0)config.get("vehicles","cruiseHandoffAltitude",512).set(BAND_HANDOFF);
+            int handoff=Integer.parseInt(System.getenv().getOrDefault("VANDOR_LABS_APPROACH_HANDOFF",
+                    Integer.toString(BAND_HANDOFF==0?FlightEnvelope.CRUISE_ALTITUDE:BAND_HANDOFF)));
+            config.get("vehicles","cruiseHandoffAltitude",FlightEnvelope.CRUISE_ALTITUDE).set(handoff);
             config.save();
             BlockAvailability.load(file);
             require(BlockAvailability.cruiseCoordinates().name().equalsIgnoreCase(MODE),
