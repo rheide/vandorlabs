@@ -37,11 +37,12 @@ public final class CabinWalkChecks {
         if(!test)throw new IllegalStateException("Cabin walk "+MODE+" stage "+stage+" "+why);
     }
     private static void advance(int next){stage=next;ticks=0;}
-    private static void key(KeyBinding key,boolean held){KeyBinding.setKeyBindState(key.getKeyCode(),held);}
-    private static void chord(Minecraft mc,boolean held){
+    static void key(KeyBinding key,boolean held){KeyBinding.setKeyBindState(key.getKeyCode(),held);}
+    static void chord(Minecraft mc,boolean held){
         key(mc.gameSettings.keyBindSprint,held);key(mc.gameSettings.keyBindSneak,held);
     }
     static boolean tick(Minecraft mc)throws Exception{
+        if(Boolean.getBoolean("vandorlabs.cabinCrewChecks"))return CabinCrewChecks.host(mc);
         need(++ticks<240,"timeout, rider="+mc.player.getRidingEntity());
         if(task!=null){if(!task.isDone())return false;task.get();task=null;}
         if(stage==0){
@@ -51,7 +52,7 @@ public final class CabinWalkChecks {
             task=mc.getIntegratedServer().addScheduledTask(()->place(mc));advance(1);return false;
         }
         if(stage==10 && mc.player.getRidingEntity()==null && Math.abs(mc.player.posZ-exitZ)<96){
-            key(mc.gameSettings.keyBindJump,false);
+            key(mc.gameSettings.keyBindJump,false);key(mc.gameSettings.keyBindForward,false);
             need(mc.player.posY<altitude+5,"jump exits at geographic altitude rather than sky offset: "+mc.player.posY);
             System.out.println("[vandorlabs] cruise-physical PASS cabin walk "+MODE+" real motion, continuous camera, saved local feet, pilot seat click and geographic deck exit");
             return true;
@@ -161,11 +162,9 @@ public final class CabinWalkChecks {
             chord(mc,true);advance(8);
         }else if(stage==8 && local.cabin.walking(mc.player)){
             chord(mc,false);look(mc,90,0);
-            key(mc.gameSettings.keyBindForward,true);advance(9);
-        }else if(stage==9 && ticks>20){
-            key(mc.gameSettings.keyBindForward,false);
-            exitZ=local.cruise.z();
-            key(mc.gameSettings.keyBindJump,true);advance(10);
+            exitZ=local.cruise.z();key(mc.gameSettings.keyBindJump,true);
+            key(mc.gameSettings.keyBindForward,true);advance(10);
+
         }
         return false;
     }
@@ -174,40 +173,46 @@ public final class CabinWalkChecks {
         if(!event.getWorld().isRemote && event.getEntity() instanceof net.minecraft.entity.projectile.EntityArrow
                 && ((net.minecraft.entity.projectile.EntityArrow)event.getEntity()).shootingEntity==server.getControllingPassenger())arrowSpawned=true;
     }
-    private static void click(Minecraft mc)throws Exception{
+    static void click(Minecraft mc)throws Exception{
         mc.objectMouseOver=new net.minecraft.util.math.RayTraceResult(net.minecraft.util.math.RayTraceResult.Type.MISS,VehicleInteraction.eyes(mc.player),EnumFacing.UP,BlockPos.ORIGIN);
         net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);
     }
-    private static void look(Minecraft mc,float yaw,float pitch){
+    static void look(Minecraft mc,float yaw,float pitch){
         mc.player.rotationYaw=mc.player.prevRotationYaw=yaw;
         mc.player.rotationPitch=mc.player.prevRotationPitch=pitch;
         mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(yaw,pitch,false));
     }
     private static void place(Minecraft mc){
-        EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+        EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
+        server=aircraft(player,false);
+        need(server.board(player),"board");
+    }
+    static EntityGroundVehicle aircraft(EntityPlayerMP player,boolean crew){
         WorldServer world=player.getServerWorld();
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         BlockPos seat=new BlockPos(1,1,0);
-        for(int z=0;z<=5;z++)for(int x=0;x<=2;x++){
+        for(int z=0;z<=5;z++)for(int x=0;x<=(crew?4:2);x++){
             cells.add(new VehicleStructure.Cell(new BlockPos(x,0,z),Blocks.STONE.getDefaultState(),null));
             if(z==5)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,z),Blocks.STONE.getDefaultState(),null));
         }
         cells.add(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
+        if(crew)for(BlockPos chair:new BlockPos[]{CabinCrewChecks.CHAIR,CabinCrewChecks.SPARE})
+            cells.add(new VehicleStructure.Cell(chair,ModBlocks.PROGRAMMABLE_CHAIR.getDefaultState(),null));
         BlockPos assembly=new BlockPos(player.posX+12,130,player.posZ);
         TileEntityConstructor drive=MaxwellRuntimeChecks.assemble(world,assembly,3,EnumFacing.NORTH,0,0);
         MaxwellRuntimeChecks.inlet(drive,drive.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true);
-        BlockPos offset=new BlockPos(3,0,1).subtract(assembly);
+        BlockPos offset=new BlockPos(crew?5:3,0,1).subtract(assembly);
         for(BlockPos pos:BlockPos.getAllInBox(assembly,assembly.add(2,2,3))){
             NBTTagCompound tag=VehicleTileData.translated(world.getTileEntity(pos).writeToNBT(new NBTTagCompound()),offset);
             cells.add(new VehicleStructure.Cell(pos.add(offset),world.getBlockState(pos),tag));
         }
-        server=new EntityGroundVehicle(world);
+        EntityGroundVehicle server=new EntityGroundVehicle(world);
         server.install(new VehicleStructure(cells,seat,EnumFacing.NORTH,1));
         server.setPosition(player.posX,200,player.posZ);
         server.hover=true;server.hoverTarget=server.posY;
         need(world.spawnEntity(server),"spawn");
         player.connection.setPlayerLocation(server.posX+1.5,201,server.posZ+.5,0,0);
-        need(server.board(player),"board");
+        return server;
     }
 }
