@@ -78,7 +78,7 @@ final class HoverClientRuntimeChecks {
         }).get();
     }
     private static double verticalResponse(EntityGroundVehicle craft){
-        double y=ORIGIN.getY()+8;
+        double y=ORIGIN.getY()+64;
         craft.setPosition(ORIGIN.getX(),y,ORIGIN.getZ());
         double response=0;
         for(int direction:new int[]{1,-1}){
@@ -92,7 +92,7 @@ final class HoverClientRuntimeChecks {
             else require(Math.abs(gain-response)<1e-8,"same load response on descent");
             for(int i=0;i<20;i++)craft.onUpdate();
             double speed=craft.motionY*direction;
-            require(Math.abs(speed-EntityGroundVehicle.HOVER_VERTICAL_SPEED)<1e-8,"both loads reach vertical cruise speed");
+            require(Math.abs(speed-EntityGroundVehicle.HOVER_VERTICAL_SPEED)<1e-8,"both loads reach vertical cruise speed, direction="+direction+" speed="+speed+" y="+craft.posY);
             craft.hoverTarget=craft.posY;
             craft.onUpdate();
             require(Math.abs(speed-craft.motionY*direction-response)<1e-8,"altitude hold brakes at measured load response");
