@@ -139,12 +139,16 @@ def main():
         front = named(typed, 'cassette_body')[0]['faces']['south']
         require(typed['textures'][front['texture'][1:]].endswith('/module'),
                 'letter-free original front artwork in every variant')
+    for path in [MODELS / 'autonavigation_module.json'] + list(MODELS.glob('slot*autonavigation_*.json')):
+        route = read(path)
+        require(route['textures']['module'].endswith('/autonavigation_module'), 'amber navigation artwork: '+path.name)
+        require(named(route,'cassette_body'), 'navigation cassette: '+path.name)
     map_models = (ASSETS / 'dynmap-models.txt').read_text().splitlines()
     map_textures = (ASSETS / 'dynmap-texture.txt').read_text().splitlines()
     require(map_models.count('customblock:id=%module_rack,state=*,'
                              'class=com.vandorlabs.dynmap.ModuleRackRenderer') == 1,
             'rack must use its native geometry Dynmap renderer exactly once')
-    map_names=TEXTURE_NAMES+('power_in_icon','emerald_block','power_in_off','power_in_on')
+    map_names=TEXTURE_NAMES+('power_in_icon','emerald_block','power_in_off','power_in_on','autonavigation_module')
     for name in map_names:
         line = ('texture:id=module_rack_' + name + ',filename=assets/vandorlabs/textures/blocks/'
                 + ('resource_ports/' if name.startswith('power_in_') else 'module_rack/') + name + '.png,xcount=1,ycount=1')
@@ -154,7 +158,7 @@ def main():
         'patch%d=0:module_rack_%s' % (index, name) for index, name in enumerate(map_names))
     require(map_textures.count(mapping + ',transparency=SEMITRANSPARENT') == 1,
             'rack Dynmap patch texture order must match its six native material indices')
-    for path in (ASSETS / 'models/item/module_rack.json', MODELS / 'blank_module.json', MODELS / 'autopilot_module.json'):
+    for path in (ASSETS / 'models/item/module_rack.json', MODELS / 'blank_module.json', MODELS / 'autopilot_module.json', MODELS / 'autonavigation_module.json'):
         bounds = gui_bounds(read(path))
         require(all(-7.5 < bound < 7.5 for bound in bounds), 'inventory icon lacks visible padding: ' + str(bounds))
         print(path.name + ' projected GUI bounds=' + repr(tuple(round(x, 3) for x in bounds)))
