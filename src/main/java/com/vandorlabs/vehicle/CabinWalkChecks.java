@@ -111,6 +111,7 @@ public final class CabinWalkChecks {
             advance(5);
         }else if(stage==5 && ticks>8){
             need(Math.abs(local.flightAltitude()-altitude)<.3,"level hold maintains altitude");
+            com.vandorlabs.client.CruiseWaypointChecks.check(mc);
             Vec3d delta=new Vec3d(local.structure.seat).addVector(.5,.55,.5)
                     .subtract(local.cabin.position(mc.player,1).addVector(0,mc.player.getEyeHeight(),0));
             look(mc,(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z))));
