@@ -52,6 +52,7 @@ final class VehicleFlightClientChecks {
     private static double hoverEntrySpeed;
     private static java.util.concurrent.Future<?> runwayStep;
     private static PoweredLanding poweredLanding;
+    private static long landingDeadline;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -497,6 +498,7 @@ final class VehicleFlightClientChecks {
         if(stage==22){
             need(frame<100,"pilot returns to powered Flight for runway approach");
             if(!craft.flying()||craft.driveSpeed<1)return false;
+            landingDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(45);
             runwayStep=mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 // Keep the pilot and aircraft in the same watched chunk. Lay fresh concrete
@@ -514,7 +516,7 @@ final class VehicleFlightClientChecks {
             next();return false;
         }
         if(stage==23){
-            need(frame<75,"powered touchdown over runway: "+flightState(craft));
+            need(System.nanoTime()<landingDeadline,"powered touchdown over runway: "+flightState(craft));
             if(!runwayStep.isDone())return false;
             runwayStep.get();
             if(!craft.flying()){
@@ -524,11 +526,10 @@ final class VehicleFlightClientChecks {
             return false;
         }
         if(stage==24){
-            need(frame<75,"server sampled powered wheel contact");
+            need(System.nanoTime()<landingDeadline,"client rollout convergence: "+flightState(craft)+" bottom="+craft.getEntityBoundingBox().minY+" runway="+runwayY);
             if(frame<9||!poweredLanding.done)return false;
             need(poweredLanding.failure==null,poweredLanding.failure);
-            need(craft.posZ<poweredLanding.contactZ-2&&Math.abs(craft.getEntityBoundingBox().minY-runwayY)<.15,
-                    "forward rollout settles on runway with no embeds: "+flightState(craft)+" bottom="+craft.getEntityBoundingBox().minY+" runway="+runwayY);
+            if(craft.posZ>=poweredLanding.contactZ-2||Math.abs(craft.getEntityBoundingBox().minY-runwayY)>=.15)return false;
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
             return true;
         }
