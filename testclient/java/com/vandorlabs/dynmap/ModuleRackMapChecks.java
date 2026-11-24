@@ -94,7 +94,10 @@ public final class ModuleRackMapChecks {
                 if (!layouts.add(signature)) throw new AssertionError("Distinct occupied slots share a map layout");
                 states++;
             }
-            Context nav=new Context(facing,1,2);
+            Context route=new Context(facing,1,2);
+            boolean amber=false;for(RenderPatch part:renderer.getRenderPatchList(route))amber|=part.getTextureIndex()==11;
+            if(!amber)throw new AssertionError("Amber autonavigation texture missing on "+facing);
+            Context nav=new Context(facing,1,257);
             RenderPatch[] mesh=renderer.getRenderPatchList(nav);
             if(mesh!=renderer.getRenderPatchList(nav))throw new AssertionError("Typed NAV map cache missed");
             int routeFaces=0,blankRouteFaces=0;

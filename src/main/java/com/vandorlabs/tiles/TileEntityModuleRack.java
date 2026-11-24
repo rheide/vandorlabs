@@ -400,8 +400,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     }
 
 
-    public int moduleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.slotKind(moduleKinds,slot); }
-    public int previousModuleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.slotKind(previousModuleKinds,slot); }
+    public int moduleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.flightSlotKind(moduleKinds,slot); }
+    public int previousModuleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.flightSlotKind(previousModuleKinds,slot); }
     public int getModuleKinds() { return moduleKinds; }
     public int autopilotCount() { int count=0; for(int slot=0;slot<4;slot++) if(moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) count++; return count; }
     public int primaryModuleSlot() { return primary; }
@@ -412,7 +412,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     @Override public com.vandorlabs.redstone.ChannelList transmittedChannels() { return com.vandorlabs.redstone.ChannelList.EMPTY; }
     @Override public int transmissionRange() { return -1; }
     public com.vandorlabs.rack.AutopilotModuleSettings moduleSettings(int slot) {
-        if(moduleKind(slot)!=com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) throw new IllegalArgumentException("No Autopilot module in slot");
+        if(moduleKind(slot)!=com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) throw new IllegalArgumentException("No Autonavigation Module in slot");
         return com.vandorlabs.rack.ModuleAutopilotData.settings(modules[slot]);
     }
     public boolean configureModule(int slot,long sequence,com.vandorlabs.rack.AutopilotModuleSettings value) {

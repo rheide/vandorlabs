@@ -29,7 +29,7 @@ final class ExistingAutopilotStartChecks {
         if(stage==1&&++frames>=40){
             pending=mc.getIntegratedServer().addScheduledTask(()->{
                 WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
-                TileEntityAutopilot tile=(TileEntityAutopilot)world.getTileEntity(COMPUTER);require(tile!=null&&tile.status.contains("No route marker below Autopilot"),"off-route saved craft is explained: "+(tile==null?"missing":tile.status));
+                TileEntityAutopilot tile=(TileEntityAutopilot)world.getTileEntity(COMPUTER);require(tile!=null&&tile.status.contains("No route marker below Autonavigation Module"),"off-route saved craft is explained: "+(tile==null?"missing":tile.status));
                 tile.setEnabled(false);
                 try{
                     VehicleScan scan=new VehicleScan(world,PILOT);for(int i=0;i<200&&!scan.step(256);i++);require(scan.error==null&&scan.result!=null,"saved craft scan: "+scan.error);

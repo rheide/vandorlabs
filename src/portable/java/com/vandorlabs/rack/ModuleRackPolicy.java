@@ -9,15 +9,18 @@ public final class ModuleRackPolicy {
     public static final String BATTERY_ID = "vandorlabs:battery_module";
     private ModuleRackPolicy() { }
     public static int kind(String itemId) {
-        return SPEED_ID.equals(itemId) ? SPEED : BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : BATTERY_ID.equals(itemId) ? BATTERY : EMPTY;
+        return BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : BATTERY_ID.equals(itemId) ? BATTERY : EMPTY;
     }
     public static int slotKind(int packed, int slot) {
+        return ModuleRackGeometry.validSlot(slot) ? packed >>> (slot*2)&3 : EMPTY;
+    }
+    /** Forge flight racks append one speed-module flag per bay above the legacy kind byte. */
+    public static int flightSlotKind(int packed,int slot){
         if (!ModuleRackGeometry.validSlot(slot)) return EMPTY;
         return (packed & (1 << (8+slot))) != 0 ? SPEED : packed >>> (slot*2) & 3;
     }
     public static boolean validKinds(int packed) {
-        if ((packed & ~4095) != 0) return false;
-        for(int slot=0;slot<4;slot++) if((packed & (1 << (8+slot)))!=0 && ((packed >>> (slot*2))&3)!=BLANK)return false;
+        if ((packed & ~255) != 0) return false;
         return true;
     }
     public static int blankKinds(int occupiedMask) {

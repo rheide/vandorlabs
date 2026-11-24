@@ -329,13 +329,13 @@ public final class ModuleRackModel implements IBakedModel {
         }
         int key=0, place=1;
         for(int slot=0;slot<4;slot++,place*=42) {
-            int bit=1<<slot,kind=com.vandorlabs.rack.ModuleRackPolicy.slotKind(kinds,slot);
+            int bit=1<<slot,kind=com.vandorlabs.rack.ModuleRackPolicy.flightSlotKind(kinds,slot);
             int digit=(occupied&bit)==0?0:(visible&bit)==0?1:kind==3?4+com.vandorlabs.rack.BatteryChargeBar.unpack(charge,slot):kind==2?3:kind==4?41:2;
             key+=digit*place;
         }
         synchronized(combinations){List<BakedQuad> found=combinations.get(key);if(found!=null)return found;
             List<BakedQuad> result=new ArrayList<>(shell.getQuads(null,null,0));
-            for(int slot=0;slot<4;slot++){result.addAll(indicators[slot][occupied>>>slot&1]);boolean show=(visible&1<<slot)!=0;int kind=com.vandorlabs.rack.ModuleRackPolicy.slotKind(kinds,slot);result.addAll(show?(kind==3?batterySeated[slot][0]:kind==2?routeSeated[slot]:kind==4?autopilotSeated[slot]:seated[slot]):empty[slot]);if(show&&kind==3)result.addAll(chargeQuads[slot][com.vandorlabs.rack.BatteryChargeBar.unpack(charge,slot)]);}
+            for(int slot=0;slot<4;slot++){result.addAll(indicators[slot][occupied>>>slot&1]);boolean show=(visible&1<<slot)!=0;int kind=com.vandorlabs.rack.ModuleRackPolicy.flightSlotKind(kinds,slot);result.addAll(show?(kind==3?batterySeated[slot][0]:kind==2?routeSeated[slot]:kind==4?autopilotSeated[slot]:seated[slot]):empty[slot]);if(show&&kind==3)result.addAll(chargeQuads[slot][com.vandorlabs.rack.BatteryChargeBar.unpack(charge,slot)]);}
             found=Collections.unmodifiableList(result);int bytes=32+found.size()*8;while(!combinations.isEmpty()&&(cacheBytes+bytes>COMBINATION_BYTES||combinations.size()>=128)){java.util.Iterator<List<BakedQuad>> values=combinations.values().iterator();List<BakedQuad> old=values.next();cacheBytes-=32+old.size()*8;values.remove();}if(bytes<=COMBINATION_BYTES){combinations.put(key,found);cacheBytes+=bytes;}return found;}
     }
     int cachedCombinations(){synchronized(combinations){return combinations.size();}}

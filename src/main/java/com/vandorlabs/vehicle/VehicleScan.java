@@ -130,7 +130,7 @@ public final class VehicleScan {
         primary.pilot=selectedPilot;
         if(!membershipOnly&&!attachment&&connectedControllers>0)require(primary.controllers>0,"The piloted segment needs its own Vehicle Controller.");
         if(!membershipOnly){
-        require(primary.controllers<=1,"The piloted segment can contain at most one Vehicle Controller.");require(primary.autopilots<=1,"A craft can contain at most one Autopilot block.");
+        require(primary.controllers<=1,"The piloted segment can contain at most one Vehicle Controller.");require(primary.autopilots<=1,"A craft can contain at most one Autonavigation Module.");
         if(!attachment)require(primary.pilot!=null,"The selected vehicle needs its own Pilot Seat.");
         for(RoleGroup group:groups)if(group!=primary&&(group.controllers>0||group.pilots>0||group.autopilots>0)){
             require(primary.controller!=null,"The lower vehicle needs its own Vehicle Controller before carrying another complete vehicle.");

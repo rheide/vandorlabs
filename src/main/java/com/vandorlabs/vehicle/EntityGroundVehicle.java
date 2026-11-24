@@ -148,7 +148,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     void requestFlight(EntityPlayerMP pilot){
         if(flying()||takeoffRoll())return;
         if(getControllingPassenger()!=pilot)throw new IllegalArgumentException("Sit in the Pilot Seat before selecting Flight.");
-        if(autopilot.enabled())throw new IllegalArgumentException("Turn off Autopilot before selecting Flight.");
+        if(autopilot.enabled())throw new IllegalArgumentException("Turn off Autonavigation before selecting Flight.");
         if(VehicleCouplingTransfer.busy(this)||VehicleCouplings.preparingArmRelease(this))throw new IllegalArgumentException("Wait for the vehicle coupling transfer.");
         refreshFlightReadout();
         if(flightReadout.drives==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive.");

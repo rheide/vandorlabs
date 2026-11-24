@@ -106,7 +106,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         if(page==0)fontRenderer.drawString("Wall texture",12,54,0xDAE8F0);
         else if(page>=2){
             fontRenderer.drawString(modulePage==0?"Route marker block":"Receive channels",12,84,0xDAE8F0);
-            if(tile.autopilotCount()>1)fontRenderer.drawString("One Autopilot per craft is required.",12,modulePage==0?180:170,0xEAAF66);
+            if(tile.autopilotCount()>1)fontRenderer.drawString("Only one Autonavigation Module per craft.",12,modulePage==0?180:170,0xEAAF66);
             else if(modulePage==0)fontRenderer.drawString("A pulse runs until the next waypoint.",12,180,0xAAAAAA);
         }
     }

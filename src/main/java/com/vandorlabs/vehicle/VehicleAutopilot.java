@@ -223,7 +223,7 @@ public final class VehicleAutopilot {
             if(source.at(pos.subtract(origin))!=null)continue;
             IBlockState state=world.getBlockState(pos);if(world.isAirBlock(pos)||state.getMaterial().isReplaceable())continue;
             if(world.getTileEntity(pos) instanceof TileEntityWaypoint||state.getBlock()==Block.getBlockFromName(tile.marker)&&state.getBlock().getMetaFromState(state)==tile.markerMeta)return;
-            throw new IllegalArgumentException("No route marker below Autopilot");
+            throw new IllegalArgumentException("No route marker below Autonavigation Module");
         }
         throw new IllegalArgumentException("Route ground out of range");
     }
