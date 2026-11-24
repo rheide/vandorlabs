@@ -5,7 +5,7 @@
 - Control powered Forge airspeed with an Autopilot Module and a full or half-height Autopilot panel. Flight instruments report kiloblocks per hour to one decimal place. Existing waypoint modules keep their routes under the name Autonavigation Module.
 - Check gross weight, fuel and cargo against installed lift capacity when selecting Hover on Forge. The Vehicle Controller shows lift capacity on its Flight tab. Climb, descent and vertical braking respond to gross weight relative to available lift.
 
-- Walk on a moving Forge aircraft’s deck with Sprint + Sneak in powered Flight. The aircraft levels out while the pilot walks. Click the pilot seat or press the same keys to take the controls again. Jump at an open edge to leave at the aircraft’s geographic position.
+- Multiple riders can walk and jump aboard a moving Forge aircraft in powered Flight. Click any available seat to sit there. Walking or jumping clear of the hull returns the rider to ordinary movement with the aircraft’s velocity.
 - Keep the full width and diagonal of the Shallow screen when lowering its casing by four pixels with a one-pixel lip at each end. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
 - Choose a small or large centered transparent flight HUD on the canopy windshield. The short rear roof of a Long Angled canopy uses the Side glass finish.
 

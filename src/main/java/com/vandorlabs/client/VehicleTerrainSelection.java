@@ -20,7 +20,7 @@ final class VehicleTerrainSelection {
         RayTraceResult nearest=mc.world.rayTraceBlocks(start,end,false,false,true);double distance=nearest!=null&&nearest.typeOfHit==RayTraceResult.Type.BLOCK?start.squareDistanceTo(nearest.hitVec):start.squareDistanceTo(end);
         for(EntityGroundVehicle craft:crafts){
             if(!craft.getEntityBoundingBox().contains(start)&&craft.getEntityBoundingBox().calculateIntercept(start,end)==null)continue;
-            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,distance,mc.player.getRidingEntity()==craft?craft.seatForPassenger(mc.player):null);
+            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,distance,mc.player.getRidingEntity()==craft&&!craft.walkingInCabin(mc.player)?craft.seatForPassenger(mc.player):null);
             if(hit!=null){distance=hit.distanceSq;nearest=new RayTraceResult(craft,craft.toWorld(hit.local.hitVec,hit.cell.pos));}
         }
         for(Entity entity:mc.world.getEntitiesInAABBexcluding(camera,ray.grow(1),e->e.canBeCollidedWith())){
