@@ -21,6 +21,7 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 /** Prepare local terrain and watches before moving the client away from its current anchor. */
 final class CruiseArrival {
     private static final int CHUNKS_PER_TICK=4;
+    private static final int NEW_WATCHES_PER_TICK=2;
     private static final long LOAD_BUDGET_NANOS=4_000_000;
     private static final Map<WorldServer,Budget> BUDGETS=new WeakHashMap<>();
     private static final Method WATCH_ENTRY=ReflectionHelper.findMethod(PlayerChunkMap.class,
@@ -113,7 +114,15 @@ final class CruiseArrival {
                 if(player.isDead||player.world!=world||player.connection==null)continue;
                 net.minecraft.util.math.Vec3d seat=craft.seatPosition(pose,player);
                 if(!withinView(column,seat.x,seat.z))continue;
-                PlayerChunkMapEntry watch=watch(column);
+                if(watches.isPlayerWatchingChunk(player,column.x,column.z))continue;
+                PlayerChunkMapEntry watch=watches.getEntry(column.x,column.z);
+                // Adding a rider to an existing, sent entry immediately serializes the
+                // whole column. Spread those initial packets even at a warm destination.
+                if((watch==null||!watch.containsPlayer(player))&&!budget.addWatch()){
+                    ready=false;
+                    continue;
+                }
+                if(watch==null)watch=watch(column);
                 if(!watch.containsPlayer(player)) {
                     watch.addPlayer(player);
                     added.computeIfAbsent(player,ignored->new ArrayList<>()).add(watch);
@@ -159,8 +168,6 @@ final class CruiseArrival {
     }
 
     private PlayerChunkMapEntry watch(ChunkPos column) {
-        PlayerChunkMapEntry existing=watches.getEntry(column.x,column.z);
-        if(existing!=null)return existing;
         try {return (PlayerChunkMapEntry)WATCH_ENTRY.invoke(watches,column.x,column.z);}
         catch(ReflectiveOperationException failure){throw new IllegalStateException("Cannot prepare the flight arrival watch",failure);}
     }
@@ -169,7 +176,12 @@ final class CruiseArrival {
 
     private static final class Budget {
         private long tick=Long.MIN_VALUE, started;
-        private int used;
+        private int used,newWatches;
+        boolean addWatch(){
+            if(newWatches>=NEW_WATCHES_PER_TICK)return false;
+            newWatches++;
+            return true;
+        }
         private boolean generated;
         boolean generate(){
             if(generated)return false;
@@ -180,7 +192,7 @@ final class CruiseArrival {
             if(tick==now)return;
             tick=now;
             started=System.nanoTime();
-            used=0;generated=false;
+            used=0;newWatches=0;generated=false;
         }
         boolean take() {
             if(used>=CHUNKS_PER_TICK || used>0&&System.nanoTime()-started>=LOAD_BUDGET_NANOS)return false;

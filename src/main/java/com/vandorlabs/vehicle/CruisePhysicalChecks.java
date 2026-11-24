@@ -50,6 +50,7 @@ final class CruisePhysicalChecks {
     private static volatile boolean observingDescent;
     private static double approachStartX,previousApproachX;
     private static int movingApproachTicks;
+    private static long approachTickStart, longestWorldTick;
     private static double maximumWaypointMismatch;
     private static int firstTerrainTick=-1,firstDescentTick=-1;
 
@@ -411,7 +412,12 @@ final class CruisePhysicalChecks {
         private String firstLoad;
 
         @SubscribeEvent public void observeApproach(net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent event){
-            if(!observingDescent||event.world!=world||event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
+            if(!observingDescent||event.world!=world)return;
+            if(event.phase==net.minecraftforge.fml.common.gameevent.TickEvent.Phase.START){
+                approachTickStart=System.nanoTime();
+                return;
+            }
+            if(approachTickStart!=0)longestWorldTick=Math.max(longestWorldTick,System.nanoTime()-approachTickStart);
             double x=craft.cruise.x();
             // A scheduled setup may run after the world's entity tick.
             if(world.getTotalWorldTime()==exitTick&&x==approachStartX)return;
