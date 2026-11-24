@@ -20,7 +20,7 @@ The Master Catalog contains these lists:
 | Builder | Blueprints |
 | --- | --- |
 | Synthesis Tower | Synthesis Tower Core, Assembly Press Core, Enclosed Gantry Core, Sentinel Array Core, Survey Dish Core, Vector Fold Array Core, Meridian Drive Core, Maxwell Drive Core, Oculus Drive Core, Vehicle Controller, Ramp Controller |
-| Assembly Press | Data Chip, Access Card, Battery Module, Autopilot Module, Navigation Data Module |
+| Assembly Press | Data Chip, Access Card, Battery Module, Autonavigation Module (Autopilot Module on NeoForge), Navigation Data Module |
 | Enclosed Gantry | Extending Arms, Rotating Arms, their Large variants, Landing Wheels and Large Landing Wheels, Landing Skis, Landing Plates, Square Couplers, and Slab Couplers |
 
 The three builder Cores are available in the Synthesis Tower without a catalog. The Assembly Press always offers Data Chips and Access Cards. The Enclosed Gantry's ordinary arm and landing recipes remain available without a catalog. Extra blueprints come from the lists stored on the inserted chip.

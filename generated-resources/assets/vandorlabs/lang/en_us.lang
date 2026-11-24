@@ -527,7 +527,7 @@ tile.vandorlabs.wheel_medium.name=Medium Wheel
 
 tile.vandorlabs.wheel_large.name=Large Wheel
 
-tile.vandorlabs.autopilot.name=Autopilot
+tile.vandorlabs.autopilot.name=Autonavigation
 tile.vandorlabs.waypoint.name=Waypoint Block
 tile.vandorlabs.vehicle_controller.name=Vehicle Controller
 

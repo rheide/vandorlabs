@@ -39,7 +39,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+32,com.vandorlabs.rack.ModuleRackTabs.width(available,modules,0),20,"Housing"));
         buttonList.add(new DialogTabButton(101,guiLeft+12+com.vandorlabs.rack.ModuleRackTabs.offset(available,modules,1),guiTop+32,com.vandorlabs.rack.ModuleRackTabs.width(available,modules,1),20,"Redstone"));
         for(int slot=0;slot<4;slot++)if(drafts[slot]!=null){
-            buttonList.add(new DialogTabButton(102+slot,guiLeft+12+com.vandorlabs.rack.ModuleRackTabs.offset(available,modules,index),guiTop+32,com.vandorlabs.rack.ModuleRackTabs.width(available,modules,index),20,com.vandorlabs.rack.ModuleRackTabs.moduleLabel(slot)));index++;
+            buttonList.add(new DialogTabButton(102+slot,guiLeft+12+com.vandorlabs.rack.ModuleRackTabs.offset(available,modules,index),guiTop+32,com.vandorlabs.rack.ModuleRackTabs.width(available,modules,index),20,"Nav"+(slot+1)));index++;
         }
         for(GuiButton button:buttonList)button.enabled=button.id!=100+page;
         if(page==0)textures=HousingTextureList.forHousing(guiLeft+12,guiTop+64,xSize-24,housing,

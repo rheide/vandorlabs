@@ -141,7 +141,7 @@ item in either chamber to collect it, or use the dialog/adjacent output.
 
 | Builder | Designs available without a Catalog Chip | Master Catalog additions |
 | --- | --- | --- |
-| Assembly Press | Data Chip, Access Card, Programmable Plate | Battery Module, Autopilot Module, Navigation Data Module |
+| Assembly Press | Data Chip, Access Card, Programmable Plate | Battery Module, Autonavigation Module (Autopilot Module on NeoForge), Navigation Data Module |
 | Enclosed Gantry | Regular and Large Extending/Rotating Arms, regular and Large Landing Wheels, Landing Ski, Landing Plate, Coupler and Coupler Slab | The same mechanical designs |
 
 Craft Programmable Armor by arranging Programmable Plates in the standard armor patterns.

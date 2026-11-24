@@ -52,9 +52,9 @@ The Autonavigation Module has an amber waypoint route on its front. To add navig
 
 1. Place a rack at the craft's route-sensor position, normally on its underside. Its facing controls access to the bays; the Pilot Seat determines driving direction.
 2. Insert one Autonavigation Module into any free bay. A craft can have at most one Autonavigation Module across its racks. Multiple modules keep their items and settings, but prevent ambiguous vehicle conversion. Blank Modules do not count as navigation controllers.
-3. Open the rack dialog and choose **Auto1** through **Auto4**, matching the occupied bay. In **General**, sample a route-marker block from the hotbar. Sampling preserves the exact block variant and does not consume it.
+3. Open the rack dialog and choose **Nav1** through **Nav4**, matching the occupied bay. In **General**, sample a route-marker block from the hotbar. Sampling preserves the exact block variant and does not consume it.
 4. In the module's **Redstone** sub-tab, set its receiving channels and activation mode. Each installed module receives its own configured channels and local power. These inputs are separate from the rack's proportional output settings.
-5. Build the route, Waypoints and complete vehicle as described in [Autopilot and waypoints](vehicle-autopilot.md). A short activation pulse starts the existing latched journey; normal Vehicle Controller, owner, terrain and transfer checks still apply.
+5. Build the route, Waypoints and complete vehicle as described in [Autonavigation and waypoints](vehicle-autopilot.md). A short activation pulse starts the existing latched journey; normal Vehicle Controller, owner, terrain and transfer checks still apply.
 
 ![Selecting the module's route marker without consuming the sample](images/module-rack/autopilot-general.png)
 
