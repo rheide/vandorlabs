@@ -18,7 +18,8 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
         boolean newWaypoint = target.equals("journeymap.client.model.Waypoint");
         boolean distances = target.equals("journeymap.client.ui.waypoint.WaypointManagerItem");
         boolean beacon = target.equals("journeymap.client.render.ingame.RenderWaypointBeacon");
-        if (!dismount && !map && !beacon && !editor && !newWaypoint && !distances) return bytes;
+        boolean riderModel=target.equals("net.minecraft.client.renderer.entity.RenderLivingBase");
+        if (!dismount && !map && !beacon && !editor && !newWaypoint && !distances && !riderModel) return bytes;
         ClassReader reader = new ClassReader(bytes);
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(ASM5,writer) {
@@ -26,6 +27,14 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                 MethodVisitor delegate = super.visitMethod(access,method,descriptor,signature,exceptions);
                 return new MethodVisitor(ASM5,delegate) {
                     @Override public void visitMethodInsn(int op,String owner,String id,String desc,boolean itf) {
+                        if(riderModel && (method.equals("doRender")||method.equals("func_76986_a"))
+                                && descriptor.startsWith("(Lnet/minecraft/entity/EntityLivingBase;") && op==INVOKEVIRTUAL
+                                && owner.equals("net/minecraft/entity/Entity") && id.equals("shouldRiderSit") && desc.equals("()Z")){
+                            super.visitVarInsn(ALOAD,1);
+                            super.visitMethodInsn(INVOKESTATIC,"com/vandorlabs/client/VehicleClient","riderSits",
+                                    "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/EntityLivingBase;)Z",false);
+                            return;
+                        }
                         if (dismount && op==INVOKEVIRTUAL && desc.equals("()V") && owner.startsWith("net/minecraft/entity/")
                                 && (id.equals("func_184210_p") || id.equals("dismountRidingEntity"))) {
                             super.visitMethodInsn(INVOKESTATIC,TELEPORT,"detach","(Lnet/minecraft/entity/Entity;)V",false);

@@ -178,9 +178,9 @@ public final class VehicleClient {
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent event) {
         if(event.phase!=TickEvent.Phase.START)return;Minecraft mc=Minecraft.getMinecraft();
         RenderGroundVehicle.cleanup(mc.world);
-        if(mc.world!=lastWorld){incoming.clear();for(Incoming pending:completed.values())if(pending.parsed!=null)pending.parsed.cancel(false);completed.clear();deferred.clear();GearMotionClient.clear();latestPreview=null;preview=null;lastWorld=mc.world;sequence=0;clearJumpGesture();jumpPlayer=jumpVehicle=null;}
+        if(mc.world!=lastWorld){renderedSeatPoses.clear();incoming.clear();for(Incoming pending:completed.values())if(pending.parsed!=null)pending.parsed.cancel(false);completed.clear();deferred.clear();GearMotionClient.clear();latestPreview=null;preview=null;lastWorld=mc.world;sequence=0;clearJumpGesture();jumpPlayer=jumpVehicle=null;}
         Entity riding=mc.player==null?null:mc.player.getRidingEntity();
-        if(jumpPlayer!=mc.player || jumpVehicle!=riding || mc.currentScreen!=null || !(riding instanceof EntityGroundVehicle) || riding.getControllingPassenger()!=mc.player)clearJumpGesture();
+        if(jumpPlayer!=mc.player || jumpVehicle!=riding || mc.currentScreen!=null || !(riding instanceof EntityGroundVehicle))clearJumpGesture();
         if(jumpVehicle!=riding)cabinGesture=false;
         jumpPlayer=mc.player;jumpVehicle=riding;
         PlacedSeatCamera.tick(mc);
@@ -197,25 +197,35 @@ public final class VehicleClient {
         boolean driver=entity.getControllingPassenger()==mc.player;
         VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.INPUT);p.entity=entity.getEntityId();p.token=entity.getUniqueID();p.sequence=++sequence;
         if(mc.currentScreen==null){p.forward=(byte)((mc.gameSettings.keyBindForward.isKeyDown()?1:0)-(mc.gameSettings.keyBindBack.isKeyDown()?1:0));p.strafe=(byte)((mc.gameSettings.keyBindRight.isKeyDown()?1:0)-(mc.gameSettings.keyBindLeft.isKeyDown()?1:0));p.flag=mc.gameSettings.keyBindJump.isKeyDown();}
-        else p.flag=true;
+        else p.flag=!entity.walkingInCabin(mc.player);
         boolean jump=mc.currentScreen==null && mc.gameSettings.keyBindJump.isKeyDown();
         int jumpInterval=mc.player.ticksExisted-lastJump;
         boolean toggle=jump && !jumpDown && jumpInterval>=0 && jumpInterval<=7;
         if(jump && !jumpDown)lastJump=toggle?-100:mc.player.ticksExisted;
-        boolean jumpPressed=jump&&!jumpDown;
         jumpDown=jump;
         VehicleNetwork.Packet flight=new VehicleNetwork.Packet(VehicleNetwork.FLIGHT);flight.entity=p.entity;flight.token=p.token;
         boolean exitGesture=mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()&&mc.gameSettings.keyBindSneak.isKeyDown();
         if(entity.hover && !entity.flying() && exitGesture)flight.sequence=1;
-        if(entity.flying() && driver && exitGesture && !cabinGesture)flight.sequence=2;
-        if(entity.walkingInCabin(mc.player)&&jumpPressed&&!exitGesture)flight.sequence=3;
+        if(entity.flying() && exitGesture && !cabinGesture)flight.sequence=2;
         cabinGesture=exitGesture;
         flight.strafe=(byte)(driver&&mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()?1:0);
         flight.flag=driver&&toggle;flight.forward=driver?(byte)((jump?1:0)-(mc.currentScreen==null && mc.gameSettings.keyBindSneak.isKeyDown()?1:0)):0;
-        PacketHandler.INSTANCE.sendToServer(flight);
-        if(driver){if(!entity.flying()&&!entity.takeoffRoll()){entity.predictFlight(flight.strafe==1);entity.predict(p.sequence,p.forward,p.strafe,p.flag);}PacketHandler.INSTANCE.sendToServer(p);}
-        else{jumpDown=false;lastJump=-100;}
+        if(driver||flight.sequence!=0)PacketHandler.INSTANCE.sendToServer(flight);
+        if(driver&&!entity.flying()&&!entity.takeoffRoll()){
+            entity.predictFlight(flight.strafe==1);
+            entity.predict(p.sequence,p.forward,p.strafe,p.flag);
+        }
+        if(driver||entity.walkingInCabin(mc.player))PacketHandler.INSTANCE.sendToServer(p);
     }
+    /** Forge asks the mount a single pose question. Two players on the same deck can need opposite poses. */
+    public static boolean riderSits(Entity mount,net.minecraft.entity.EntityLivingBase rider){
+        return mount instanceof EntityGroundVehicle?!((EntityGroundVehicle)mount).walkingInCabin(rider):mount.shouldRiderSit();
+    }
+
+    private static final boolean CHECK_CREW_POSE=Boolean.getBoolean("vandorlabs.cabinCrewChecks");
+    private static final Map<UUID,Boolean> renderedSeatPoses=new HashMap<>();
+    public static Boolean renderedRiderSitting(UUID rider){return renderedSeatPoses.get(rider);}
+
     private static UUID cameraCraft;
     private static int cruisePilotDraws;
     public static int cruisePilotDraws(){return cruisePilotDraws;}
@@ -253,6 +263,8 @@ public final class VehicleClient {
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle){
             EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
             if(craft.structure!=null)GlStateManager.popMatrix();
+            if(CHECK_CREW_POSE)
+                renderedSeatPoses.put(event.getEntityPlayer().getUniqueID(),event.getRenderer().getMainModel().isRiding);
             if(aboveRenderSections(craft)&&event.getEntityPlayer()==Minecraft.getMinecraft().player&&!VehicleRenderPass.shadow())
                 cruisePilotDraws++;
         }

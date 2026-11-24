@@ -295,7 +295,7 @@ def main():
     command = [args.java, '-Xmx'+args.max_heap]+(['-XX:+UseG1GC', '-XX:MaxGCPauseMillis=20'] if args.focus in ('ramps','canopy-animations','gear-animations') else [])+properties+['-cp', ';'.join(classpath),
         'net.minecraft.launchwrapper.Launch', '--tweakClass', 'net.minecraftforge.fml.common.launcher.FMLTweaker',
         '--gameDir', str(game), '--assetsDir', str(base/'assets'), '--assetIndex', '1.12',
-        '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else 'REPROBOT', '--accessToken', 'test', '--version', args.forge_profile,
+        '--username', ('VDriver' if args.role=='driver' else 'VObserver') if args.role else ('CrewPeer' if os.environ.get('VANDOR_LABS_CABIN_PEER_PORT') else 'REPROBOT'), '--accessToken', 'test', '--version', args.forge_profile,
         '--width', '1920' if args.focus == 'connection-acceptance' else '896' if args.focus in ('ramps','canopy-animations','gear-animations') else '1280', '--height', '1080' if args.focus == 'connection-acceptance' else '504' if args.focus in ('ramps','canopy-animations','gear-animations') else '720']
     if args.server:
         host,port=args.server.split(':')

@@ -603,7 +603,7 @@ public class ReproLab {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent ev) {
-        if (ev.phase != TickEvent.Phase.END || !enabled) {
+        if (ev.phase != TickEvent.Phase.END || !enabled || Boolean.getBoolean("vandorlabs.cabinCrewPeer")) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();

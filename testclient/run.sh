@@ -129,6 +129,11 @@ CAPTURE_JVM+=("-Dvandorlabs.bridgeMachineChecksOnly=${VANDOR_LABS_BRIDGE_MACHINE
 if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then
   CAPTURE_JVM+=(-XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps "-Xloggc:$REPRO_OUT/gc.log")
 fi
+CLIENT_NAME=REPROBOT
+if [ -n "${VANDOR_LABS_CABIN_PEER_PORT:-}" ]; then
+  CLIENT_NAME=CrewPeer
+  set -- "$@" --server 127.0.0.1 --port "$VANDOR_LABS_CABIN_PEER_PORT"
+fi
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-3G}" "${CAPTURE_JVM[@]}" \
@@ -188,6 +193,6 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -cp "$CP" net.minecraft.launchwrapper.Launch \
   --tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker \
   --gameDir "$BENCH_GAME_DIR" --assetsDir "$PWD/assets" --assetIndex 1.12 \
-  --username REPROBOT --accessToken duck0000 --version "1.12.2-Forge$FORGE_VERSION" \
+  --username "$CLIENT_NAME" --accessToken duck0000 --version "1.12.2-Forge$FORGE_VERSION" \
   --fml.forgeVersion "$FORGE_VERSION" --fml.mcVersion 1.12.2 --fml.forgeGroup net.minecraftforge \
   --width "${VANDOR_LABS_REPRO_WIDTH:-1280}" --height "${VANDOR_LABS_REPRO_HEIGHT:-720}" "$@"
