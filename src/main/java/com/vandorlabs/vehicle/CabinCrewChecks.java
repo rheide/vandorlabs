@@ -2,10 +2,22 @@ package com.vandorlabs.vehicle;
 
 import com.vandorlabs.client.VehicleClient;
 import com.vandorlabs.config.BlockAvailability;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 import java.io.File;
+import java.util.List;
+import net.minecraft.network.EnumConnectionState;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.NetworkSystem;
+import net.minecraft.network.login.server.SPacketLoginSuccess;
 import java.net.InetAddress;
 import java.util.concurrent.Future;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,6 +31,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 /** Both riders connect and send normal keyboard and interaction packets through their own Minecraft clients. */
 @net.minecraftforge.fml.relauncher.SideOnly(Side.CLIENT)
@@ -70,8 +83,37 @@ public final class CabinCrewChecks {
         BlockAvailability.load(cfg.getConfigFile());
         mc.getIntegratedServer().setOnlineMode(false);
         mc.getIntegratedServer().getNetworkSystem().addLanEndpoint(InetAddress.getLoopbackAddress(),Integer.getInteger("vandorlabs.cabinCrewPort"));
+        // The vanilla LAN switch also disables pausing the integrated server while a menu is open.
+        // Bind only the loopback endpoint instead of broadcasting a LAN game to the local network.
+        ReflectionHelper.setPrivateValue(IntegratedServer.class,mc.getIntegratedServer(),true,"isPublic","field_71346_p");
+        prepareLoopback(mc.getIntegratedServer().getNetworkSystem());
         deadline=System.nanoTime()+300_000_000_000L;
         System.out.println("[vandorlabs] cabin crew READY");
+    }
+
+    // Forge 2864 can advance this loopback channel to PLAY while its queued LOGIN success
+    // is still awaiting encoding. Use its LOGIN packet table only for that pending write.
+    private static void prepareLoopback(NetworkSystem network){
+        List<ChannelFuture> endpoints=ReflectionHelper.getPrivateValue(NetworkSystem.class,network,"endpoints","field_151274_e");
+        endpoints.get(endpoints.size()-1).channel().pipeline().addFirst(new ChannelInboundHandlerAdapter(){
+            @Override public void channelRead(ChannelHandlerContext context,Object message)throws Exception{
+                if(message instanceof Channel)((Channel)message).pipeline().addFirst(new ChannelInboundHandlerAdapter(){
+                    @Override public void channelActive(ChannelHandlerContext child)throws Exception{
+                        child.pipeline().addAfter("encoder","crewLoginOrdering",new ChannelOutboundHandlerAdapter(){
+                            @Override public void write(ChannelHandlerContext out,Object packet,ChannelPromise promise)throws Exception{
+                                io.netty.util.Attribute<EnumConnectionState> protocol=out.channel().attr(NetworkManager.PROTOCOL_ATTRIBUTE_KEY);
+                                if(packet instanceof SPacketLoginSuccess&&protocol.get()==EnumConnectionState.PLAY){
+                                    protocol.set(EnumConnectionState.LOGIN);
+                                    try{super.write(out,packet,promise);}finally{protocol.set(EnumConnectionState.PLAY);}
+                                }else super.write(out,packet,promise);
+                            }
+                        });
+                        super.channelActive(child);
+                    }
+                });
+                super.channelRead(context,message);
+            }
+        });
     }
 
     static boolean host(Minecraft mc)throws Exception{
