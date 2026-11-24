@@ -23,7 +23,6 @@ public final class VehicleCruise {
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
     private CruiseArrival arrival;
-    private double arrivalAltitude;
     private final CruiseTiles tiles=new CruiseTiles();
     private final CruiseGeography geography=new CruiseGeography();
 
@@ -55,7 +54,6 @@ public final class VehicleCruise {
             craft.getDataManager().set(EntityGroundVehicle.CRUISE_HANDOFF,BlockAvailability.cruiseHandoffAltitude());
     }
     public int handoffAltitude(){return craft.getDataManager().get(EntityGroundVehicle.CRUISE_HANDOFF);}
-    boolean preparingArrival(){ return arrival!=null; }
     public boolean projected() { return active()&&craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getY()==1; }
     double anchorX() { return craft.world.isRemote?craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getX():anchorX; }
     double anchorZ() { return craft.world.isRemote?craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getZ():anchorZ; }
@@ -82,25 +80,16 @@ public final class VehicleCruise {
             routeZ = craft.posZ;
             anchor(craft.posX,craft.posZ);
         }
-        if(arrival!=null){
-            // Continue descending while destination columns populate. Ease toward the
-            // build ceiling and keep the swept hull above unverified terrain.
-            double room=Math.max(0,arrivalAltitude-FlightEnvelope.WORLD_CEILING);
-            arrivalAltitude+=Math.max(-room*.12,Math.min(0,dy));
-            return finishArrival(yaw,pitch,bank);
-        }
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);
         if (height <= handoffAltitude()) {
-            VehiclePose pose=new VehiclePose(routeX,craft.posY,routeZ,yaw,pitch,bank,craft.structure.facing);
-            AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
-                routeX-craft.posX,0,routeZ-craft.posZ));
-            arrivalAltitude=height;
-            arrival=new CruiseArrival((WorldServer)craft.world,routeX,routeZ,hull.grow(1));
+            if(arrival==null)arrival=new CruiseArrival((WorldServer)craft.world);
             publishRoute();
-            return finishArrival(yaw,pitch,bank);
+            updateTerrain(routeX,routeZ,height);
+            return finishArrival(height,dx,dz,yaw,pitch,bank);
         }
+        cancelArrival();
         if (!cruising || craft.ticksExisted % 3 == 0) {
             publishRoute();
         }
@@ -122,16 +111,18 @@ public final class VehicleCruise {
         return true;
     }
 
-    private boolean finishArrival(float yaw,float pitch,float bank) {
+    private boolean finishArrival(double height,double dx,double dz,float yaw,float pitch,float bank) {
         VehiclePose pose=new VehiclePose(routeX,0,routeZ,yaw,pitch,bank,craft.structure.facing);
         double lowest=Math.min(craft.flightBounds(pose).minY,
             craft.getEntityBoundingBox().minY-craft.posY);
         // Old saves can already be cruising inside the transition band.
-        double y=Math.max(FlightEnvelope.WORLD_CEILING-Math.min(0,lowest)+.01,
-                Math.min(arrivalAltitude,handoffAltitude()));
-        if(!arrival.ready(craft,pose)) {
-            double hold=SKY_OFFSET+Math.min(y,altitude());
-            craft.setPosition(projected()?routeX:craft.posX,hold,projected()?routeZ:craft.posZ);
+        double floor=FlightEnvelope.WORLD_CEILING-Math.min(0,lowest)+.01;
+        double room=Math.max(0,altitude()-floor);
+        double y=Math.max(floor,Math.min(handoffAltitude(),Math.max(height,altitude()-room*.12)));
+        AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
+                routeX-craft.posX,-craft.posY,routeZ-craft.posZ)).grow(1);
+        if(!arrival.ready(craft,pose,hull,dx,dz)) {
+            craft.setPosition(projected()?routeX:craft.posX,SKY_OFFSET+y,projected()?routeZ:craft.posZ);
             return true;
         }
         CruiseArrival prepared=arrival;

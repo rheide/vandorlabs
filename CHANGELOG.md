@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Keep Forge aircraft moving and steering on descent while terrain loads under the hull and ahead along its course. Ease into cruise speed on climb and start shedding excess airspeed well above the terrain handoff.
+
 - Control powered Forge airspeed with an Autopilot Module and a full or half-height Autopilot panel. Flight instruments report kiloblocks per hour to one decimal place. Existing waypoint modules keep their routes under the name Autonavigation Module.
 - Check gross weight, fuel and cargo against installed lift capacity when selecting Hover on Forge. The Vehicle Controller shows lift capacity on its Flight tab. Climb, descent and vertical braking respond to gross weight relative to available lift.
 

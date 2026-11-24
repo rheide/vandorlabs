@@ -25,43 +25,76 @@ final class CruiseArrival {
     private static final Map<WorldServer,Budget> BUDGETS=new WeakHashMap<>();
     private static final Method WATCH_ENTRY=ReflectionHelper.findMethod(PlayerChunkMap.class,
         "getOrCreateEntry","func_187302_c",int.class,int.class);
-    final double x,z;
+    private int left,right,back,front,leadX,leadZ;
+    private final java.util.Set<ChunkPos> requested=new java.util.HashSet<>();
+    private final java.util.Set<ChunkPos> reading=new java.util.HashSet<>();
     private final WorldServer world;
     private final PlayerChunkMap watches;
     private final List<ChunkPos> footprint=new ArrayList<>(), prepare=new ArrayList<>();
     private final Map<EntityPlayerMP,List<PlayerChunkMapEntry>> added=new IdentityHashMap<>();
-    private int next;
 
-    CruiseArrival(WorldServer world,double x,double z,AxisAlignedBB hull) {
+
+    CruiseArrival(WorldServer world) {
         this.world=world;
-        this.x=x;this.z=z;
         watches=world.getPlayerChunkMap();
-        int cx=section(x),cz=section(z);
-        int minX=Math.min(cx-1,section(hull.minX)),maxX=Math.max(cx+1,section(hull.maxX));
-        int minZ=Math.min(cz-1,section(hull.minZ)),maxZ=Math.max(cz+1,section(hull.maxZ));
-        // The perimeter allows vanilla to populate and light the inner footprint.
-        for(int xx=minX-1;xx<=maxX+1;xx++)for(int zz=minZ-1;zz<=maxZ+1;zz++) {
-            ChunkPos column=new ChunkPos(xx,zz);
-            prepare.add(column);
-            if(xx>=minX&&xx<=maxX&&zz>=minZ&&zz<=maxZ)footprint.add(column);
-        }
-        prepare.sort(Comparator.comparingInt(column->Math.max(Math.abs(column.x-cx),Math.abs(column.z-cz))));
     }
 
-    boolean ready(EntityGroundVehicle craft,VehiclePose pose) {
+    private void plan(VehiclePose pose,AxisAlignedBB hull,double dx,double dz) {
+        int cx=section(pose.x),cz=section(pose.z);
+        int minX=Math.min(cx-1,section(hull.minX)),maxX=Math.max(cx+1,section(hull.maxX));
+        int minZ=Math.min(cz-1,section(hull.minZ)),maxZ=Math.max(cz+1,section(hull.maxZ));
+        double speed=Math.hypot(dx,dz);
+        int aheadX=speed<.01?0:(int)Math.round(2*dx/speed);
+        int aheadZ=speed<.01?0:(int)Math.round(2*dz/speed);
+        if(!prepare.isEmpty()&&left==minX&&right==maxX&&back==minZ&&front==maxZ&&aheadX==leadX&&aheadZ==leadZ)return;
+        left=minX;right=maxX;back=minZ;front=maxZ;leadX=aheadX;leadZ=aheadZ;
+        prepare.clear();footprint.clear();
+        // Ship the hull and its approach, including the vanilla population border.
+        minX=Math.min(minX,cx+aheadX);maxX=Math.max(maxX,cx+aheadX);
+        minZ=Math.min(minZ,cz+aheadZ);maxZ=Math.max(maxZ,cz+aheadZ);
+        for(int x=minX-1;x<=maxX+1;x++)for(int z=minZ-1;z<=maxZ+1;z++){
+            ChunkPos column=new ChunkPos(x,z);
+            prepare.add(column);
+            if(x>=minX&&x<=maxX&&z>=minZ&&z<=maxZ)footprint.add(column);
+        }
+        Comparator<ChunkPos> closestFirst=Comparator.comparingDouble(c->
+                Math.pow(c.x-cx-aheadX*.5,2)+Math.pow(c.z-cz-aheadZ*.5,2));
+        prepare.sort(closestFirst);footprint.sort(closestFirst);
+        for(Map.Entry<EntityPlayerMP,List<PlayerChunkMapEntry>> entry:added.entrySet()){
+            entry.getValue().removeIf(watch->{
+                if(footprint.contains(watch.getPos()))return false;
+                release(entry.getKey(),watch);
+                return true;
+            });
+        }
+        requested.removeIf(column->{
+            if(prepare.contains(column))return false;
+            retire(column);
+            return true;
+        });
+    }
+
+    boolean ready(EntityGroundVehicle craft,VehiclePose pose,AxisAlignedBB hull,double dx,double dz) {
+        plan(pose,hull,dx,dz);
         Budget budget=BUDGETS.computeIfAbsent(world,ignored->new Budget());
         budget.reset(world.getTotalWorldTime());
-        while(next<prepare.size()) {
-            ChunkPos column=prepare.get(next);
-            if(world.getChunkProvider().getLoadedChunk(column.x,column.z)==null) {
-                if(!budget.take())break;
-                world.getChunkProvider().provideChunk(column.x,column.z);
+        net.minecraft.world.gen.ChunkProviderServer provider=world.getChunkProvider();
+        for(ChunkPos column:prepare){
+            if(provider.getLoadedChunk(column.x,column.z)!=null||reading.contains(column))continue;
+            if(!budget.take())break;
+            if(provider.isChunkGeneratedAt(column.x,column.z)){
+                reading.add(column);
+                provider.loadChunk(column.x,column.z,()->{
+                    reading.remove(column);
+                    if(!requested.contains(column)&&!prepare.contains(column))retire(column);
+                });
+            }else{
+                if(!budget.generate())break;
+                provider.provideChunk(column.x,column.z);
             }
-            next++;
+            requested.add(column);
         }
-        // Start sending populated columns while the outer lighting perimeter is still loading.
-        // A large footprint or a slow generator can span many server ticks.
-        boolean ready=next==prepare.size();
+        boolean ready=true;
         List<Entity> riders=craft.getPassengers();
         added.entrySet().removeIf(entry->{
             if(riders.contains(entry.getKey()))return false;
@@ -71,7 +104,6 @@ final class CruiseArrival {
         for(ChunkPos column:footprint) {
             Chunk chunk=world.getChunkProvider().getLoadedChunk(column.x,column.z);
             if(chunk==null) {
-                if(next==prepare.size())next=0;
                 ready=false;
                 continue;
             }
@@ -96,16 +128,28 @@ final class CruiseArrival {
         for(Map.Entry<EntityPlayerMP,List<PlayerChunkMapEntry>> entry:added.entrySet())
             release(entry.getKey(),entry.getValue());
         added.clear();
+        prepare.clear();
+        for(ChunkPos column:requested)retire(column);
+        requested.clear();
+    }
+
+    private void retire(ChunkPos column){
+        if(watches.getEntry(column.x,column.z)==null){
+            Chunk chunk=world.getChunkProvider().getLoadedChunk(column.x,column.z);
+            if(chunk!=null)world.getChunkProvider().queueUnload(chunk);
+        }
     }
 
     private void release(EntityPlayerMP player,List<PlayerChunkMapEntry> entries) {
-        for(PlayerChunkMapEntry watch:entries) {
-            ChunkPos column=watch.getPos();
-            if(watches.getEntry(column.x,column.z)!=watch)continue;
-            // The normal movement update adopts temporary destination watches that are now in range.
-            if(!player.isDead&&player.world==world&&withinView(column,player.managedPosX,player.managedPosZ))continue;
-            watch.removePlayer(player);
-        }
+        for(PlayerChunkMapEntry watch:entries)release(player,watch);
+    }
+
+    private void release(EntityPlayerMP player,PlayerChunkMapEntry watch) {
+        ChunkPos column=watch.getPos();
+        if(watches.getEntry(column.x,column.z)!=watch)return;
+        // Vanilla adopts the destination watches when the player changes tracking origin.
+        if(!player.isDead&&player.world==world&&withinView(column,player.managedPosX,player.managedPosZ))return;
+        watch.removePlayer(player);
     }
 
     private boolean withinView(ChunkPos column,double x,double z) {
@@ -126,11 +170,17 @@ final class CruiseArrival {
     private static final class Budget {
         private long tick=Long.MIN_VALUE, started;
         private int used;
+        private boolean generated;
+        boolean generate(){
+            if(generated)return false;
+            generated=true;
+            return true;
+        }
         void reset(long now) {
             if(tick==now)return;
             tick=now;
             started=System.nanoTime();
-            used=0;
+            used=0;generated=false;
         }
         boolean take() {
             if(used>=CHUNKS_PER_TICK || used>0&&System.nanoTime()-started>=LOAD_BUDGET_NANOS)return false;
