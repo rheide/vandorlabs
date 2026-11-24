@@ -513,21 +513,22 @@ final class VehicleFlightClientChecks {
             need(frame<75,"powered touchdown over runway: "+flightState(craft));
             if(!craft.flying()){
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-                need(craft.vehicleMode()==1&&Math.abs(craft.posY-runwayY)<.15&&craft.driveSpeed>.45,
-                    "wheel touchdown keeps forward airspeed in Taxi: "+flightState(craft));
-                landingZ=craft.posZ;
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    EntityGroundVehicle actual=server(mc);
+                    need(actual.vehicleMode()==1&&actual.onGround&&actual.flightPitch()==0&&actual.flightBank()==0
+                                    &&Math.abs(actual.getEntityBoundingBox().minY-runwayY)<.02&&actual.driveSpeed>.45,
+                            "server wheel contact and rollout: "+flightState(actual)+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
+                    landingZ=actual.posZ;
+                    System.out.println("[vandorlabs] powered runway contact speed="+actual.driveSpeed+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
+                }).get();
                 next();return false;
-            }
-            if(frame==40){
-                String state=mc.getIntegratedServer().callFromMainThread(()->{EntityGroundVehicle actual=server(mc);return flightState(actual)+" motion="+actual.motionX+","+actual.motionY+","+actual.motionZ+" runway="+runwayY;}).get();
-                System.out.println("[vandorlabs] powered landing progress "+state);
             }
             return false;
         }
         if(stage==24){
             if(frame<9)return false;
-            need(craft.posZ<landingZ-2&&Math.abs(craft.posY-runwayY)<.15,
-                    "forward rollout settles on runway with no embeds");
+            need(craft.posZ<landingZ-2&&Math.abs(craft.getEntityBoundingBox().minY-runwayY)<.15,
+                    "forward rollout settles on runway with no embeds: "+flightState(craft)+" bottom="+craft.getEntityBoundingBox().minY+" runway="+runwayY);
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
             return true;
         }
