@@ -309,6 +309,19 @@ public final class VehicleCollision {
             for(AxisAlignedBB box:cluster.boxes)if(box.intersects(body))return false;
         return true;
     }
+    /** Sweep the same rider bounding box and axis offsets Minecraft uses, in deck coordinates. */
+    double clipCabin(AxisAlignedBB body,double delta,int axis){
+        if(delta==0)return 0;
+        AxisAlignedBB swept=body.expand(axis==0?delta:0,axis==1?delta:0,axis==2?delta:0);
+        for(Cluster cluster:clusters)if(cluster.bounds.intersects(swept)){
+            for(AxisAlignedBB box:cluster.boxes){
+                if(axis==0)delta=box.calculateXOffset(body,delta);
+                else if(axis==1)delta=box.calculateYOffset(body,delta);
+                else delta=box.calculateZOffset(body,delta);
+            }
+        }
+        return delta;
+    }
     private float boundedYaw=Float.NaN;private AxisAlignedBB bounded;
     public AxisAlignedBB bounds(float yaw){
         if(posed!=null&&yaw==posedYaw)return posedBounds;

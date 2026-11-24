@@ -54,8 +54,13 @@ public final class VehicleInteraction {
         return target;
     }
     public static boolean supported(EntityPlayer player,Target target) {
-        if(target!=null && target.craft.walkingInCabin(player) &&
-                player.getHeldItemMainhand().getItemUseAction()!=net.minecraft.item.EnumAction.NONE)return false;
+        if(target!=null&&target.craft.walkingInCabin(player)&&!player.getHeldItemMainhand().isEmpty()
+                &&player.getHeldItemMainhand().getItem()!=ModItems.CONFIGURIZER){
+            if(target.hit.action!=VehicleSelection.Action.DOOR)return false;
+            net.minecraft.tileentity.TileEntity tile=target.craft.view.getTileEntity(target.hit.cell.pos);
+            if(!(tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
+                    ||!((com.vandorlabs.tiles.TileEntitySpaceDoor)tile).holdingCredential(player,EnumHand.MAIN_HAND))return false;
+        }
         return target!=null && (player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER
                 || target.hit.action==VehicleSelection.Action.CHEST
                 || target.hit.action==VehicleSelection.Action.COUPLER
@@ -119,7 +124,10 @@ public final class VehicleInteraction {
             Vec3d eye=eyes(player);
             Vec3d start=craft.toLocal(eye,tile.getPos()).subtract(new Vec3d(tile.getPos())),end=craft.toLocal(eye.add(look(player).scale(8)),tile.getPos()).subtract(new Vec3d(tile.getPos()));
             if(player.isSneaking() || player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER){if(!player.isSneaking()&&tile.useEmergencyPark(start,end,player))return true;com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;}
-            if(tile.use(start,end,player)){if(craft.view.getTileEntity(tile.getPos())==tile)craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && craft.walkingInCabin(player)&&tile.getPos().equals(craft.seatForPassenger(player))){craft.toggleCabin(server);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
+            if(tile.use(start,end,player)){if(craft.view.getTileEntity(tile.getPos())==tile)craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && (player.getRidingEntity()!=craft||craft.walkingInCabin(player)||!tile.getPos().equals(craft.seatForPassenger(player)))){
+                if(!craft.board(player,tile.getPos()))VehicleNetwork.error(server,"This cockpit seat is occupied or cannot be boarded.");
+                return true;
+            }com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
         }
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
             if(target.hit.action==VehicleSelection.Action.SCREEN&&craft.signals.clickEmergencyPark(target.hit.cell.pos,player))return true;
@@ -150,7 +158,6 @@ public final class VehicleInteraction {
         seat=VehicleSeats.lower(target.hit.cell.state,seat);
         if(!craft.structure.passengerSeats().contains(seat))return false;
         if(player.isSneaking()){if(craft.structure.pilotSeats().contains(seat))VehicleService.previewSeat(server,craft,seat);return true;}
-        if(craft.walkingInCabin(player)&&seat.equals(craft.seatForPassenger(player))){craft.toggleCabin(server);return true;}
         if(!craft.board(player,seat))VehicleNetwork.error(server,"This seat is occupied or cannot be boarded.");
         return true;
     }

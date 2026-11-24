@@ -256,8 +256,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean walkingInCabin(Entity rider){return cabin.walking(rider);}
     public boolean flightDismount;
     void toggleCabin(EntityPlayerMP player){
+        Entity previous=getControllingPassenger();
         if(cabin.toggle(player)){
-            serverInputs.clear();forward=strafe=0;brake=false;lastInput=-100;
+            if(previous==player||previous!=getControllingPassenger())resetHelmInput();
             updatePassenger(player);
         }
     }
@@ -628,14 +629,29 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean couplingInputSeen,couplingInputBrake;private byte couplingInputForward,couplingInputStrafe;
     private void couplingInput(byte f,byte s,boolean b){if(!couplingInputSeen){couplingInputSeen=true;couplingInputForward=forward;couplingInputStrafe=strafe;couplingInputBrake=brake;}if(couplingInputForward!=f||couplingInputStrafe!=s||couplingInputBrake!=b){couplingInputForward=f;couplingInputStrafe=s;couplingInputBrake=b;VehicleCouplings.releaseControlsChanged(this);}}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
-        if(transferInProgress || getControllingPassenger()!=player)return;
+        if(transferInProgress||player.getRidingEntity()!=this)return;
+        if(cabin.walking(player)){cabin.input(player,sequence,forward,strafe,brake);return;}
+        if(getControllingPassenger()!=player)return;
         if(!(hover||poweredFlight()||flying()?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
         couplingInput(forward,strafe,brake);
         recordCurrentCouplingDriver();
         lastInput=world.getTotalWorldTime();
     }
     @Override protected void addPassenger(Entity passenger){super.addPassenger(passenger);recordCurrentCouplingDriver();}
-    @Override public Entity getControllingPassenger(){if(structure==null)return null;for(Entity passenger:getPassengers())if(structure.pilotSeats().contains(seatForPassenger(passenger)))return passenger;return null;}
+    @Override public Entity getControllingPassenger(){
+        if(structure==null)return null;
+        Entity standingPilot=null;
+        for(Entity rider:getPassengers()){
+            if(!structure.pilotSeats().contains(seatForPassenger(rider)))continue;
+            if(!cabin.walking(rider))return rider;
+            if(standingPilot==null)standingPilot=rider;
+        }
+        return standingPilot;
+    }
+    private void resetHelmInput(){
+        serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;
+        forward=strafe=vertical=0;verticalAt=-100;brake=false;
+    }
     // Vanilla otherwise sends client vehicle positions, overriding the server controller.
     @Override public boolean shouldRiderSit(){return getPassengers().size()!=1 || !cabin.walking(getControllingPassenger());}
     @Override public boolean canPassengerSteer(){return false;}
@@ -648,16 +664,38 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean board(EntityPlayer player) {return structure!=null && board(player,structure.seat);}
     public boolean board(EntityPlayer player,BlockPos seat) {
         if(world.isRemote || isDead || ownershipBlocked || structure==null || player.isSpectator()
-                || player.isDead || player.world!=world || player.getRidingEntity()==this || !structure.passengerSeats().contains(seat))return false;
+                || player.isDead || player.world!=world || !structure.passengerSeats().contains(seat))return false;
+        boolean aboard=player.getRidingEntity()==this;
+        if(aboard&&transferInProgress)return false;
         // Airborne dismounts require an explicit geographic exit. A boarding request
         // cannot transfer an attached walker between unrelated anchored flight routes.
-        if(player.getRidingEntity() instanceof EntityGroundVehicle && ((EntityGroundVehicle)player.getRidingEntity()).flying())return false;
-        for(Entity passenger:getPassengers())if(seatForPassenger(passenger).equals(seat))return false;
-        boolean first=getControllingPassenger()==null&&structure.pilotSeats().contains(seat);assignSeat(player,seat);
-        if(!player.startRiding(this)){assignSeat(player,null);return false;}
+        if(!aboard&&player.getRidingEntity() instanceof EntityGroundVehicle&&((EntityGroundVehicle)player.getRidingEntity()).flying())return false;
+        Entity displaced=null;
+        for(Entity passenger:getPassengers()){
+            if(passenger==player||!seat.equals(seatForPassenger(passenger)))continue;
+            if(!cabin.walking(passenger))return false;
+            displaced=passenger;
+        }
+        Entity previous=getControllingPassenger();
+        BlockPos released=aboard?seatForPassenger(player):null;
+        if(displaced!=null&&released==null){
+            // Keep a distinct return seat for every walker even when a new passenger boards.
+            for(BlockPos option:structure.passengerSeats()){
+                boolean assigned=false;
+                for(Entity rider:getPassengers())if(option.equals(seatForPassenger(rider))){assigned=true;break;}
+                if(!assigned){released=option;break;}
+            }
+            if(released==null)return false;
+        }
+        if(!aboard){
+            assignSeat(player,seat);
+            if(!player.startRiding(this)){assignSeat(player,null);return false;}
+        }else assignSeat(player,seat);
+        if(displaced!=null)assignSeat(displaced,released);
+        cabin.remove(player);
         taxiReturnPending=false;
-        if(first){serverInputs.clear();forward=strafe=0;brake=false;lastInput=-100;
-            pendingInputs.clear();lastAcknowledgement=-1;}
+        if(previous!=getControllingPassenger()||previous==player)resetHelmInput();
+        updatePassenger(player);
         return true;
     }
     @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
@@ -681,10 +719,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean wasDriver=getControllingPassenger()==passenger;
         if(wasDriver&&structure!=null)taxiReturnSeat=seatForPassenger(passenger);
         super.removePassenger(passenger);
-        if(!world.isRemote){if(cabin.walking(passenger))cabin.clear();assignSeat(passenger,null);recordCurrentCouplingDriver();}
+        if(!world.isRemote){cabin.remove(passenger);assignSeat(passenger,null);recordCurrentCouplingDriver();}
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
         if(world.isRemote || collision==null || VehicleTransfer.isMutating(world) || passenger==teleportingPassenger)return;
-        if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
+        if(wasDriver&&flying()&&getControllingPassenger()==null)beginFlightRecovery(RECOVER_FLIGHT);
         else if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
         if(flightDismount && flying())return; // FlightCabin places the rider at the geographic exit.
         if(cruise.projected()) { cruise.riderLeft(passenger);return; }
@@ -789,9 +827,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean automated=!flying()&&!takeoffRoll()&&autopilot.tick();if(isDead)return;
         VehicleControls.Command command=serverInputs.poll();
         if(command!=null && !automated){forward=command.forward;strafe=command.strafe;brake=command.brake;}
+        if(flying())cabin.serverTick();
         boolean controlled=getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10;
         boolean walking=cabin.walking(getControllingPassenger());
-        if(walking && controlled)cabin.move(getControllingPassenger(),forward,strafe);
         if(flying())advanceFlight(controlled&&!walking);
         else if(takeoffRoll())advanceTakeoff(controlled);
         else advance(automated||controlled);
@@ -845,7 +883,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
 
     private void advanceFlight(boolean controlled){
-        boolean hasPilot=getControllingPassenger()!=null;
+        boolean hasPilot=!getPassengers().isEmpty();
         boolean powered=flightReadout.thrust>0;
         if(flightPhase==POWERED_FLIGHT){
             if(!hasPilot)beginFlightRecovery(RECOVER_FLIGHT);
@@ -883,7 +921,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         float elevator=controlled&&!launching?-forward*(float)(.7+.36*response):0;
         float pitch=AircraftAttitude.pitch(flightPitch,(float)(elevator*Math.cos(roll)));
         float yaw=rotationYaw+AircraftAttitude.coordinatedTurn(roll,response)+(float)(elevator*Math.sin(roll));
-        if(cabin.walking(getControllingPassenger())){
+        if(getControllingPassenger()==null||cabin.walking(getControllingPassenger())){
             bank=AircraftAttitude.levelBank(flightBank);flightRollRate=0;roll=Math.toRadians(bank);
             pitch=(float)approach(flightPitch,0,2.25);yaw=rotationYaw;
         }

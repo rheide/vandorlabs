@@ -1,24 +1,37 @@
 package com.vandorlabs.vehicle;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 
-/** Keep the pilot attached to the tracked aircraft while walking on its local collision surfaces. */
+/** Each rider walks in hull coordinates while the Minecraft mount carries the crew. */
 final class FlightCabin {
     private static final DataParameter<NBTTagCompound> POSITION =
             EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.COMPOUND_TAG);
     private final EntityGroundVehicle craft;
-    private UUID walker;
-    private Vec3d feet, previous, rendered;
-    private long lastToggle = Long.MIN_VALUE;
+    private final Map<UUID,Walker> walkers=new HashMap<>();
+
+    private static final class Walker {
+        Vec3d feet,previous,rendered;
+        double vertical;
+        int sequence=-1,forward,right;
+        boolean jump;
+        long lastInput=Long.MIN_VALUE;
+
+        Walker(Vec3d feet){this.feet=this.previous=this.rendered=feet;}
+    }
 
     FlightCabin(EntityGroundVehicle craft) { this.craft = craft; }
 
@@ -27,138 +40,171 @@ final class FlightCabin {
     }
 
     void changed(DataParameter<?> key) {
-        if (!POSITION.equals(key)) return;
-        NBTTagCompound position = craft.getDataManager().get(POSITION);
-        UUID next = position.hasUniqueId("Walker") ? position.getUniqueId("Walker") : null;
-        boolean same = next != null && next.equals(walker);
-        walker = next;
-        feet = next == null ? null : new Vec3d(position.getDouble("X"), position.getDouble("Y"), position.getDouble("Z"));
-        if (!same) previous = rendered = feet;
+        if (!POSITION.equals(key)||!craft.world.isRemote) return;
+        NBTTagCompound data=craft.getDataManager().get(POSITION);
+        NBTTagList list=data.getTagList("Walkers",10);
+        Map<UUID,Walker> next=new HashMap<>();
+        for(int i=0;i<list.tagCount();i++){
+            NBTTagCompound row=list.getCompoundTagAt(i);
+            UUID id=row.getUniqueId("Walker");
+            Vec3d feet=feet(row);
+            Walker walker=walkers.get(id);
+            if(walker==null)walker=new Walker(feet);
+            else walker.feet=feet;
+            next.put(id,walker);
+        }
+        walkers.clear();walkers.putAll(next);
     }
 
-    boolean walking(Entity rider) { return rider != null && rider.getUniqueID().equals(walker); }
+    boolean walking(Entity rider) { return rider!=null&&walkers.containsKey(rider.getUniqueID()); }
 
-    // Metadata can arrive in batches. Consume the latest destination once per simulation
-    // tick and interpolate two stable endpoints for every camera frame in that tick.
     void clientTick() {
-        if (feet == null) return;
-        previous = rendered;
-        Vec3d delta = feet.subtract(rendered);
-        double distance = delta.lengthVector();
-        // Blend over successive ticks so a quiet tick between two network updates
-        // still advances the same step. Snap the final subpixel when stopped.
-        rendered = distance < .001 ? feet : rendered.add(delta.scale(Math.min(.55,.32/distance)));
+        for(Walker w:walkers.values()){
+            w.previous=w.rendered;
+            Vec3d delta=w.feet.subtract(w.rendered);
+            double distance=delta.lengthVector();
+            w.rendered=distance<.001?w.feet:w.rendered.add(delta.scale(Math.min(.55,.32/distance)));
+        }
     }
 
     Vec3d position(Entity rider, float partial) {
-        if (!walking(rider)) return null;
-        if (!craft.world.isRemote || previous == null) return feet;
-        float t = Math.max(0, Math.min(1, partial));
-        return previous.add(rendered.subtract(previous).scale(t));
+        Walker w=rider==null?null:walkers.get(rider.getUniqueID());
+        if(w==null)return null;
+        if(!craft.world.isRemote)return w.feet;
+        return w.previous.add(w.rendered.subtract(w.previous).scale(Math.max(0,Math.min(1,partial))));
     }
 
-    void clear() {
-        if (walker != null) craft.getDataManager().set(POSITION, new NBTTagCompound());
-    }
+    void clear() { if(!walkers.isEmpty()){walkers.clear();publish();} }
+    void remove(Entity rider){if(walkers.remove(rider.getUniqueID())!=null)publish();}
 
-    void write(NBTTagCompound state) {
-        if (walker != null) state.setTag("FlightCabin", craft.getDataManager().get(POSITION).copy());
+    private NBTTagCompound snapshot(boolean saving) {
+        NBTTagCompound tag=new NBTTagCompound();
+        NBTTagList list=new NBTTagList();
+        for(Map.Entry<UUID,Walker> entry:walkers.entrySet()){
+            Walker w=entry.getValue();
+            NBTTagCompound row=new NBTTagCompound();
+            row.setUniqueId("Walker",entry.getKey());
+            row.setDouble("X",w.feet.x);row.setDouble("Y",w.feet.y);row.setDouble("Z",w.feet.z);
+            if(saving)row.setDouble("Vertical",w.vertical);
+            list.appendTag(row);
+        }
+        tag.setTag("Walkers",list);
+        return tag;
     }
+    private void publish(){craft.getDataManager().set(POSITION,snapshot(false));}
+    void write(NBTTagCompound state) { if(!walkers.isEmpty())state.setTag("FlightCabin",snapshot(true)); }
+    private static Vec3d feet(NBTTagCompound row){return new Vec3d(row.getDouble("X"),row.getDouble("Y"),row.getDouble("Z"));}
 
     void read(NBTTagCompound state) {
-        NBTTagCompound position = state.getCompoundTag("FlightCabin");
-        if (!craft.flying() || !position.hasUniqueId("Walker") || craft.collision == null) return;
-        double x = position.getDouble("X"), y = position.getDouble("Y"), z = position.getDouble("Z");
-        if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) return;
-        if (!Double.isFinite(craft.collision.deckHeight(x,z,y-.01,y+.01,.3,1.8))) return;
-        set(position.getUniqueId("Walker"), new Vec3d(x,y,z));
-    }
-
-    private void set(UUID player, Vec3d local) {
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setUniqueId("Walker", player);
-        tag.setDouble("X", local.x);
-        tag.setDouble("Y", local.y);
-        tag.setDouble("Z", local.z);
-        craft.getDataManager().set(POSITION, tag);
+        walkers.clear();
+        if(!craft.flying()||craft.collision==null)return;
+        NBTTagCompound tag=state.getCompoundTag("FlightCabin");
+        NBTTagList list=tag.getTagList("Walkers",10);
+        if(tag.hasUniqueId("Walker")){list=new NBTTagList();list.appendTag(tag);}
+        for(int i=0;i<Math.min(list.tagCount(),craft.structure.passengerSeats().size());i++){
+            NBTTagCompound row=list.getCompoundTagAt(i);
+            if(!row.hasUniqueId("Walker"))continue;
+            Vec3d point=feet(row);
+            double vertical=row.getDouble("Vertical");
+            if(!Double.isFinite(point.x)||!Double.isFinite(point.y)||!Double.isFinite(point.z)||!Double.isFinite(vertical))continue;
+            if(!craft.collision.bounds.grow(2).contains(point)||!craft.collision.clearBody(point.x,point.z,point.y+.0001,.3,1.7998))continue;
+            Walker walker=new Walker(point);
+            walker.vertical=Math.max(-3.92,Math.min(.42,vertical));
+            walkers.put(row.getUniqueId("Walker"),walker);
+        }
+        publish();
     }
 
     boolean toggle(EntityPlayerMP player) {
-        if (craft.transferInProgress || !craft.flying() || craft.getControllingPassenger() != player) return false;
-        long now = craft.world.getTotalWorldTime();
-        if (now == lastToggle) return false;
-        lastToggle = now;
-        if (walking(player)) {
-            clear();
-            player.sendStatusMessage(new TextComponentString("Back in the pilot seat."), true);
-            return true;
+        if(craft.transferInProgress||!craft.flying()||player.getRidingEntity()!=craft)return false;
+        BlockPos seat=craft.seatForPassenger(player);
+        if(walking(player))return craft.board(player,seat);
+        if(!craft.poweredFlight()||craft.collision==null)return false;
+        Vec3d localSeat=craft.toLocal(craft.seatPosition(craft.flightPose(),player,1));
+        Vec3d best=null;
+        double bestDistance=Double.POSITIVE_INFINITY;
+        for(int dz=-2;dz<=2;dz++)for(int dx=-2;dx<=2;dx++){
+            if(dx==0&&dz==0)continue;
+            double x=seat.getX()+.5+dx,z=seat.getZ()+.5+dz;
+            double y=craft.collision.deckHeight(x,z,localSeat.y-1.25,localSeat.y+.6,player.width/2,player.height);
+            if(!Double.isFinite(y))continue;
+            Vec3d candidate=new Vec3d(x,y,z);
+            boolean occupied=false;
+            for(Walker w:walkers.values())if(candidate.squareDistanceTo(w.feet)<.36){occupied=true;break;}
+            if(occupied)continue;
+            double distance=candidate.squareDistanceTo(localSeat);
+            if(distance<bestDistance){best=candidate;bestDistance=distance;}
         }
-        if (!craft.poweredFlight() || craft.collision == null) return false;
-        BlockPos seat = craft.seatForPassenger(player);
-        Vec3d localSeat = craft.toLocal(craft.seatPosition(craft.flightPose(), player, 1));
-        // Prefer the closest standing spot beside the seat, including half-height floors.
-        Vec3d best = null;
-        double bestDistance = Double.POSITIVE_INFINITY;
-        for (int dz = -2; dz <= 2; dz++) for (int dx = -2; dx <= 2; dx++) {
-            if (dx == 0 && dz == 0) continue;
-            double x = seat.getX()+.5+dx, z = seat.getZ()+.5+dz;
-            double y = craft.collision.deckHeight(x,z,localSeat.y-1.25,localSeat.y+.6,player.width/2,player.height);
-            if (!Double.isFinite(y)) continue;
-            Vec3d candidate = new Vec3d(x,y,z);
-            double distance = candidate.squareDistanceTo(localSeat);
-            if (distance < bestDistance) { best = candidate; bestDistance = distance; }
-        }
-        if (best == null) {
-            player.sendStatusMessage(new TextComponentString("No clear standing space beside the pilot seat."), true);
+        if(best==null){
+            player.sendStatusMessage(new TextComponentString("No clear standing space beside this seat."),true);
             return false;
         }
-        set(player.getUniqueID(), best);
-        player.sendStatusMessage(new TextComponentString("Cabin walk. Use movement keys to walk. Click your seat to return. Face an open deck edge and jump to leave."), true);
+        walkers.put(player.getUniqueID(),new Walker(best));
+        publish();
+        player.sendStatusMessage(new TextComponentString("Walking on deck. Click an available seat to sit."),true);
         return true;
     }
 
-    void move(Entity player, int forward, int right) {
-        if (!walking(player) || forward == 0 && right == 0) return;
-        double angle = Math.toRadians(player.rotationYaw - craft.pilotViewReference(craft.flightPose()));
-        double speed = .215 / Math.hypot(forward,right);
-        double x = (feet.x - (forward*Math.sin(angle)+right*Math.cos(angle))*speed);
-        double z = (feet.z + (forward*Math.cos(angle)-right*Math.sin(angle))*speed);
-        Vec3d target = step(player,x,z);
-        if (target == null) target = step(player,x,feet.z);
-        if (target == null || feet.equals(target)) target = step(player,feet.x,z);
-        if (target != null && !feet.equals(target)) set(walker,target);
+    void input(EntityPlayerMP player,int sequence,byte forward,byte right,boolean jump){
+        Walker w=walkers.get(player.getUniqueID());
+        if(w==null||sequence<=w.sequence||Math.abs((int)forward)>1||Math.abs((int)right)>1)return;
+        w.sequence=sequence;w.forward=forward;w.right=right;w.jump=jump;w.lastInput=craft.world.getTotalWorldTime();
     }
 
-    void jumpOff(EntityPlayerMP player) {
-        if (!walking(player) || player.getRidingEntity() != craft || !craft.flying() || craft.transferInProgress) return;
-        double angle = Math.toRadians(player.rotationYaw - craft.pilotViewReference(craft.flightPose()));
-        double dx = -Math.sin(angle), dz = Math.cos(angle);
-        double radius = player.width / 2;
-        // Walk the body through the opening. Only detach beyond the lip, with the
-        // entire player clear and unsupported; a seat, hatch or roof can block exit.
-        for (int i = 1; i <= 6; i++) {
-            double distance = i * .20;
-            double x = feet.x + dx * distance, z = feet.z + dz * distance;
-            if (!craft.collision.clearBody(x,z,feet.y+.001,radius,player.height+.42)) break;
-            if (Double.isFinite(craft.collision.deckHeight(x,z,feet.y-.61,feet.y+.01,radius,player.height))) continue;
-            if (!craft.collision.clearBody(x,z,feet.y-.16,radius,player.height+.58)) continue;
-            Vec3d exit = craft.toWorld(new Vec3d(x,feet.y+.12,z));
-            exit = exit.addVector(craft.cruise.x()-craft.posX,craft.flightAltitude()-craft.posY,craft.cruise.z()-craft.posZ);
-            craft.flightDismount = true;
-            try { player.dismountRidingEntity(); } finally { craft.flightDismount = false; }
-            if (player.isRiding()) return;
-            VehicleNetwork.releaseTeleportedRider(player,craft);
-            player.connection.setPlayerLocation(exit.x,exit.y,exit.z,player.rotationYaw,player.rotationPitch);
-            player.motionY = .42;
-            player.fallDistance = 0;
-            player.velocityChanged = true;
-            return;
+    void serverTick(){
+        if(walkers.isEmpty())return;
+        boolean moved=false;
+        // A rider can detach during movement; Minecraft mutates its passenger list on dismount.
+        for(Entity rider:new ArrayList<>(craft.getPassengers())){
+            Walker w=walkers.get(rider.getUniqueID());
+            if(w!=null&&rider instanceof EntityPlayerMP)moved|=move((EntityPlayerMP)rider,w);
         }
-        player.sendStatusMessage(new TextComponentString("Face an open edge of the flight deck to jump off."),true);
+        if(moved)publish();
     }
 
-    private Vec3d step(Entity player, double x, double z) {
-        double y = craft.collision.deckHeight(x,z, feet.y-.6, feet.y+.6,player.width/2,player.height);
-        return Double.isFinite(y) ? new Vec3d(x,y,z) : null;
+    private boolean move(EntityPlayerMP player,Walker w){
+        boolean recent=w.lastInput>=craft.world.getTotalWorldTime()-10;
+        int forward=recent?w.forward:0,right=recent?w.right:0;
+        double angle=Math.toRadians(player.rotationYaw-craft.pilotViewReference(craft.flightPose()));
+        double speed=.215/Math.max(1,Math.hypot(forward,right));
+        double dx=-(forward*Math.sin(angle)+right*Math.cos(angle))*speed;
+        double dz=(forward*Math.cos(angle)-right*Math.sin(angle))*speed;
+        double radius=player.width/2;
+        Vec3d p=w.feet;
+        AxisAlignedBB body=new AxisAlignedBB(p.x-radius,p.y,p.z-radius,p.x+radius,p.y+player.height,p.z+radius);
+        VehicleCollision hull=craft.collision;
+        boolean grounded=hull.clipCabin(body,-.001,1)>-.001;
+        double dy=grounded&&recent&&w.jump?.42:w.vertical;
+        double y=hull.clipCabin(body,dy,1);
+        body=body.offset(0,y,0);
+        double x=hull.clipCabin(body,dx,0);
+        double z=hull.clipCabin(body.offset(x,0,0),dz,2);
+        if(grounded&&dy<=0&&(x!=dx||z!=dz)){
+            double up=hull.clipCabin(body,.6,1);
+            AxisAlignedBB raised=body.offset(0,up,0);
+            double sx=hull.clipCabin(raised,dx,0);
+            double sz=hull.clipCabin(raised.offset(sx,0,0),dz,2);
+            if(sx*sx+sz*sz>x*x+z*z){x=sx;z=sz;y+=up+hull.clipCabin(raised.offset(x,0,z),-up,1);}
+        }
+        Vec3d next=p.addVector(x,y,z);
+        w.vertical=((y==dy?dy:0)-.08)*.98;
+        if(next.equals(p))return false;
+        w.feet=next;
+        AxisAlignedBB box=body.offset(x,next.y-body.minY,z);
+        if(!hull.bounds.grow(0,2,0).intersects(box))exit(player,next,x,y,z);
+        return true;
+    }
+
+    private void exit(EntityPlayerMP player,Vec3d local,double dx,double dy,double dz){
+        Vec3d exit=craft.toWorld(local);
+        Vec3d drift=craft.toWorld(local.addVector(dx,dy,dz)).subtract(exit);
+        exit=exit.addVector(craft.cruise.x()-craft.posX,craft.flightAltitude()-craft.posY,craft.cruise.z()-craft.posZ);
+        craft.flightDismount=true;
+        try{player.dismountRidingEntity();}finally{craft.flightDismount=false;}
+        if(player.isRiding())return;
+        VehicleNetwork.releaseTeleportedRider(player,craft);
+        player.connection.setPlayerLocation(exit.x,exit.y,exit.z,player.rotationYaw,player.rotationPitch);
+        player.motionX=drift.x+craft.motionX;player.motionY=drift.y+craft.motionY;player.motionZ=drift.z+craft.motionZ;
+        player.fallDistance=0;player.velocityChanged=true;
     }
 }
