@@ -50,6 +50,7 @@ final class VehicleFlightClientChecks {
     private static Vec3d cabinLook,cabinUp,hoverEntry;
     private static float cabinYaw;
     private static double hoverEntrySpeed;
+    private static java.util.concurrent.Future<?> runwayStep;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -495,7 +496,7 @@ final class VehicleFlightClientChecks {
         if(stage==22){
             need(frame<100,"pilot returns to powered Flight for runway approach");
             if(!craft.flying()||craft.driveSpeed<1)return false;
-            mc.getIntegratedServer().addScheduledTask(()->{
+            runwayStep=mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 // Keep the pilot and aircraft in the same watched chunk. Lay fresh concrete
                 // just beneath their current height, clear of the earlier impact obstacle.
@@ -506,27 +507,31 @@ final class VehicleFlightClientChecks {
                     world(mc).setBlockState(p,Blocks.CONCRETE.getDefaultState(),2);
                 }
                 stageAttitude(actual,-5,0);
-            }).get();
+            });
             next();return false;
         }
         if(stage==23){
             need(frame<75,"powered touchdown over runway: "+flightState(craft));
+            if(!runwayStep.isDone())return false;
+            runwayStep.get();
             if(!craft.flying()){
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-                mc.getIntegratedServer().addScheduledTask(()->{
+                runwayStep=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityGroundVehicle actual=server(mc);
                     need(actual.vehicleMode()==1&&actual.onGround&&actual.flightPitch()==0&&actual.flightBank()==0
                                     &&Math.abs(actual.getEntityBoundingBox().minY-runwayY)<.02&&actual.driveSpeed>.45,
                             "server wheel contact and rollout: "+flightState(actual)+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
                     landingZ=actual.posZ;
                     System.out.println("[vandorlabs] powered runway contact speed="+actual.driveSpeed+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
-                }).get();
+                });
                 next();return false;
             }
             return false;
         }
         if(stage==24){
-            if(frame<9)return false;
+            need(frame<75,"server sampled powered wheel contact");
+            if(frame<9||!runwayStep.isDone())return false;
+            runwayStep.get();
             need(craft.posZ<landingZ-2&&Math.abs(craft.getEntityBoundingBox().minY-runwayY)<.15,
                     "forward rollout settles on runway with no embeds: "+flightState(craft)+" bottom="+craft.getEntityBoundingBox().minY+" runway="+runwayY);
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
