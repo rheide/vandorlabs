@@ -132,3 +132,9 @@ runs on a physical server with `test_server_startup.py --reactor-glass`.
 `testGlazingOrder` checks graph ordering against an independent reachability oracle, including cycles with outgoing occlusion constraints and 16,384-node chains/cycles. A cyclic component must never discard an ordering constraint belonging to another component. These invariants supplement rendered comparisons rather than substituting for them.
 
 For a full saved-world capture, set `VANDOR_LABS_TEST_EXISTING_GLASS_SCENE=true`, select an isolated game directory and world through the launcher, and run the same focus. This skips fixture construction and produces native composition captures at 90.5, 94 and 110 degrees. It reports CAPTURE and requires visual review; it does not claim an asserted image comparison.
+
+## Two players aboard a moving aircraft
+
+Build the standard Forge JAR, then run `python testclient/test_cabin_crew.py --mode physical` or `--mode anchored` from the repository root. Each invocation uses two live client slots. The host and guest use separate game directories and connect over loopback. Their logs and artifact hashes are under `build/tests/cabin-crew/`.
+
+The passenger boards first and the pilot boards second. The fixture checks which player holds the controls, each player's rendered posture, simultaneous walking, and restoration of their deck positions. The passenger then clicks the vacant pilot seat and the former pilot takes a passenger chair before stepping overboard. The final check compares the exit with the geographic route and verifies that the remaining pilot continues in the configured cruise mode.
