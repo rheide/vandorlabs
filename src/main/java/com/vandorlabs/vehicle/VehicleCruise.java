@@ -84,10 +84,11 @@ public final class VehicleCruise {
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);
         if (height <= handoffAltitude()) {
-            if(arrival==null)arrival=new CruiseArrival((WorldServer)craft.world);
+            boolean entering=arrival==null;
+            if(entering)arrival=new CruiseArrival((WorldServer)craft.world);
             publishRoute();
             updateTerrain(routeX,routeZ,height);
-            return finishArrival(height,dx,dz,yaw,pitch,bank);
+            return finishArrival(height,dx,dz,yaw,pitch,bank,entering);
         }
         cancelArrival();
         if (!cruising || craft.ticksExisted % 3 == 0) {
@@ -111,17 +112,19 @@ public final class VehicleCruise {
         return true;
     }
 
-    private boolean finishArrival(double height,double dx,double dz,float yaw,float pitch,float bank) {
+    private boolean finishArrival(double height,double dx,double dz,float yaw,float pitch,float bank,boolean entering) {
         VehiclePose pose=new VehiclePose(routeX,0,routeZ,yaw,pitch,bank,craft.structure.facing);
         double lowest=Math.min(craft.flightBounds(pose).minY,
             craft.getEntityBoundingBox().minY-craft.posY);
         // Old saves can already be cruising inside the transition band.
         double floor=FlightEnvelope.WORLD_CEILING-Math.min(0,lowest)+.01;
-        double room=Math.max(0,altitude()-floor);
-        double y=Math.max(floor,Math.min(handoffAltitude(),Math.max(height,altitude()-room*.12)));
+        double y=Math.max(floor,height);
         AxisAlignedBB hull=craft.flightBounds(pose).union(craft.getEntityBoundingBox().offset(
                 routeX-craft.posX,-craft.posY,routeZ-craft.posZ)).grow(1);
         if(!arrival.ready(craft,pose,hull,dx,dz)) {
+            // Ease only subsequent descent over unverified ground. The first position
+            // inside the band may be a restored or deliberately repositioned aircraft.
+            if(!entering)y=Math.max(y,altitude()-Math.max(0,altitude()-floor)*.12);
             craft.setPosition(projected()?routeX:craft.posX,SKY_OFFSET+y,projected()?routeZ:craft.posZ);
             return true;
         }
