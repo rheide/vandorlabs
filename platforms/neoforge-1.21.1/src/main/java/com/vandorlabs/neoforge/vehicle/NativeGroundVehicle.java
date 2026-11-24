@@ -672,7 +672,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         }
         double response = FlightEnvelope.response(mass, thrust);
         setOnGround(false);
-        double maximumSpeed = FlightEnvelope.cruiseSpeed(altitude);
+        double maximumSpeed = FlightEnvelope.cruiseSpeed(altitude, mass, thrust);
         speed = approach(speed, maximumSpeed, FlightEnvelope.acceleration(mass, thrust) * (1 + maximumSpeed / 10));
         float yaw = getYRot() + (active ? strafe * (float)(.9 + .55 * response) : 0);
         float pitch = Mth.clamp(hullPitch() - (active ? forward * (float)(.6 + .38 * response) : 0),

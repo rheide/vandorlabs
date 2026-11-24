@@ -52,6 +52,9 @@ public final class NativeVehicleFlightFixture {
     private static Vec3 departed;
     private static int ticks, unexpectedLoads, airborneTicks;
     private static double descendingFrom;
+    private static double lastRouteX, lastRouteZ, peakSpeed;
+    private static boolean reachedTarget;
+
     private static int wheelWallZ, wheelWait;
     private static double lastWheelZ;
     private static boolean landed, sawRunway;
@@ -62,6 +65,10 @@ public final class NativeVehicleFlightFixture {
     public static String restartPhase() { return System.getProperty("vandorlabs.vehicleFlightRestart", ""); }
     public static String impact() { return System.getProperty("vandorlabs.vehicleFlightImpact", ""); }
     public static boolean normalTerrain() { return Boolean.getBoolean("vandorlabs.vehicleFlightNormalTerrain"); }
+
+    private static int initialFuel() {
+        return impact().isEmpty() && restartPhase().isEmpty() && !NativeVehicleEngineMenuFixture.enabled() ? 2 : 1;
+    }
 
     @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
     public static final class Fuel {
@@ -173,7 +180,7 @@ public final class NativeVehicleFlightFixture {
                 if (!engine.available() || !engine.synthesisReady()) return;
                 var side = engine.facing();
                 var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, engine.maxwellPort(side), side);
-                require(inlet != null && inlet.fill(new FluidStack(fuel, 1), FluidAction.EXECUTE) == 1, "real Maxwell fuel inlet");
+                require(inlet != null && inlet.fill(new FluidStack(fuel, initialFuel()), FluidAction.EXECUTE) == initialFuel(), "real Maxwell fuel inlet");
                 actor.teleportTo(root.getX() + 1.5, root.getY() - 1, root.getZ() - 1.5);
                 var hull = NativeVehicleScan.scan(world, root, actor.getUUID());
                 var admissionProbe = new NativeGroundVehicle(NativeVehicleBindings.VEHICLE, world);
@@ -187,7 +194,7 @@ public final class NativeVehicleFlightFixture {
                 if (found.size() != 1 || !found.getFirst().admitted() || NativeVehicleTransfer.escrowed(found.getFirst())) return;
                 craft = found.getFirst();
                 var telemetry = craft.flightReadout();
-                require(telemetry.drives() == 1 && telemetry.fuel() == 1 && telemetry.ceiling() > 1000
+                require(telemetry.drives() == 1 && telemetry.fuel() == initialFuel() && telemetry.ceiling() > 1000
                         && craft.statusPanels().size() == 1, "formed Maxwell and Vehicle Status carried");
                 if (NativeVehicleEngineMenuFixture.enabled()) NativeVehicleEngineMenuFixture.prepare(actor, craft);
                 stage = Stage.BOARD;
@@ -244,6 +251,8 @@ public final class NativeVehicleFlightFixture {
                 double height = Math.min(6000, craft.flightReadout().ceiling() - 100);
                 craft.setPos(craft.getX(), NativeVehicleCruise.SKY_OFFSET + height, craft.getZ());
                 craft.setOldPosAndRot();
+                lastRouteX = craft.routeX();
+                lastRouteZ = craft.routeZ();
                 stage = Stage.BURN;
             }
             case BURN -> {
@@ -256,9 +265,24 @@ public final class NativeVehicleFlightFixture {
                     System.out.println("[vandorlabs][vehicle-flight-write-player] server PASS saved powered geographic craft and mounted pilot");
                     return;
                 }
-                if (craft.flightReadout().fuel() != 0) return;
-                require(Math.hypot(craft.routeX() - departed.x, craft.routeZ() - departed.z) > 800,
-                        "altitude-dependent cruise speed advances a distant geographic route");
+                var readout = craft.flightReadout();
+                if (readout.fuel() > 0) {
+                    double measured = Math.hypot(craft.routeX() - lastRouteX, craft.routeZ() - lastRouteZ);
+                    lastRouteX = craft.routeX();
+                    lastRouteZ = craft.routeZ();
+                    peakSpeed = Math.max(peakSpeed, measured);
+                    double expected = FlightEnvelope.cruiseSpeed(craft.flightAltitude(), readout.effectiveMass(), readout.thrust());
+                    double horizontalTarget = expected * Math.cos(Math.toRadians(craft.hullPitch()));
+                    reachedTarget |= Math.abs(measured - horizontalTarget) < .02 && measured > FlightEnvelope.LOW_SPEED;
+                    require(measured <= FlightEnvelope.MAX_CRUISE_SPEED + 1e-6,
+                            "server geographic speed exceeds 300 m/s: " + measured);
+                    return;
+                }
+                double distance = Math.hypot(craft.routeX() - departed.x, craft.routeZ() - departed.z);
+                require(reachedTarget && distance > 800, "cruise reaches its powered speed and a distant destination"
+                        + " distance=" + distance + " peak speed=" + peakSpeed + " reached target=" + reachedTarget);
+                System.out.println("[vandorlabs][vehicle-flight-player] cruise distance=" + distance
+                        + " blocks, peak horizontal speed=" + peakSpeed + " blocks/tick, fuel=" + initialFuel() + " mB");
                 var tag = craft.saveWithoutId(new CompoundTag());
                 var saved = NativeGroundVehicle.readSavedVehicle(tag, world.registryAccess());
                 require(saved.route() != null && saved.pilotAssignment().equals(actor.getUUID()),
