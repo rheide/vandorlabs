@@ -37,7 +37,7 @@ off retains the selections for later reuse.
 
 For a Programmable Diagonal Screen, choose **Profile** on **Displays**. **Full**
 uses the original full-block wedge. **Shallow** lowers the same 45° face by
-two pixels and clips the front of the casing at the floor. Both profiles have
+four pixels and retains a one-pixel lip at both ends. Both profiles have
 the same full-width display, including its diagonal length. Invert the screen to mirror the shape against a ceiling. The profile is saved with the placed screen and its configured item.
 
 In the Cockpit editor, select **Displays**, pick a physical screen and turn on **Split display**. Use **Editing** to switch between the top and bottom halves. Each half can show artwork, an instrument, or a Redstone panel with up to three control rows. The cockpit throttle grips turn cyan in Low, Medium and High.

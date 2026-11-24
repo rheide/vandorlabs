@@ -40,9 +40,10 @@ public final class ScreenChipSupport {
         else{family=com.vandorlabs.screen.ScreenFamily.DIAGONAL;upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);}
         com.vandorlabs.screen.ScreenChipMount.Frame frame=com.vandorlabs.screen.ScreenChipMount.local(family,upper,tile.isCeilingMounted(),tile.getCeilingPosition(1));
         if(family==com.vandorlabs.screen.ScreenFamily.DIAGONAL&&tile.isShallowDiagonalScreen()) {
-            // Keep the reader on the narrow strip between the new nose and the image.
-            Vec3d center=new Vec3d(.5,upper?1-1.125/16:1.125/16,3.125/16);
-            return new MachineMountSurface(center,vector(frame.u),vector(frame.v),vector(frame.normal),2.5/16,frame.height);
+            // Mount across the flat front lip, leaving the drawing surface unobstructed.
+            Vec3d center=new Vec3d(.5,upper?15D/16:1D/16,3.5/16);
+            return new MachineMountSurface(center,new Vec3d(0,0,upper?1:-1),new Vec3d(1,0,0),
+                    new Vec3d(0,upper?-1:1,0),1D/16,frame.height);
         }
         return new MachineMountSurface(vector(frame.center),vector(frame.u),vector(frame.v),vector(frame.normal),frame.width,frame.height);
     }

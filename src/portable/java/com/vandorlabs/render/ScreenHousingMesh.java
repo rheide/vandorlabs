@@ -121,13 +121,19 @@ public final class ScreenHousingMesh {
 
     /** Only the portion of the translated casing below the floor is removed. */
     private static ScreenHousingMesh buildShallowDiagonal() {
-        int start=ScreenSurface.DIAGONAL_DROP, rear=16-start, end=15-start;
+        int start=ScreenSurface.DIAGONAL_DROP, toe=start-1, rear=16-start, end=15-start;
         return new ScreenHousingMesh(new Face[]{
-                quad(0,0,start,16,0,start,16,0,16,0,0,16,0,rear,16,0),
+                quad(0,0,toe,16,0,toe,16,0,16,0,0,16,0,rear,16,0),
                 quad(0,0,16,16,0,16,16,rear,16,0,rear,16,0,16,16,start),
                 quad(0,0,start,16,0,start,16,end,15,0,end,15,0,rear,16,1),
                 quad(0,end,15,16,end,15,16,rear,15,0,rear,15,0,start+1,16,start),
                 quad(0,rear,15,16,rear,15,16,rear,16,0,rear,16,0,15,16,16),
+                // One-pixel front lip with a recessed step to the lower display edge.
+                quad(0,0,toe,16,0,toe,16,1,toe,0,1,toe,0,15,16,16),
+                quad(0,1,toe,16,1,toe,16,1,start,0,1,start,0,15,16,16),
+                quad(0,1,start,16,1,start,16,0,start,0,0,start,0,15,16,16),
+                sideQuad(0,0,toe,1,toe,1,start,0,start),
+                sideQuad(16,0,toe,0,start,1,start,1,toe),
                 sideQuad(0,0,start,end,15,0,15,0,(start+15)/2),
                 sideQuad(16,0,(start+15)/2,0,15,end,15,0,start),
                 sideQuad(0,0,15,rear,15,rear,16,0,16),

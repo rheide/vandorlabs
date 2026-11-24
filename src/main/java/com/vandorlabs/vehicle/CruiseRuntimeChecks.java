@@ -65,7 +65,7 @@ public final class CruiseRuntimeChecks {
             Minecraft mc=Minecraft.getMinecraft();
             int x=transition?mc.displayWidth/8:mc.displayWidth/4,y=transition?mc.displayHeight/12:mc.displayHeight*3/5;
             int width=transition?mc.displayWidth*3/4:12,height=transition?mc.displayHeight/2:12;
-            java.nio.ByteBuffer[] images=new java.nio.ByteBuffer[transition?4:2];
+            java.nio.ByteBuffer[] images=new java.nio.ByteBuffer[transition?4:3];
             for(int i=0;i<images.length;i++)images[i]=org.lwjgl.BufferUtils.createByteBuffer(width*height*4);
             int trimmed=0;
             java.nio.ByteBuffer background=org.lwjgl.BufferUtils.createByteBuffer(4);
@@ -75,11 +75,13 @@ public final class CruiseRuntimeChecks {
             org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER,drawing);
             int previousBuffer=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_READ_BUFFER);
             org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_SCISSOR_BIT|org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
+            long oldTime=mc.world.getWorldTime();
             try{
                 org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
                 org.lwjgl.opengl.GL11.glScissor(x,y,width,height);
                 org.lwjgl.opengl.GL11.glReadBuffer(org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL20.GL_DRAW_BUFFER0));
                 for(int pass=0;pass<images.length;pass++){
+                    if(!transition)mc.world.getWorldInfo().setWorldTime(pass==2?18000:6000);
                     int backdrop=pass&1;
                     org.lwjgl.opengl.GL11.glClearColor(backdrop,0,backdrop,1);
                     org.lwjgl.opengl.GL11.glClear(org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT);
@@ -91,6 +93,7 @@ public final class CruiseRuntimeChecks {
                             org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,images[pass]);
                 }
             }finally{
+                mc.world.getWorldInfo().setWorldTime(oldTime);
                 org.lwjgl.opengl.GL11.glPopAttrib();
                 org.lwjgl.opengl.GL11.glReadBuffer(previousBuffer);
                 org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER,previousRead);
@@ -106,7 +109,16 @@ public final class CruiseRuntimeChecks {
                 if(trimmed==0){requested=true;return;} // First fine ring is still streaming.
                 require(covered>width*height/4&&largest<=3,"LOD coverage lost pixels, opaque="+covered+" delta="+largest);
                 System.out.println("[vandorlabs] transition LOD coverage PASS trimmed="+trimmed+" opaquePixels="+covered+" largest delta="+largest);
-            }else require(largest<=2,"opaque cruise surface leaks backdrop; greatest RGB change="+largest);
+            }else{
+                require(largest<=2,"opaque cruise surface leaks backdrop; greatest RGB change="+largest);
+                long day=0,night=0;
+                for(int i=0;i<images[0].capacity();i+=4)for(int c=0;c<3;c++){
+                    day+=images[0].get(i+c)&255;
+                    night+=images[2].get(i+c)&255;
+                }
+                require(day>0&&night<day*.75,"seed surface changes from noon to midnight: "+day+"/"+night);
+                System.out.println("[vandorlabs] seed daylight PASS noon="+day+" midnight="+night);
+            }
             passed=true;
             if(!transition)System.out.println("[vandorlabs] cruise surface backdrop PASS largest RGB delta="+largest);
         }

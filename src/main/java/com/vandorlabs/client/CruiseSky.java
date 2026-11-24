@@ -34,6 +34,8 @@ public final class CruiseSky {
     private static final double[] parentEdge=new double[13];
     private static int parentCount;
     private static double leadX,leadZ;
+    private static int landRed,landGreen,landBlue;
+    private static double previousOpacity, tickOpacity;
     private static void updateLead(EntityGroundVehicle craft,int step,float yaw){
         if(craft.structure==null){leadX=leadZ=0;return;}
         double distance=craft.cruise.active()?CruiseAtlas.forecastDistance(craft.cruiseGroundSpeed(),step):0;
@@ -141,7 +143,7 @@ public final class CruiseSky {
     }
     private static void clear(){
         for(ResourceLocation loc:tiles.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(loc);
-        footprintKey=Long.MIN_VALUE;tiles.clear();elevations.clear();peaks.clear();renderOrder.clear();parents.clear();owner=null;
+        previousOpacity=tickOpacity=0;footprintKey=Long.MIN_VALUE;tiles.clear();elevations.clear();peaks.clear();renderOrder.clear();parents.clear();owner=null;
     }
     public static void receive(MessageCruiseTerrain image){
         Minecraft mc=Minecraft.getMinecraft();
@@ -198,7 +200,11 @@ public final class CruiseSky {
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){
         if(event.phase!=TickEvent.Phase.END||owner==null)return;
         Minecraft mc=Minecraft.getMinecraft();
-        if(mc.player==null||mc.player.getRidingEntity()!=owner||!owner.cruise.active()&&(!owner.flying()||owner.flightAltitude()<200))clear();
+        if(mc.player==null||mc.player.getRidingEntity()!=owner||!owner.cruise.active()&&(!owner.flying()||owner.flightAltitude()<200)){clear();return;}
+        previousOpacity=tickOpacity;
+        double target=owner.cruise.active()?1:FlightEnvelope.seedOpacity(owner.flightAltitude(),owner.cruise.handoffAltitude());
+        // Keep the destination covered while its first real chunks reach the renderer.
+        tickOpacity=Math.max(target,tickOpacity-.025);
     }
     @SubscribeEvent public static void render(RenderWorldLastEvent event){draw(event,false,true);}
     /** Draw the same mesh fully opaque over alternate backdrops for the live LOD boundary check. */
@@ -213,6 +219,7 @@ public final class CruiseSky {
         double physicalY=owner.lastTickPosY+partial*(owner.posY-owner.lastTickPosY);
         double altitude=owner.cruise.altitude()+physicalY-owner.posY;
         double opacity=cruising?1:FlightEnvelope.seedOpacity(altitude,owner.cruise.handoffAltitude());
+        opacity=Math.max(opacity,previousOpacity+(tickOpacity-previousOpacity)*partial);
         if(opacity<=0)return 0;
         boolean earlyBlend=opacity<.8;
         if(mask)opacity=1;
@@ -249,6 +256,11 @@ public final class CruiseSky {
             GlStateManager.color(1,1,1,1);
             // Larger tiles cover the horizon while finer ones arrive and during altitude transitions.
             net.minecraft.util.math.Vec3d fog=mc.world.getFogColor(partial);
+            // Sample once per frame. Cached seed pixels describe the surface in daylight.
+            float sun=mc.world.getSunBrightness(partial);
+            landRed=Math.round(255*(.08F+.92F*sun));
+            landGreen=Math.round(255*(.10F+.90F*sun));
+            landBlue=Math.round(255*(.17F+.83F*sun));
             skyFrustum.init();
             if(!cruising)updateCoverage(x,z,step);
             double eyeMargin=mc.gameSettings.thirdPersonView==0?4:VehicleClient.cameraDistance()+4;
@@ -351,7 +363,7 @@ public final class CruiseSky {
         double clear=Math.max(0,Math.min(1,(.92-radius)/.55));
         double surface=total*clear*clear*(3-2*clear);
         double alpha=atmosphere?(total>=1?1:(total-surface)/(1-surface)):surface;
-        int r=atmosphere?(int)(255*fog.x):255,g=atmosphere?(int)(255*fog.y):255,blue=atmosphere?(int)(255*fog.z):255;
+        int r=atmosphere?(int)(255*fog.x):landRed,g=atmosphere?(int)(255*fog.y):landGreen,blue=atmosphere?(int)(255*fog.z):landBlue;
         double ground=0;
         if(heights!=null){
             int grid=MessageCruiseTerrain.HEIGHT_GRID;

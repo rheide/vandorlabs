@@ -285,8 +285,8 @@ public final class ControllerPlatformTest {
                 if(slope)slopedFaces++;
                 for(ScreenHousingMesh.Vertex v:face.vertices){
                     double height=upper?16-v.y:v.y;
-                    check(v.z>=2&&v.z<=16&&height>=0&&height<=14,"clipped casing stays inside cell");
-                    if(slope)close(height,v.z-2,"housing angle equals translated Full face");
+                    check(v.z>=3&&v.z<=16&&height>=0&&height<=12,"clipped casing stays inside cell");
+                    if(slope)close(height,v.z-4,"housing angle equals translated Full face");
                 }
             }
             check(slopedFaces==1,"single inclined Shallow backing face");
@@ -295,7 +295,7 @@ public final class ControllerPlatformTest {
             for(int corner=0;corner<4;corner++){
                 close(image.vertices[corner].x,original.vertices[corner].x,"full display width");
                 close(image.vertices[corner].z,original.vertices[corner].z,"full display depth");
-                close(image.vertices[corner].y,original.vertices[corner].y+(upper?2:-2),"rigid vertical translation");
+                close(image.vertices[corner].y,original.vertices[corner].y+(upper?4:-4),"rigid vertical translation");
             }
         }
         int slopes=0;

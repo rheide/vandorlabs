@@ -34,6 +34,9 @@ public final class FlightEnvelopeTest {
                 "seed transition endpoints and midpoint");
         require(FlightEnvelope.seedOpacity(288,320)==.5&&FlightEnvelope.seedOpacity(320,320)==1
                 &&FlightEnvelope.seedOpacity(256,256)==0&&FlightEnvelope.seedOpacity(257,256)==1,"short or direct handoff");
+        require(FlightEnvelope.sustainableClimb(3,500)==3&&FlightEnvelope.sustainableClimb(3,48)==.75
+                &&FlightEnvelope.sustainableClimb(3,0)==0&&FlightEnvelope.sustainableClimb(-2,0)==-2,
+                "climb rate tapers to the service ceiling and descent remains available");
         double speed=75,y=520;
         while(y>250){
             double previous=speed;

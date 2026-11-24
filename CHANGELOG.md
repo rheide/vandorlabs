@@ -3,7 +3,7 @@
 ## 3.0.0 (in development)
 
 - Walk on a moving Forge aircraft’s deck with Sprint + Sneak in powered Flight. The aircraft levels out while the pilot walks. Press the same keys to take the controls again.
-- Keep the full width and diagonal of the Shallow screen when lowering its casing by two pixels. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
+- Keep the full width and diagonal of the Shallow screen when lowering its casing by four pixels with a one-pixel lip at each end. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
 - Project a transparent flight HUD on the canopy windshield. The short rear roof of a Long Angled canopy uses the Side glass finish.
 
 - Recover completed parking after a drive burns fuel or controls change. A conflicting hull edit protects the affected area while nearby independent vehicles can still enter Taxi or Hover.

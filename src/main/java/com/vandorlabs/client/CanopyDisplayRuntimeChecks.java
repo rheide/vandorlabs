@@ -108,9 +108,9 @@ final class CanopyDisplayRuntimeChecks {
             aim(mc,tile,false);next(6);return false;
         }
         if(stage==6&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,main(),false)){
-            if(main()==VehicleInstrument.HUD)checkHud(tile);
+            if(main().isHud())checkHud(tile);
             shot(mc,output,"main");
-            if(main()==VehicleInstrument.HUD){
+            if(main().isHud()){
                 Vec3d eye=variant==2?new Vec3d(1.5,1.5,2.6):new Vec3d(.5,.59,2.2);
                 Vec3d target=variant==2?new Vec3d(1.5,1.55,0):new Vec3d(.5,.70,.8);
                 Vec3d anchor=new Vec3d(tile.getPos());
@@ -244,7 +244,7 @@ final class CanopyDisplayRuntimeChecks {
 
     private static BlockPos position(){return FIRST.east(variant*16);}
     private static boolean joined(){return variant==KINDS.length-1;}
-    private static VehicleInstrument main(){return joined()?VehicleInstrument.STATUS:variant==1||variant==2?VehicleInstrument.HUD:CHOICES[variant%CHOICES.length];}
+    private static VehicleInstrument main(){return joined()?VehicleInstrument.STATUS:variant==1?VehicleInstrument.HUD:variant==2?VehicleInstrument.HUD_LARGE:CHOICES[variant%CHOICES.length];}
     private static VehicleInstrument side(){return CHOICES[(variant+2)%CHOICES.length];}
     private static void next(int value){stage=value;ticks=0;}
     private static void require(boolean ok,String message){

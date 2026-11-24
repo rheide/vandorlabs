@@ -38,7 +38,7 @@ public final class ScreenSurface {
     // The renderer gives the image a depth bias instead of a geometric gap.
     private static final Quad DIAGONAL=new Quad(0,16,4.25,4.25,14.85,14.85);
     private static final Quad DIAGONAL_INVERTED=new Quad(0,16,1.15,14.85,11.75,4.25);
-    public static final int DIAGONAL_DROP = 2;
+    public static final int DIAGONAL_DROP = 4;
     private static Quad shifted(Quad q,double amount){
         return new Quad(q.topLeft.x,q.topRight.x,q.bottomLeft.y+amount,q.bottomLeft.z,q.topLeft.y+amount,q.topLeft.z);
     }

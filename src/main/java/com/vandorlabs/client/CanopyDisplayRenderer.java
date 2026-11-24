@@ -93,7 +93,7 @@ public final class CanopyDisplayRenderer {
         for(int side=0;side<displays.length;side++){
             Display display=displays[side];
             if(display==null||display.frame==null||display.rendered!=display.requested)continue;
-            boolean hud=display.rendered==VehicleInstrument.HUD;
+            boolean hud=display.rendered!=null&&display.rendered.isHud();
             boolean alphaEnabled=hud&&GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
             int alphaFunc=hud?GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC):0;
             float alphaRef=hud?GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF):0;
@@ -135,16 +135,19 @@ public final class CanopyDisplayRenderer {
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){
             if(program!=0)GL20.glUseProgram(0);
-            if(display.frame==null){
-                display.frame=new Framebuffer(256,height*2,true);
+            boolean hud=display.requested!=null&&display.requested.isHud();
+            int density=hud?4:2;
+            if(display.frame==null||display.frame.framebufferWidth!=128*density){
+                display.delete();
+                display.frame=new Framebuffer(128*density,height*density,true);
                 display.frame.setFramebufferFilter(GL11.GL_LINEAR);
             }
             display.frame.bindFramebuffer(true);
-            GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,display.requested==VehicleInstrument.HUD?0:1);
+            GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,hud?0:1);
             GlStateManager.depthMask(true);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);
             GlStateManager.enableDepth();
-            if(display.requested==VehicleInstrument.HUD&&tile.resizable()&&height==128)
-                VehicleInstrumentRenderer.draw(VehicleInstrument.HUD,tile.getWorld(),tile.getPos(),height,true);
+            if(hud&&tile.resizable()&&height==128)
+                VehicleInstrumentRenderer.draw(display.requested,tile.getWorld(),tile.getPos(),height,true);
             else RedstoneScreenRenderer.drawVehicleSelection(display.requested,tile.getWorld(),tile.getPos(),height);
             display.rendered=display.requested;display.updated=tick;
         }finally{

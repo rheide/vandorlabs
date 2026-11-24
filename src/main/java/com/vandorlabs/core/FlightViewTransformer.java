@@ -37,6 +37,10 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             return;
                         }
                         super.visitMethodInsn(op,owner,id,desc,itf);
+                        if(beacon && method.equals("doRender") && op==INVOKESTATIC
+                                && owner.equals("net/minecraft/client/renderer/GlStateManager")
+                                && (id.equals("func_179139_a")||id.equals("scale")) && desc.equals("(DDD)V"))
+                            super.visitMethodInsn(INVOKESTATIC,GEO,"faceCamera","()V",false);
                         if(beacon && method.equals("doRender") && Boolean.getBoolean("vandorlabs.cruisePhysicalChecks")
                                 && owner.equals("java/lang/String") && id.equals("format") && desc.equals("(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;")){
                             super.visitInsn(DUP);

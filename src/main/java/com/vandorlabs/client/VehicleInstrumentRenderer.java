@@ -60,8 +60,18 @@ final class VehicleInstrumentRenderer {
 
     private static void drawFace(VehicleInstrument instrument,int height,double pitch,double bank,double heading,
                                  double altitude,double speed,double projectedMax,boolean frontGlass){
-        if(instrument==VehicleInstrument.HUD){
-            drawHud(height,pitch,bank,heading,altitude,speed,frontGlass);
+        if(instrument.isHud()){
+            // Keep the pilot's sightline clear and group the readouts around the pane centre.
+            float scale=instrument==VehicleInstrument.HUD?.48F:.72F;
+            GlStateManager.pushMatrix();
+            try{
+                GlStateManager.translate(64,height*.5,0);
+                GlStateManager.scale(scale,scale,1);
+                GlStateManager.translate(-64,-height*(frontGlass?.48:.40),0);
+                drawHud(height,pitch,bank,heading,altitude,speed,frontGlass);
+            }finally{
+                GlStateManager.popMatrix();
+            }
             return;
         }
         boolean compact = height < 96;

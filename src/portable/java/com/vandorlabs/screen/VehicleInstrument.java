@@ -7,7 +7,10 @@ public enum VehicleInstrument {
     COMPASS(-22, "Compass"),
     ALTIMETER(-23, "Altimeter"),
     AIRSPEED(-24, "Airspeed Indicator"),
-    HUD(-25, "HUD");
+    HUD(-25, "HUD (Small)"),
+    HUD_LARGE(-26, "HUD (Large)");
+
+    public boolean isHud() { return this == HUD || this == HUD_LARGE; }
 
     private static final VehicleInstrument[] CHOICES = values();
     public final int choice;

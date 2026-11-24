@@ -89,7 +89,13 @@ public final class VehicleCruise {
             routeZ = craft.posZ;
             anchor(craft.posX,craft.posZ);
         }
-        if(arrival!=null)return finishArrival(yaw,pitch,bank);
+        if(arrival!=null){
+            // Continue descending while destination columns populate. Ease toward the
+            // build ceiling and keep the swept hull above unverified terrain.
+            double room=Math.max(0,arrivalAltitude-FlightEnvelope.WORLD_CEILING);
+            arrivalAltitude+=Math.max(-room*.12,Math.min(0,dy));
+            return finishArrival(yaw,pitch,bank);
+        }
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
         routeZ = MathHelper.clamp(routeZ + dz, border.minZ()+1, border.maxZ()-1);

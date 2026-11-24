@@ -42,6 +42,22 @@ public final class CruiseMapView {
         float heading=(float)Math.toDegrees(Math.atan2(-world[0],world[2]));
         return mc.gameSettings.thirdPersonView==2?heading+180:heading;
     }
+    private static final java.nio.FloatBuffer billboard=org.lwjgl.BufferUtils.createFloatBuffer(16);
+    /** JourneyMap applied its scale and vanilla head rotations, but the cockpit camera can
+     * face the back of that plane. Keep its eye-space position and pixel scale and use
+     * screen-right and screen-down axes for both the glyphs and the marker icon. */
+    public static void faceCamera() {
+        if(mounted()==null)return;
+        billboard.clear();
+        org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX,billboard);
+        for(int col=0;col<3;col++){
+            int i=4*col;
+            float x=billboard.get(i),y=billboard.get(i+1),z=billboard.get(i+2);
+            float size=(float)Math.sqrt(x*x+y*y+z*z);
+            for(int row=0;row<3;row++)billboard.put(i+row,row==col?(col==0?size:-size):0);
+        }
+        org.lwjgl.opengl.GL11.glLoadMatrix(billboard);
+    }
     public static double beaconAngleDifference(double delta) {
         return Math.abs(mounted()==null?delta:net.minecraft.util.math.MathHelper.wrapDegrees(delta));
     }

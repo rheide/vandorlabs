@@ -875,7 +875,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         motionZ=(front.getFrontOffsetX()*Math.sin(angle)+front.getFrontOffsetZ()*Math.cos(angle))*horizontal;
         ceiling=Math.min(ceiling,flightMotion.ceiling(yaw,pitch,bank));
         double vertical=launching?.17:Math.sin(radians)*driveSpeed-AircraftAttitude.bankSink(roll,driveSpeed);
-        motionY=gliding||limited?Math.min(vertical,-.06):Math.min(vertical,Math.max(0,ceiling-altitude));
+        motionY=gliding||limited?Math.min(vertical,-.06):FlightEnvelope.sustainableClimb(vertical,ceiling-altitude);
 
         // Bank sink can add to the commanded airspeed on a steep descending turn.
         double distanceSquared=motionX*motionX+motionY*motionY+motionZ*motionZ;

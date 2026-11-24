@@ -17,10 +17,11 @@ public final class DiagonalScreenShape {
     public static DiagonalScreenShape of(EnumFacing facing,boolean upper,boolean shallow){return SHAPES[facing.getHorizontalIndex()][upper?1:0][shallow?1:0];}
     private DiagonalScreenShape(EnumFacing facing,boolean upper,boolean shallow){
         int start=shallow?com.vandorlabs.render.ScreenSurface.DIAGONAL_DROP:0;
-        collision=new AxisAlignedBB[16-start];
-        for(int z=start;z<16;z++){
-            double height=(z+1-start)/16D;
-            collision[z-start]=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?1-height:0,z/16D,1,upper?1:height,(z+1)/16D),facing);
+        int first=shallow?start-1:0;
+        collision=new AxisAlignedBB[16-first];
+        for(int z=first;z<16;z++){
+            double height=(z==15?16-start:Math.max(1,z+1-start))/16D;
+            collision[z-first]=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,upper?1-height:0,z/16D,1,upper?1:height,(z+1)/16D),facing);
         }
         List<Triangle> faces=new ArrayList<>();Map<String,List<Edge>> edges=new LinkedHashMap<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(upper,shallow).quads){
@@ -55,8 +56,9 @@ public final class DiagonalScreenShape {
             // including rays that leave the housing from inside it.
             Vec3d probe=RedstoneScreenInteractions.local(center.add(n.scale(.00001)),facing).scale(1D/16);
             double height=probe.z<1D/16?1D/16:probe.z>=15D/16?1:probe.z;
-            if(shallow)height-=com.vandorlabs.render.ScreenSurface.DIAGONAL_DROP/16D;
-            boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=(shallow?com.vandorlabs.render.ScreenSurface.DIAGONAL_DROP/16D:0) && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
+            double drop=com.vandorlabs.render.ScreenSurface.DIAGONAL_DROP/16D;
+            if(shallow)height=probe.z<drop?1D/16:height-drop;
+            boolean inside=probe.x>=0 && probe.x<=1 && probe.y>=0 && probe.y<=1 && probe.z>=(shallow?drop-1D/16:0) && probe.z<=1 && (upper?probe.y>=1-height:probe.y<=height);
             normal=inside?n.scale(-1):n;
         }
         double hit(Vec3d start,Vec3d d){

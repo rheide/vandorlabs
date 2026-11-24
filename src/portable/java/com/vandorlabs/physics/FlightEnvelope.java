@@ -77,6 +77,14 @@ public final class FlightEnvelope {
         return t * t * (3 - 2 * t);
     }
 
+    /** Bleed off commanded climb over roughly four seconds of remaining headroom. */
+    public static double sustainableClimb(double vertical,double remaining) {
+        if(vertical<=0)return vertical;
+        double room=Math.max(0,remaining);
+        double band=Math.min(192,Math.max(12,vertical*80));
+        return Math.min(room,vertical*Math.min(1,room/band));
+    }
+
     /** Shed the fraction of excess airspeed corresponding to the descent through this band. */
     public static double descentSpeed(double speed, double altitude, double drop) {
         if (drop <= 0 || speed <= LOW_SPEED || altitude - drop >= DESCENT_BRAKING_ALTITUDE) return speed;
