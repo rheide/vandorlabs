@@ -119,6 +119,6 @@ public final class VehicleFlightReadout {
     }
 
     public static VehicleFlightReadout preview(VehicleStructure structure, net.minecraft.world.World world, double mass, boolean partial) {
-        return structure==null||structure.maxwellCells.isEmpty()?EMPTY:new Sampler().sample(new VehicleWorld(world,structure),0,mass,partial);
+        return structure==null||structure.maxwellCells.isEmpty()&&structure.liftCells.isEmpty()?EMPTY:new Sampler().sample(new VehicleWorld(world,structure),0,mass,partial);
     }
 }

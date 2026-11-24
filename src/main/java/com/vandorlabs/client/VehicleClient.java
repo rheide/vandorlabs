@@ -501,14 +501,15 @@ public final class VehicleClient {
                         Math.max(0,tag.getDouble("VehicleWeight")),tag.getBoolean("VehicleWeightIncomplete"));
                 readout=parkedFlight;
             }
-            String hoverLimit=data.structure==null?null:"Hover lift capacity: "+com.vandorlabs.vehicle.VehicleFlight.hoverCapacity(data.structure)+" weight units";
+            VehicleStructure liftStructure=raw instanceof EntityGroundVehicle?((EntityGroundVehicle)raw).structure:data.structure;
+            String hoverLimit=liftStructure==null?null:"Hover lift capacity: "+com.vandorlabs.vehicle.VehicleFlight.hoverCapacity(liftStructure)+" weight units";
             if(readout.drives==0){
                 if(data.structure==null) {
                     fontRenderer.drawString("Complete and inspect the vehicle to measure its flight envelope.",x,y,0xc4d0d8);
                 } else {
                     fontRenderer.drawString("Theoretical Max Takeoff Weight: 0 units",x,y,0xc4d0d8);
                     fontRenderer.drawString("Install a Maxwell Drive to fly.",x,y+16,0xc4d0d8);
-                    fontRenderer.drawString(hoverLimit,x,y+32,0xc4d0d8);
+                    if(hoverLimit!=null)fontRenderer.drawString(hoverLimit,x,y+32,0xc4d0d8);
                 }
                 return;
             }
