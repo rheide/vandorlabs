@@ -661,7 +661,7 @@ final class VehicleFlightClientChecks {
         EntityGroundVehicle grounded=server(mc);
         EntityPlayerMP pilot=player(mc);
         List<VehicleStructure.Cell> cells=new ArrayList<>(grounded.structure.cells);
-        String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster"};
+        String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster","repulsor_array","repulsor_array"};
         for(int z=0;z<lift.length;z++){
             IBlockState state=Block.getBlockFromName("vandorlabs:"+lift[z]).getDefaultState()
                     .withProperty(com.vandorlabs.blocks.BlockPropulsionLight.FACING,EnumFacing.DOWN);

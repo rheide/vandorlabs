@@ -76,6 +76,9 @@ final class VehicleStatusClientRuntimeChecks {
         BlockPos seatPos=new BlockPos(4,1,1);TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(seatPos);seat.setTaxiMode(false);seat.owner=player(mc).getUniqueID();cells.add(new VehicleStructure.Cell(seatPos,ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new NBTTagCompound())));
         String[] names={"antigravity_plate","repulsor_array","vertical_hover_thruster"};for(int i=0;i<3;i++)cells.add(new VehicleStructure.Cell(new BlockPos(i,1,3),net.minecraft.block.Block.getBlockFromName("vandorlabs:"+names[i]).getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(new BlockPos(4,1,3),net.minecraft.block.Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),null));
+        // Support the mass of the formed Maxwell during ordinary Hover transitions.
+        for(int x=2;x<=3;x++)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,2),
+                net.minecraft.block.Block.getBlockFromName("vandorlabs:repulsor_array").getDefaultState(),null));
         addEngine(w,cells);
         EntityGroundVehicle craft=new EntityGroundVehicle(w);craft.install(new VehicleStructure(cells,seatPos,EnumFacing.NORTH,1));craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(w.spawnEntity(craft),"fixture spawn");id=craft.getUniqueID();
     }
