@@ -12,6 +12,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.util.*;
+import net.minecraft.entity.player.EntityPlayer;
 
 /** Snapshot reassembly, standard movement keys and an explicit confirmation preview. */
 public final class VehicleClient {
@@ -228,6 +229,7 @@ public final class VehicleClient {
 
     private static UUID cameraCraft;
     private static int cruisePilotDraws;
+    private static final Set<Entity> drawnCrew=Collections.newSetFromMap(new IdentityHashMap<>());
     public static int cruisePilotDraws(){return cruisePilotDraws;}
     private static boolean aboveRenderSections(EntityGroundVehicle craft){
         return craft.dimension==0&&craft.flying()&&craft.flightAltitude()>com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING;
@@ -265,8 +267,10 @@ public final class VehicleClient {
             if(craft.structure!=null)GlStateManager.popMatrix();
             if(CHECK_CREW_POSE)
                 renderedSeatPoses.put(event.getEntityPlayer().getUniqueID(),event.getRenderer().getMainModel().isRiding);
-            if(aboveRenderSections(craft)&&event.getEntityPlayer()==Minecraft.getMinecraft().player&&!VehicleRenderPass.shadow())
-                cruisePilotDraws++;
+            if(aboveRenderSections(craft)&&!VehicleRenderPass.shadow()){
+                drawnCrew.add(event.getEntityPlayer());
+                if(event.getEntityPlayer()==Minecraft.getMinecraft().player)cruisePilotDraws++;
+            }
         }
     }
     private static double cameraDistance=4;
@@ -329,23 +333,25 @@ public final class VehicleClient {
         double z=-Math.sin(yaw)*direction.x+Math.cos(yaw)*direction.z;
         return new Vec3d(x,Math.cos(pitch)*direction.y-Math.sin(pitch)*z,Math.sin(pitch)*direction.y+Math.cos(pitch)*z);
     }
-    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){cruisePilotDraws=0;GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
+    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){cruisePilotDraws=0;drawnCrew.clear();GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {
         RenderGroundVehicle.renderMissing(event.getPartialTicks());
-        if(cruisePilotDraws!=0)return;
         Minecraft mc=Minecraft.getMinecraft();
-        if(mc.player==null||mc.getRenderViewEntity()!=mc.player||mc.gameSettings.thirdPersonView==0
-                ||!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
+        if(mc.player==null||mc.getRenderViewEntity()!=mc.player||!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)mc.player.getRidingEntity();
         if(craft.structure==null||!aboveRenderSections(craft)||VehicleRenderPass.shadow())return;
 
-        // OptiFine visits entities in visible terrain sections. Cruise can place the player
-        // above those sections, so use the same vanilla player renderer if it missed this frame.
-        try(TurntableRenderState saved=new TurntableRenderState()){
-            RenderHelper.enableStandardItemLighting();
-            mc.entityRenderer.enableLightmap();
-            try{mc.getRenderManager().renderEntityStatic(mc.player,event.getPartialTicks(),false);}
-            finally{mc.entityRenderer.disableLightmap();}
+        // Above terrain render sections vanilla or OptiFine may miss riders entirely.
+        // Preserve first-person visibility and render each missing crewmate once.
+        for(Entity rider:craft.getPassengers()){
+            if(!(rider instanceof EntityPlayer)||drawnCrew.contains(rider)
+                    ||rider==mc.player&&mc.gameSettings.thirdPersonView==0)continue;
+            try(TurntableRenderState saved=new TurntableRenderState()){
+                RenderHelper.enableStandardItemLighting();
+                mc.entityRenderer.enableLightmap();
+                try{mc.getRenderManager().renderEntityStatic(rider,event.getPartialTicks(),false);}
+                finally{mc.entityRenderer.disableLightmap();}
+            }
         }
     }
     private static final class Preview extends GuiScreen {
