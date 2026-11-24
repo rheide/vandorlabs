@@ -11,7 +11,8 @@ import io.netty.channel.ChannelPromise;
 import java.io.File;
 import java.util.List;
 import net.minecraft.network.EnumConnectionState;
-import net.minecraft.network.NetworkManager;
+import net.minecraft.network.EnumPacketDirection;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.NetworkSystem;
 import net.minecraft.network.Packet;
 import java.net.InetAddress;
@@ -91,23 +92,31 @@ public final class CabinCrewChecks {
         System.out.println("[vandorlabs] cabin crew READY");
     }
 
-    // Forge 2864 can advance this loopback channel to PLAY while its queued LOGIN success
-    // is still awaiting encoding. Use its LOGIN packet table only for that pending write.
+    // Forge can advance a TCP channel to PLAY on the server thread before Netty has written
+    // the queued LOGIN packets. Encode them with the LOGIN table on this test endpoint.
     private static void prepareLoopback(NetworkSystem network){
         List<ChannelFuture> endpoints=ReflectionHelper.getPrivateValue(NetworkSystem.class,network,"endpoints","field_151274_e");
         endpoints.get(endpoints.size()-1).channel().pipeline().addFirst(new ChannelInboundHandlerAdapter(){
             @Override public void channelRead(ChannelHandlerContext context,Object message)throws Exception{
                 if(message instanceof Channel)((Channel)message).pipeline().addFirst(new ChannelInboundHandlerAdapter(){
                     @Override public void channelActive(ChannelHandlerContext child)throws Exception{
-                        System.out.println("[vandorlabs] loopback crew protocol handler installed");
                         child.pipeline().addAfter("encoder","crewLoginOrdering",new ChannelOutboundHandlerAdapter(){
                             @Override public void write(ChannelHandlerContext out,Object packet,ChannelPromise promise)throws Exception{
-                                io.netty.util.Attribute<EnumConnectionState> protocol=out.channel().attr(NetworkManager.PROTOCOL_ATTRIBUTE_KEY);
-                                if(packet instanceof Packet && EnumConnectionState.getFromPacket((Packet<?>)packet)==EnumConnectionState.LOGIN && protocol.get()==EnumConnectionState.PLAY){
-                                    System.out.println("[vandorlabs] loopback login ordering "+packet.getClass().getSimpleName());
-                                    protocol.set(EnumConnectionState.LOGIN);
-                                    try{super.write(out,packet,promise);}finally{protocol.set(EnumConnectionState.PLAY);}
-                                }else super.write(out,packet,promise);
+                                if(!(packet instanceof Packet)||EnumConnectionState.getFromPacket((Packet<?>)packet)!=EnumConnectionState.LOGIN){
+                                    super.write(out,packet,promise);
+                                    return;
+                                }
+                                Packet<?> login=(Packet<?>)packet;
+                                PacketBuffer bytes=new PacketBuffer(out.alloc().buffer());
+                                try{
+                                    bytes.writeVarInt(EnumConnectionState.LOGIN.getPacketId(EnumPacketDirection.CLIENTBOUND,login));
+                                    login.writePacketData(bytes);
+                                }catch(Exception failure){
+                                    bytes.release();
+                                    throw failure;
+                                }
+                                // The following handlers apply vanilla framing and negotiated compression.
+                                out.write(bytes,promise);
                             }
                         });
                         super.channelActive(child);
