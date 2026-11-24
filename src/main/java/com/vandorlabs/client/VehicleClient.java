@@ -219,8 +219,9 @@ public final class VehicleClient {
         if(driver||entity.walkingInCabin(mc.player))PacketHandler.INSTANCE.sendToServer(p);
     }
     /** Forge asks the mount a single pose question. Two players on the same deck can need opposite poses. */
-    public static boolean riderSits(Entity mount,net.minecraft.entity.EntityLivingBase rider){
-        return mount instanceof EntityGroundVehicle?!((EntityGroundVehicle)mount).walkingInCabin(rider):mount.shouldRiderSit();
+    public static boolean riderSits(boolean sitting,net.minecraft.entity.EntityLivingBase rider){
+        Entity mount=rider.getRidingEntity();
+        return mount instanceof EntityGroundVehicle?!((EntityGroundVehicle)mount).walkingInCabin(rider):sitting;
     }
 
     private static final boolean CHECK_CREW_POSE=Boolean.getBoolean("vandorlabs.cabinCrewChecks");

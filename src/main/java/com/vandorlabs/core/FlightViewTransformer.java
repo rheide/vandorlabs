@@ -27,14 +27,6 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                 MethodVisitor delegate = super.visitMethod(access,method,descriptor,signature,exceptions);
                 return new MethodVisitor(ASM5,delegate) {
                     @Override public void visitMethodInsn(int op,String owner,String id,String desc,boolean itf) {
-                        if(riderModel && (method.equals("doRender")||method.equals("func_76986_a"))
-                                && descriptor.startsWith("(Lnet/minecraft/entity/EntityLivingBase;") && op==INVOKEVIRTUAL
-                                && owner.equals("net/minecraft/entity/Entity") && id.equals("shouldRiderSit") && desc.equals("()Z")){
-                            super.visitVarInsn(ALOAD,1);
-                            super.visitMethodInsn(INVOKESTATIC,"com/vandorlabs/client/VehicleClient","riderSits",
-                                    "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/EntityLivingBase;)Z",false);
-                            return;
-                        }
                         if (dismount && op==INVOKEVIRTUAL && desc.equals("()V") && owner.startsWith("net/minecraft/entity/")
                                 && (id.equals("func_184210_p") || id.equals("dismountRidingEntity"))) {
                             super.visitMethodInsn(INVOKESTATIC,TELEPORT,"detach","(Lnet/minecraft/entity/Entity;)V",false);
@@ -67,6 +59,16 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             super.visitMethodInsn(INVOKESTATIC,GEO,beacon?"beaconOrigin":"viewPosition","(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",false);
                     }
                     @Override public void visitFieldInsn(int op,String owner,String id,String desc) {
+                        // Vanilla calls the mount directly, while OptiFine can ask through Reflector.
+                        // Both renderers store the result on the model before animating it.
+                        if(riderModel && (method.equals("doRender")||method.equals("func_76986_a"))
+                                && descriptor.startsWith("(Lnet/minecraft/entity/EntityLivingBase;")
+                                && op==PUTFIELD && desc.equals("Z") && owner.equals("net/minecraft/client/model/ModelBase")
+                                && (id.equals("field_78093_q")||id.equals("isRiding"))){
+                            super.visitVarInsn(ALOAD,1);
+                            super.visitMethodInsn(INVOKESTATIC,"com/vandorlabs/client/VehicleClient","riderSits",
+                                    "(ZLnet/minecraft/entity/EntityLivingBase;)Z",false);
+                        }
                         super.visitFieldInsn(op,owner,id,desc);
                         if (op!=GETFIELD || !desc.equals("D")) return;
                         String axis=null;
