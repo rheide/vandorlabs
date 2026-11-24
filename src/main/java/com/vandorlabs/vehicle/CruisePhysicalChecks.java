@@ -47,6 +47,9 @@ final class CruisePhysicalChecks {
     private static double lastCraftX=Double.NaN,firstArrivalY;
     private static int smoothSamples, mountedArrivalTicks;
     private static long exitTick;
+    private static volatile boolean observingDescent;
+    private static double approachStartX,previousApproachX;
+    private static int movingApproachTicks;
     private static double maximumWaypointMismatch;
     private static int firstTerrainTick=-1,firstDescentTick=-1;
 
@@ -319,8 +322,17 @@ final class CruisePhysicalChecks {
         exitTick=world.getTotalWorldTime();
         arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
-            arrivalX+=24;
-            require(craft.cruise.move(24,craft.cruise.handoffAltitude()-1-craft.cruise.altitude(),0,18,-32,25),"dive through the cruise boundary");
+            // Start an eastbound glide over fresh columns. Subsequent movement comes from normal server flight ticks.
+            craft.rotationYaw=90;
+            NBTTagCompound flight=new NBTTagCompound();
+            flight.setByte("MaxwellFlightPhase",(byte)EntityGroundVehicle.GLIDING_FLIGHT);
+            flight.setDouble("MaxwellFlightSpeed",1.5);
+            flight.setFloat("MaxwellFlightPitch",-18);
+            craft.readFlightMode(flight);
+            require(craft.cruise.move(1.4,craft.cruise.handoffAltitude()-1-craft.cruise.altitude(),0,90,-18,0),"dive through the cruise boundary");
+            arrivalX=approachStartX=previousApproachX=craft.cruise.x();
+            observingDescent=true;
+            MinecraftForge.EVENT_BUS.register(AUDIT);
         }else if("teleport".equals(EXIT)) {
             int result=world.getMinecraftServer().getCommandManager().executeCommand(world.getMinecraftServer(),
                 "tp "+pilot.getName()+" "+(int)startX+" 100 "+(int)startZ);
@@ -333,7 +345,8 @@ final class CruisePhysicalChecks {
     private static void verifyArrival(double clientY){
         require(pilot.getRidingEntity()==craft&&craft.posY<512,"descent continues underneath the ceiling with pilot aboard");
         require(Math.abs(clientY-craft.posY)<4,"server and visible aircraft continue through the same descent");
-        require(world.getTotalWorldTime()-exitTick<120,"reentry keeps updating the client promptly");
+        require(world.getTotalWorldTime()-exitTick<240,"reentry keeps updating the client promptly");
+        require(movingApproachTicks>1&&arrivalX>approachStartX+1,"glide traveled while preparing new terrain");
         int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
         for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
             require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,x,z),"arrival footprint delivered at "+x+","+z);
@@ -341,8 +354,9 @@ final class CruisePhysicalChecks {
     }
 
     private static void verifyDestination(){
-        require(!craft.cruise.active()&&Math.abs(craft.posX-arrivalX)<.01
-            &&craft.chunkCoordX==(int)Math.floor(arrivalX/16),"aircraft reindexes at the real arrival site");
+        boolean descending="descend".equals(EXIT);
+        require(!craft.cruise.active()&&(descending?craft.posX>=arrivalX-.01:Math.abs(craft.posX-arrivalX)<.01)
+            &&craft.chunkCoordX==(int)Math.floor(craft.posX/16),"aircraft reindexes at its moving geographic position");
         require(generated(arrivalX,startZ)&&!generated(startX+FAR/2,startZ),
             "the destination is loaded and the route midpoint is still absent");
         System.out.println("[vandorlabs][cruise-arrival] mode="+MODE+" exit="+EXIT+" arrivalX="+arrivalX+
@@ -360,13 +374,14 @@ final class CruisePhysicalChecks {
         require(mc.player.getRidingEntity() instanceof EntityGroundVehicle,"actual client kept the mounted craft at reentry");
         EntityGroundVehicle local=(EntityGroundVehicle)mc.player.getRidingEntity();
         require(local.getUniqueID().equals(craft.getUniqueID())&&local.view!=null,"client mount retains actual aircraft structure");
-        if(local.cruise.active()||Math.abs(mc.player.posX-arrivalX)>=4)return false;
+        if(local.cruise.active()||observingDescent||mc.player.posX<arrivalX-4)return false;
         int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(startZ/16);
         for(int x=cx-1;x<=cx+1;x++)for(int z=cz-1;z<=cz+1;z++)
             require(mc.world.getChunkProvider().getLoadedChunk(x,z)!=null,"arrival terrain present on first client descent frame "+x+","+z);
         require(local.addedToChunk&&local.isAddedToWorld()&&mc.world.getEntityByID(local.getEntityId())==local
             &&local.getPassengers().contains(mc.player),"client aircraft remains indexed and mounted");
         if(mountedArrivalTicks++==0){
+            require(mc.world.getChunkProvider().getLoadedChunk(cx+2,cz)!=null,"two columns ahead available on first client arrival frame");
             firstDescentTick=wait;
             firstArrivalY=local.posY;
             mc.gameSettings.thirdPersonView=1;
@@ -394,6 +409,22 @@ final class CruisePhysicalChecks {
     public static final class Audit {
         private final Set<ChunkPos> loads=new LinkedHashSet<>(), saves=new LinkedHashSet<>();
         private String firstLoad;
+
+        @SubscribeEvent public void observeApproach(net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent event){
+            if(!observingDescent||event.world!=world||event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
+            double x=craft.cruise.x();
+            // A scheduled setup may run after the world's entity tick.
+            if(world.getTotalWorldTime()==exitTick&&x==approachStartX)return;
+            require(x>previousApproachX+.1,"aircraft stopped waiting for arrival terrain at x="+x+" previous="+previousApproachX);
+            movingApproachTicks++;
+            previousApproachX=x;
+            if(craft.cruise.active())return;
+            arrivalX=x;
+            int cx=(int)Math.floor(x/16),cz=(int)Math.floor(craft.posZ/16);
+            require(world.getPlayerChunkMap().isPlayerWatchingChunk(pilot,cx+2,cz),"two forward approach columns ready at handoff");
+            observingDescent=false;
+            MinecraftForge.EVENT_BUS.unregister(this);
+        }
 
         private boolean remote(ChunkEvent event){
             double x=event.getChunk().x*16.0,z=event.getChunk().z*16.0;
