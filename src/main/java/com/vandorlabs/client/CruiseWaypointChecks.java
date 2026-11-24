@@ -12,6 +12,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class CruiseWaypointChecks {
     private static String label;
     private static boolean checked;
+    private static boolean sampling, upright;
+    public static void inspectLabelPlane(){
+        if(!sampling)return;
+        java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
+        org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX,matrix);
+        upright=matrix.get(0)>0&&matrix.get(5)<0&&Math.abs(matrix.get(1))<1e-5&&Math.abs(matrix.get(4))<1e-5;
+    }
     public static void formatted(String value){label=value;}
 
     public static void check(Minecraft mc) throws Exception {
@@ -41,14 +48,17 @@ public final class CruiseWaypointChecks {
                 double radians=Math.toRadians(yaw+turn);
                 BlockPos target=new BlockPos(origin.x-900*Math.sin(radians),origin.y,origin.z+900*Math.cos(radians));
                 Object marker=at.invoke(null,target,type.getField("Normal").get(null),0);
-                label=null;
+                label=null;upright=false;sampling=true;
                 render.invoke(null,marker);
                 if((turn==0)!=(label!=null))throw new IllegalStateException("JourneyMap aimed distance at yaw="+yaw+" turn="+turn+" label="+label);
-                if(turn==0)System.out.println("[vandorlabs] JourneyMap aimed waypoint distance="+label);
+                if(turn==0){
+                    if(!upright)throw new IllegalStateException("JourneyMap text is mirrored or upside down");
+                    System.out.println("[vandorlabs] JourneyMap aimed waypoint upright distance="+label);
+                }
             }
             checked=true;
         }finally{
-            mc.player.rotationYawHead=old;
+            sampling=false;mc.player.rotationYawHead=old;
             set.invoke(hide,oldHide);set.invoke(distance,oldDistance);
         }
     }

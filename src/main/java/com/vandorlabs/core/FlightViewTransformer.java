@@ -36,6 +36,9 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             super.visitMethodInsn(INVOKESTATIC,GEO,"beaconAngleDifference",desc,false);
                             return;
                         }
+                        if(beacon && method.equals("doRender") && Boolean.getBoolean("vandorlabs.cruisePhysicalChecks")
+                                && owner.equals("journeymap/client/render/draw/DrawUtil") && id.equals("drawLabel"))
+                            super.visitMethodInsn(INVOKESTATIC,"com/vandorlabs/client/CruiseWaypointChecks","inspectLabelPlane","()V",false);
                         super.visitMethodInsn(op,owner,id,desc,itf);
                         if(beacon && method.equals("doRender") && op==INVOKESTATIC
                                 && owner.equals("net/minecraft/client/renderer/GlStateManager")
