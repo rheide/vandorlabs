@@ -9,15 +9,29 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
 /** One persistent, ground craft. All movement decisions are server authoritative. */
 public final class EntityGroundVehicle extends Entity implements net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData {
+    // Metadata IDs are allocated in declaration order. Keep the entire wire layout here:
+    // Forge can load event subscribers such as VehicleCruise before the entity class.
     // Tenths of a kiloblock per hour. A negative setpoint is selected but disengaged.
-    private static final net.minecraft.network.datasync.DataParameter<Integer> SPEED_HOLD=
-            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.VARINT);
+    private static final DataParameter<Integer> SPEED_HOLD=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
+    private static final DataParameter<Boolean> TRANSFERRING=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> HOVER_EXHAUST=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BOOLEAN);
+    private static final DataParameter<NBTTagCompound> PILOT_SEATS=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.COMPOUND_TAG);
+    private static final DataParameter<Boolean> HOVER_LIFT_READY=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BOOLEAN);
+    static final DataParameter<BlockPos> CRUISE_ROUTE=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BLOCK_POS);
+    static final DataParameter<BlockPos> CRUISE_ANCHOR=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BLOCK_POS);
+    static final DataParameter<Integer> CRUISE_FRACTION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
+    static final DataParameter<Integer> CRUISE_HANDOFF=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
+    static final DataParameter<NBTTagCompound> CABIN_POSITION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.COMPOUND_TAG);
+
     public boolean canHoldSpeed(){return structure!=null&&structure.speedModule&&flightPhase==POWERED_FLIGHT;}
     public int speedHoldSetting(){return dataManager.get(SPEED_HOLD);}
     void speedControl(int action){
@@ -33,14 +47,6 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         dataManager.set(SPEED_HOLD,on?selected:-selected);
     }
     private void disengageSpeedHold(){if(speedHoldSetting()>0)dataManager.set(SPEED_HOLD,-speedHoldSetting());}
-    private static final net.minecraft.network.datasync.DataParameter<Boolean> TRANSFERRING=
-            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
-    private static final net.minecraft.network.datasync.DataParameter<Boolean> HOVER_EXHAUST=
-            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
-    private static final net.minecraft.network.datasync.DataParameter<NBTTagCompound> PILOT_SEATS=
-            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.COMPOUND_TAG);
-    private static final net.minecraft.network.datasync.DataParameter<Boolean> HOVER_LIFT_READY=
-            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
     NBTTagCompound occupiedSeatAssignments(){return dataManager.get(PILOT_SEATS).copy();}
     void restoreSeatAssignments(NBTTagCompound assignments){dataManager.set(PILOT_SEATS,assignments.copy());}
     public BlockPos seatForPassenger(Entity passenger){

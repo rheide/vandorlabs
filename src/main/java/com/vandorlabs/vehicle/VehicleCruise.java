@@ -7,9 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketEntityMetadata;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
@@ -22,8 +19,6 @@ import net.minecraft.world.border.WorldBorder;
 /** Geographic flight with a separate canonical terrain and save anchor. */
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class VehicleCruise {
-    private static final DataParameter<BlockPos> ROUTE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
-    private static final DataParameter<BlockPos> ANCHOR=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.BLOCK_POS);
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
     private double routeX, routeZ, anchorX, anchorZ;
@@ -31,8 +26,6 @@ public final class VehicleCruise {
     private double arrivalAltitude;
     private final CruiseTiles tiles=new CruiseTiles();
     private final CruiseGeography geography=new CruiseGeography();
-    private static final DataParameter<Integer> FRACTION=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
-    private static final DataParameter<Integer> HANDOFF=EntityDataManager.createKey(EntityGroundVehicle.class,DataSerializers.VARINT);
 
     public double view(boolean east,float partial){
         if(!active()){geography.clear();return east?craft.posX:craft.posZ;}
@@ -40,40 +33,40 @@ public final class VehicleCruise {
             double last=east?craft.lastTickPosX:craft.lastTickPosZ,now=east?craft.posX:craft.posZ;
             return last+(now-last)*partial;
         }
-        BlockPos route=craft.getDataManager().get(ROUTE);
+        BlockPos route=craft.getDataManager().get(EntityGroundVehicle.CRUISE_ROUTE);
         double tick=(double)craft.ticksExisted+partial;
-        geography.accept(route.getX(),route.getZ(),craft.getDataManager().get(FRACTION),tick);
+        geography.accept(route.getX(),route.getZ(),craft.getDataManager().get(EntityGroundVehicle.CRUISE_FRACTION),tick);
         return geography.at(east,tick);
     }
     private void publishRoute(){
-        craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
-        craft.getDataManager().set(FRACTION,CruiseGeography.fractions(routeX,routeZ));
+        craft.getDataManager().set(EntityGroundVehicle.CRUISE_ROUTE,new BlockPos(routeX,1,routeZ));
+        craft.getDataManager().set(EntityGroundVehicle.CRUISE_FRACTION,CruiseGeography.fractions(routeX,routeZ));
     }
 
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
     static void define(EntityGroundVehicle craft) {
-        craft.getDataManager().register(ROUTE,BlockPos.ORIGIN);
-        craft.getDataManager().register(FRACTION,0);
-        craft.getDataManager().register(ANCHOR,BlockPos.ORIGIN);
-        craft.getDataManager().register(HANDOFF,FlightEnvelope.CRUISE_ALTITUDE);
+        craft.getDataManager().register(EntityGroundVehicle.CRUISE_ROUTE,BlockPos.ORIGIN);
+        craft.getDataManager().register(EntityGroundVehicle.CRUISE_FRACTION,0);
+        craft.getDataManager().register(EntityGroundVehicle.CRUISE_ANCHOR,BlockPos.ORIGIN);
+        craft.getDataManager().register(EntityGroundVehicle.CRUISE_HANDOFF,FlightEnvelope.CRUISE_ALTITUDE);
         if(craft.world!=null&&!craft.world.isRemote)
-            craft.getDataManager().set(HANDOFF,BlockAvailability.cruiseHandoffAltitude());
+            craft.getDataManager().set(EntityGroundVehicle.CRUISE_HANDOFF,BlockAvailability.cruiseHandoffAltitude());
     }
-    public int handoffAltitude(){return craft.getDataManager().get(HANDOFF);}
+    public int handoffAltitude(){return craft.getDataManager().get(EntityGroundVehicle.CRUISE_HANDOFF);}
     boolean preparingArrival(){ return arrival!=null; }
-    public boolean projected() { return active()&&craft.getDataManager().get(ANCHOR).getY()==1; }
-    double anchorX() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getX():anchorX; }
-    double anchorZ() { return craft.world.isRemote?craft.getDataManager().get(ANCHOR).getZ():anchorZ; }
+    public boolean projected() { return active()&&craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getY()==1; }
+    double anchorX() { return craft.world.isRemote?craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getX():anchorX; }
+    double anchorZ() { return craft.world.isRemote?craft.getDataManager().get(EntityGroundVehicle.CRUISE_ANCHOR).getZ():anchorZ; }
     private void anchor(double x,double z) { anchorX=x;anchorZ=z; }
     private void projection(boolean enabled) {
-        craft.getDataManager().set(ANCHOR,enabled?new BlockPos(anchorX,1,anchorZ):BlockPos.ORIGIN);
+        craft.getDataManager().set(EntityGroundVehicle.CRUISE_ANCHOR,enabled?new BlockPos(anchorX,1,anchorZ):BlockPos.ORIGIN);
     }
-    public boolean active() { return craft.getDataManager().get(ROUTE).getY() == 1; }
+    public boolean active() { return craft.getDataManager().get(EntityGroundVehicle.CRUISE_ROUTE).getY() == 1; }
     public double altitude() { return active() ? craft.posY - SKY_OFFSET : craft.posY; }
-    public double x() { return !active() ? craft.posX : craft.world.isRemote ? craft.getDataManager().get(ROUTE).getX() : routeX; }
-    public double z() { return !active() ? craft.posZ : craft.world.isRemote ? craft.getDataManager().get(ROUTE).getZ() : routeZ; }
+    public double x() { return !active() ? craft.posX : craft.world.isRemote ? craft.getDataManager().get(EntityGroundVehicle.CRUISE_ROUTE).getX() : routeX; }
+    public double z() { return !active() ? craft.posZ : craft.world.isRemote ? craft.getDataManager().get(EntityGroundVehicle.CRUISE_ROUTE).getZ() : routeZ; }
 
     boolean move(double dx, double dy, double dz) {
         return move(dx,dy,dz,craft.rotationYaw,craft.flightPitch(),craft.flightBank());
@@ -241,7 +234,7 @@ public final class VehicleCruise {
     void endForLanding() {
         cancelArrival();
         projection(false);
-        craft.getDataManager().set(ROUTE, BlockPos.ORIGIN);
+        craft.getDataManager().set(EntityGroundVehicle.CRUISE_ROUTE, BlockPos.ORIGIN);
         clearTerrain();
     }
 

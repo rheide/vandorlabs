@@ -9,8 +9,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -18,8 +16,6 @@ import net.minecraft.util.text.TextComponentString;
 
 /** Each rider walks in hull coordinates while the Minecraft mount carries the crew. */
 final class FlightCabin {
-    private static final DataParameter<NBTTagCompound> POSITION =
-            EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.COMPOUND_TAG);
     private final EntityGroundVehicle craft;
     private final Map<UUID,Walker> walkers=new HashMap<>();
     private final Map<EntityPlayerMP,Long> lastToggle=new java.util.WeakHashMap<>();
@@ -37,12 +33,12 @@ final class FlightCabin {
     FlightCabin(EntityGroundVehicle craft) { this.craft = craft; }
 
     static void define(EntityGroundVehicle craft) {
-        craft.getDataManager().register(POSITION, new NBTTagCompound());
+        craft.getDataManager().register(EntityGroundVehicle.CABIN_POSITION, new NBTTagCompound());
     }
 
     void changed(DataParameter<?> key) {
-        if (!POSITION.equals(key)||!craft.world.isRemote) return;
-        NBTTagCompound data=craft.getDataManager().get(POSITION);
+        if (!EntityGroundVehicle.CABIN_POSITION.equals(key)||!craft.world.isRemote) return;
+        NBTTagCompound data=craft.getDataManager().get(EntityGroundVehicle.CABIN_POSITION);
         NBTTagList list=data.getTagList("Walkers",10);
         Map<UUID,Walker> next=new HashMap<>();
         for(int i=0;i<list.tagCount();i++){
@@ -92,7 +88,7 @@ final class FlightCabin {
         tag.setTag("Walkers",list);
         return tag;
     }
-    private void publish(){craft.getDataManager().set(POSITION,snapshot(false));}
+    private void publish(){craft.getDataManager().set(EntityGroundVehicle.CABIN_POSITION,snapshot(false));}
     void write(NBTTagCompound state) { if(!walkers.isEmpty())state.setTag("FlightCabin",snapshot(true)); }
     private static Vec3d feet(NBTTagCompound row){return new Vec3d(row.getDouble("X"),row.getDouble("Y"),row.getDouble("Z"));}
 
