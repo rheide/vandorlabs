@@ -608,6 +608,18 @@ final class VehicleFlightClientChecks {
             int expected=speedStep==0?selected:speedStep==1||speedStep==4?-speedBefore:
                     speedStep==2?speedBefore-100:speedBefore+100;
             need(selected==expected&&(speedStep!=0||selected<=-684),"autopilot speed setting step="+speedStep+" new="+selected+" old="+speedBefore);
+            if(speedStep==2){
+                double measured=mc.getIntegratedServer().callFromMainThread(()->server(mc).driveSpeed*72).get();
+                if(Math.abs(measured-selected/10D)>.15)return false;
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    EntityGroundVehicle original=server(mc);
+                    EntityGroundVehicle copy=new EntityGroundVehicle(world(mc));
+                    copy.readFromNBT(original.writeToNBT(new NBTTagCompound()));
+                    need(copy.structure!=null&&copy.structure.speedModule&&copy.speedHoldSetting()==selected,
+                            "saved flight keeps the installed speed module and selected airspeed");
+                }).get();
+                System.out.println("[vandorlabs] speed autopilot reached "+measured+" kb/h, target "+selected/10D+" kb/h");
+            }
             speedStep++;speedClickPending=false;
             return false;
         }
