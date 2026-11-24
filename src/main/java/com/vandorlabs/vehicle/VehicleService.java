@@ -46,7 +46,7 @@ public final class VehicleService {
         }
         require(!craft.cruise.active()&&(!craft.flying()||craft.flightLanded())&&!craft.takeoffRoll(),"Land the craft before parking.");
         require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
-        if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?VehicleFlight.hoverRequirement(craft.structure)+" Hover also needs a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
+        if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?craft.hoverRequirement():"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
         require(!craft.hover || VehicleFlight.canParkHover(craft),"Extend the landing gear and descend within three blocks of ground before parking.");
         require(craft.stopped(),"Stop before parking.");
         VehicleTransfer.submit(player.getServerWorld(),()->{
@@ -162,13 +162,13 @@ public final class VehicleService {
         require(job.requestedMode!=1 || VehicleSkiTraction.canStart(world,structure,origin),"Taxi requires wheels, or only skis over ice.");
         require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
         if(job.requestedMode==2)VehicleFlight.requireThruster(structure);
-        require(job.requestedMode!=2 || VehicleFlight.canHover(structure),VehicleFlight.hoverRequirement(structure));
+        if(job.requestedMode==2&&!VehicleFlight.canHover(structure))throw new IllegalArgumentException(VehicleFlight.hoverRequirement(structure));
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
         require(clearOfPeople(world,VehicleTransfer.geometry(world,structure),origin,assemblyAllowed(world,structure,origin,job.player)),"Another occupant obstructs assembly.");
         authorizeAssembly(job.player,structure,origin);
         EntityGroundVehicle assembled=VehicleTransfer.assemble(world,structure,origin,job.player);
-        if(job.requestedMode==2 && !assembled.setHover(true))VehicleNetwork.error(job.player,"Craft assembled in Taxi: Hover requires three lift blocks.");
+        if(job.requestedMode==2 && !assembled.setHover(true))VehicleNetwork.error(job.player,"Craft assembled in Taxi. "+assembled.hoverRequirement());
     }
     private static final class Preview {
         final UUID token=UUID.randomUUID();final WorldServer world;VehicleStructure structure;final BlockPos origin;final EntityGroundVehicle entity;final long expires;
@@ -290,7 +290,7 @@ public final class VehicleService {
             require(!preview.entity.flying()&&!preview.entity.takeoffRoll(),"Change Flight mode on the Vehicle Status screen.");
             VehicleMounts.requireAllowed(preview.entity.view,VehicleControlSettings.position(preview.entity.structure));
             require(preview.entity.setHover(packet.sequence==2),packet.sequence==2?
-                    "Hover requires three lift blocks and a Vehicle Thruster.":
+                    preview.entity.hoverRequirement():
                     "Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");
             previews.remove(player.getUniqueID());
             VehicleNetwork.state(preview.entity);
@@ -433,7 +433,10 @@ public final class VehicleService {
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(origin.add(cell.pos));if(!(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController))return structure;
         com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)raw;
         controller.preview=VehiclePreview.of(structure);controller.shape=VehicleShape.read(controller.preview);if(weight!=null){controller.vehicleWeight=weight.units;controller.vehicleWeightVersion=VehicleWeight.VERSION;controller.vehicleWeightIncomplete=weight.incomplete;}controller.markDirty();controller.publishDesign();
-        return VehicleSeatSettings.replaceAt(structure,cell.pos,controller.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));
+        VehicleStructure refreshed=VehicleSeatSettings.replaceAt(structure,cell.pos,controller.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));
+        refreshed.measuredMass=structure.measuredMass;
+        if(refreshed.needsComponentView())new VehicleWorld(world,refreshed);
+        return refreshed;
     }
     public static void designSettings(EntityPlayerMP player,VehicleNetwork.Packet packet){
         try{

@@ -21,6 +21,8 @@ In powered Flight, press **Sprint + Sneak** together (default **Ctrl + Shift**) 
 
 The pilot remains a Minecraft passenger while walking. The aircraft tracks the pilot’s feet in cabin coordinates and checks its own block shapes. Other riders remain in their assigned seats. Two adjacent vehicles have separate decks. You must dismount before boarding another aircraft. Continuous-use items such as a bow take precedence over onboard controls while walking. Projectiles use ordinary world coordinates and chunk ticking; Anchored cruise places them over the physical departure area.
 
+On Forge, each Antigravity Plate or Vertical Hover Thruster supports **36 weight units**. Each Repulsor Array supports **72**. The Vehicle Controller’s Flight tab shows total Hover lift capacity. Compare it with actual weight including fuel and cargo. Keep at least three lift blocks in each connected coupler section and a propulsion thruster. An existing craft saved in Hover can hold position while you arrange a refit.
+
 Selecting **Hover** from Flight levels the craft while it slows along its current heading. It carries the remaining forward motion into Hover at a supported speed.
 
 In Forge Hover, hold **Space** to rise or **Sneak** to descend at up to **8.4 blocks per second**. Release the key to hold the selected altitude. Horizontal Hover speed is 16 blocks per second, or 20 while sprinting.

@@ -30,7 +30,7 @@ final class HoverRuntimeChecks {
         for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(7,12,5))){world.getChunkFromBlockCoords(pos);world.setBlockState(pos,pos.getY()==100?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);}
         DirectionalPropulsionRuntimeChecks.run(world);
         for(int x=-32;x<=32;x+=16)for(int z=-32;z<=32;z+=16)world.getChunkFromBlockCoords(BASE.add(x,0,z));
-        require(!VehicleFlight.canHover(fixture(2,true)) && VehicleFlight.canHover(fixture(3,true)),"three mixed lift blocks required");
+        require(!VehicleFlight.canHover(fixture(2,true),1) && VehicleFlight.canHover(fixture(3,true),1),"three mixed lift blocks required");
         boolean denied=false;try{VehicleFlight.requireThruster(fixture(3,false));}catch(IllegalArgumentException expected){denied=true;}require(denied,"lift blocks cannot substitute propulsion");VehicleFlight.requireThruster(fixture(3,true));
         EntityGroundVehicle insufficient=new EntityGroundVehicle(world);insufficient.install(fixture(2,true));insufficient.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(!insufficient.setHover(true),"two lifts reject Hover");insufficient.setDead();
         EntityGroundVehicle noThrust=new EntityGroundVehicle(world);noThrust.install(fixture(3,false));noThrust.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(!noThrust.setHover(true),"Hover rejects missing forward thruster");noThrust.setDead();

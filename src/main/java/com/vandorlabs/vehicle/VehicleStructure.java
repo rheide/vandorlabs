@@ -126,6 +126,10 @@ public final class VehicleStructure {
     private VehicleWorld.CouplerScope componentScope;
     VehicleWorld.CouplerScope componentScope(){return componentScope;}
     VehicleCouplerTopology couplerTopology;
+    // Completed weight of this frozen snapshot, populated by the incremental discovery scan.
+    double measuredMass = -1;
+    int activeLiftCapacity=-1,activeLiftCount;
+    boolean needsComponentView(){return splitComponents||!couplers.isEmpty();}
     VehicleWorld componentView(){return componentView;}
     private Set<BlockPos> activeCells;
     private boolean derivingComponents;
@@ -162,7 +166,7 @@ public final class VehicleStructure {
         VehicleWorld.CouplerScope next=view.couplerScope();
         if(!explicit&&componentScope!=null&&next==null)return;
         boolean changed=!VehicleWorld.CouplerScope.same(componentScope,next);
-        if(componentView!=view||changed){componentView=view;componentScope=next;activeFootKinds=-1;activePropulsion=-1;if(changed){activeCells=null;couplerTopology=null;}}
+        if(componentView!=view||changed){componentView=view;componentScope=next;activeFootKinds=-1;activePropulsion=-1;if(changed){activeCells=null;couplerTopology=null;activeLiftCapacity=-1;}}
     }
     void inheritComponents(VehicleStructure before){
         if(before.activeCells==null||before.cells.size()!=cells.size()||!VehicleWorld.CouplerScope.same(componentScope,before.componentScope))return;

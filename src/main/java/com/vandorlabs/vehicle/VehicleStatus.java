@@ -32,7 +32,9 @@ public final class VehicleStatus {
             if(mode>=0){
                 if (craft!=null && highModeLocked(craft,mode))
                     throw new IllegalArgumentException("Descend to Y=256 or below before selecting Taxi or Hover.");
-                if((availableModes(world,screen,player)&(1<<mode))!=0)VehicleService.screenMode(player,screen,craft,mode);
+                // A parked inspection may predate a cargo change. Always remeasure a Hover request.
+                if((craft==null&&mode==VehicleStatusLayout.HOVER)||(availableModes(world,screen,player)&(1<<mode))!=0)
+                    VehicleService.screenMode(player,screen,craft,mode);
                 return;
             }
             if(action==EMERGENCY_PARK_ACTION){if(offersEmergencyPark(world,player))VehicleService.screenEmergencyPark(player,craft);return;}
@@ -60,7 +62,7 @@ public final class VehicleStatus {
         boolean transitioning=craft.flying()||craft.takeoffRoll();
         boolean taxi=transitioning||VehicleSkiTraction.allowed(craft)&&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft));
         if(taxi)modes|=1<<VehicleStatusLayout.TAXI;
-        if(VehicleFlight.canHover(craft.structure)&&craft.structure.activeThruster())modes|=1<<VehicleStatusLayout.HOVER;
+        if(craft.hoverAvailable())modes|=1<<VehicleStatusLayout.HOVER;
         if(!transitioning&&!craft.autopilot.enabled()&&craft.flightReadout().canFly()&&player!=null&&craft.getControllingPassenger()==player
                 &&(craft.hover||taxi&&(craft.onGround||craft.groundClearance()<=.001)&&VehicleLandingGear.extended(craft)))modes|=1<<VehicleStatusLayout.FLIGHT;
         if((!transitioning||craft.flightLanded())&&!craft.cruise.active()&&craft.stopped()
@@ -103,12 +105,12 @@ public final class VehicleStatus {
         Map<BlockPos,Entry> entries=cache.computeIfAbsent(world,w->new HashMap<>());Entry old=entries.get(screen);
         if(old!=null&&world.getTotalWorldTime()-old.at>=0&&world.getTotalWorldTime()-old.at<40)return old;
         ArrayDeque<BlockPos> queue=new ArrayDeque<>();Set<BlockPos> seen=new HashSet<>();queue.add(screen);seen.add(screen);
-        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096,lift=0;
+        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096,lift=0,capacity=0;
         boolean thruster=false,pilot=false;VehicleStatusSupport supports=new VehicleStatusSupport();
         while(!queue.isEmpty()&&budget-->0){BlockPos p=queue.removeFirst();if(!world.isBlockLoaded(p)||world.isAirBlock(p))continue;TileEntity tile=world.getTileEntity(p);
             int navigation=com.vandorlabs.rack.ModuleAutopilots.count(tile);if(navigation>0){autopilots+=navigation;autopilot=p;}
             net.minecraft.block.state.IBlockState state=world.getBlockState(p);if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=p;
-            if(VehicleFlight.lift(state.getBlock()))lift++;else if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
+            if(VehicleFlight.lift(state.getBlock())){lift++;capacity+=VehicleFlight.hoverLift(state.getBlock());}else if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat&&!state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER))pilot=true;
             try{supports.observe(world,p,state,tile);}
             catch(RuntimeException|LinkageError unavailable){supports.unavailable();VehicleCompatibility.warn(state.getBlock(),"status landing supports",unavailable);}
@@ -119,7 +121,9 @@ public final class VehicleStatus {
         int modes=1<<VehicleStatusLayout.PARK;
         if(queue.isEmpty()&&pilot&&supports.ready()){
             if(supports.taxi())modes|=1<<VehicleStatusLayout.TAXI;
-            if(lift>=3&&thruster)modes|=1<<VehicleStatusLayout.HOVER;
+            TileEntity raw=controller==null?null:world.getTileEntity(controller);
+            if(lift>=3&&thruster&&raw instanceof com.vandorlabs.tiles.TileEntityVehicleController
+                    && ((com.vandorlabs.tiles.TileEntityVehicleController)raw).vehicleWeight<=capacity)modes|=1<<VehicleStatusLayout.HOVER;
         }
         if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller,modes);entries.put(screen.toImmutable(),result);return result;
     }

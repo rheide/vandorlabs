@@ -501,12 +501,14 @@ public final class VehicleClient {
                         Math.max(0,tag.getDouble("VehicleWeight")),tag.getBoolean("VehicleWeightIncomplete"));
                 readout=parkedFlight;
             }
+            String hoverLimit=data.structure==null?null:"Hover lift capacity: "+com.vandorlabs.vehicle.VehicleFlight.hoverCapacity(data.structure)+" weight units";
             if(readout.drives==0){
                 if(data.structure==null) {
                     fontRenderer.drawString("Complete and inspect the vehicle to measure its flight envelope.",x,y,0xc4d0d8);
                 } else {
                     fontRenderer.drawString("Theoretical Max Takeoff Weight: 0 units",x,y,0xc4d0d8);
                     fontRenderer.drawString("Install a Maxwell Drive to fly.",x,y+16,0xc4d0d8);
+                    fontRenderer.drawString(hoverLimit,x,y+32,0xc4d0d8);
                 }
                 return;
             }
@@ -525,7 +527,7 @@ public final class VehicleClient {
             fontRenderer.drawString("Projected max speed: "+speed,x,y+72,0xc4d0d8);
             if(!readout.canFly() && readout.thrust>0)haiku(x,y+89,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");
             else if(readout.canFly() && readout.maximumAltitude()<com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)haiku(x,y+89,0x9fc8ff,"The thin heavens wait","Thrust fades as the air grows thin","Clouds keep their distance");
-            fontRenderer.drawSplitString("Select Flight on the Status screen.",x,y+120,width,0xaabbcc);
+            fontRenderer.drawSplitString(hoverLimit==null?"Select Flight on the Status screen.":hoverLimit,x,y+120,width,0xaabbcc);
         }
         private static String weightLimit(double thrust) {
             return String.format(java.util.Locale.ROOT,"%,d units",(long)Math.floor(com.vandorlabs.physics.FlightEnvelope.takeoffMass(thrust)));

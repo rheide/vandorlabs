@@ -333,7 +333,7 @@ public final class VehicleTransfer {
         VehicleWorld validationView=assemblyView(world,structure,scope);
         boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
         if(forceHover)VehicleFlight.requireThruster(structure);
-        if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
+        if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice. "+VehicleFlight.hoverRequirement(structure));
         validateAssembly(structure,validationView);
         VehicleArticulation.requireAssemblyLimit(structure);
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");

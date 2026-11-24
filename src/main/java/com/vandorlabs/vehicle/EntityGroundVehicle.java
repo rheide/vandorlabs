@@ -39,6 +39,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
     private static final net.minecraft.network.datasync.DataParameter<NBTTagCompound> PILOT_SEATS=
             net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.COMPOUND_TAG);
+    private static final net.minecraft.network.datasync.DataParameter<Boolean> HOVER_LIFT_READY=
+            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
     NBTTagCompound occupiedSeatAssignments(){return dataManager.get(PILOT_SEATS).copy();}
     void restoreSeatAssignments(NBTTagCompound assignments){dataManager.set(PILOT_SEATS,assignments.copy());}
     public BlockPos seatForPassenger(Entity passenger){
@@ -141,7 +143,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public double cruiseGroundSpeed(){return world.isRemote?reportedGroundSpeed:Math.hypot(motionX,motionZ);}
     double networkDriveSpeed(){return flying()?Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ):driveSpeed;}
     public VehicleFlightReadout flightReadout(){return flightReadout;}
-    void flightPayloadChanged(){if(structure!=null&&!structure.maxwellCells.isEmpty())flightSampler.inventoryDirty(world.getTotalWorldTime());}
+    void flightPayloadChanged(){if(structure!=null&&(!structure.maxwellCells.isEmpty()||structure.liftCells.size()>=3))flightSampler.inventoryDirty(world.getTotalWorldTime());}
 
     void requestFlight(EntityPlayerMP pilot){
         if(flying()||takeoffRoll())return;
@@ -168,23 +170,36 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             throw new IllegalArgumentException("Descend to Y=256 or below before selecting Taxi or Hover.");
         if(takeoffRoll()){
             flightPhase=NO_FLIGHT;
-            if(mode==2&&!setHover(true))throw new IllegalArgumentException("This vehicle needs lift blocks and a Vehicle Thruster for Hover.");
+            if(mode==2&&!setHover(true))throw new IllegalArgumentException(hoverRequirement());
             return;
         }
         if(!flying())return;
-        if(mode==2&&!canResumeHover())throw new IllegalArgumentException("This vehicle needs lift blocks and a Vehicle Thruster for Hover.");
+        if(mode==2&&!checkHoverAdmission())throw new IllegalArgumentException(hoverRequirement());
         beginFlightRecovery(mode==1?RETURN_TAXI:RETURN_HOVER);
     }
 
     private void refreshFlightReadout(){
-        if(structure.maxwellCells.isEmpty()){flightReadout=VehicleFlightReadout.EMPTY;return;}
+        if(structure.maxwellCells.isEmpty()&&structure.liftCells.size()<3){flightReadout=VehicleFlightReadout.EMPTY;dataManager.set(HOVER_LIFT_READY,false);return;}
         net.minecraft.tileentity.TileEntity raw=view.getTileEntity(VehicleControlSettings.position(structure));
         com.vandorlabs.tiles.TileEntityVehicleController controller=raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;
         double prior=controller==null?0:Math.max(0,controller.vehicleWeight);
         flightReadout=flightSampler.sample(view,world.getTotalWorldTime(),prior,controller!=null&&controller.vehicleWeightIncomplete);
+        dataManager.set(HOVER_LIFT_READY,flightReadout.mass>0&&VehicleFlight.canHover(structure,flightReadout.mass)&&structure.activeThruster());
     }
 
-    private boolean canResumeHover(){return VehicleFlight.canHover(structure)&&structure.activeThruster();}
+    public boolean hoverAvailable(){return dataManager.get(HOVER_LIFT_READY);}
+    private double hoverAdmissionMass=-1;
+    String hoverRequirement(){return VehicleFlight.hoverRequirement(structure,hoverAdmissionMass);}
+    private boolean checkHoverAdmission(){
+        hoverAdmissionMass=-1;
+        if(structure==null||view==null||structure.liftCells.size()<3||!structure.activeThruster())return false;
+        if(world.isRemote)return hoverAvailable();
+        hoverAdmissionMass=VehicleFlight.measure(structure,view);
+        boolean ready=VehicleFlight.canHover(structure,hoverAdmissionMass);
+        dataManager.set(HOVER_LIFT_READY,ready);
+        return ready;
+    }
+    private boolean canResumeHover(){return hoverAvailable();}
     private void beginFlightRecovery(int phase){
         disengageSpeedHold();
         if(phase==RETURN_HOVER&&flightPhase!=RETURN_HOVER)driveSpeed*=Math.cos(Math.toRadians(flightPitch));
@@ -268,7 +283,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(flying()||takeoffRoll())return false;
         if(view!=null&&structure!=null&&structure.controller()!=null&&!VehicleMounts.allowed(view,structure.controller().pos))return false;
         if(!value && structure!=null && !VehicleSkiTraction.allowed(this))return false;
-        if(value && (!VehicleFlight.canHover(structure)))return false;
+        if(value && !checkHoverAdmission())return false;
         if(value==hover)return true;
         if(value)try{VehicleFlight.requireThruster(structure);}catch(IllegalArgumentException unavailable){return false;}
         if(!value){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();if(clearance>3 || !VehicleLandingGear.extended(this))return false;}
@@ -283,7 +298,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(toggle||direction!=vertical||sprint!=flightSprint)VehicleCouplings.releaseControlsChanged(this);
         recordCurrentCouplingDriver();
         if(toggle&&!structure.hasDedicatedController()){VehicleNetwork.error(player,"Vehicle Controller missing");return;}
-        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.activeNonWheeledGear()?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):VehicleFlight.hoverRequirement(structure));
+        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.activeNonWheeledGear()?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):hoverRequirement());
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }
     public void autopilotControls(byte f,byte s,boolean b){couplingInput(f,s,b);forward=f;strafe=s;brake=b;}
@@ -587,7 +602,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collisionCache.restart(view);
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
-    @Override protected void entityInit(){dataManager.register(SPEED_HOLD,0);dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);FlightCabin.define(this);}
+    @Override protected void entityInit(){dataManager.register(SPEED_HOLD,0);dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);dataManager.register(HOVER_LIFT_READY,false);VehicleCruise.define(this);FlightCabin.define(this);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
@@ -1016,6 +1031,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private void finishFlight(boolean toHover) {finishFlight(toHover,0);}
     private void finishFlight(boolean toHover,double carrySpeed) {
         disengageSpeedHold();
+        if(toHover&&!checkHoverAdmission()){
+            beginFlightRecovery(RECOVER_FLIGHT);
+            return;
+        }
         cabin.clear();
         if(Float.isFinite(flightViewYaw))for(Entity passenger:getPassengers())
             if(passenger instanceof EntityPlayer)releasePilotView(passenger,rotationYaw);

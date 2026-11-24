@@ -27,14 +27,50 @@ public final class VehicleFlight {
         if(structure.activeThruster())return;
         throw new IllegalArgumentException("Hover requires at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine.");
     }
-    public static boolean canHover(VehicleStructure structure){
-        if(structure.couplers.isEmpty()){
-            int count=0;for(VehicleStructure.Cell cell:structure.liftCells)if(structure.isActive(cell.pos)&&++count>=3)return true;return false;
+    /** Gross weight units supported in Hover, including carried stores. */
+    public static int hoverLift(net.minecraft.block.Block block){
+        if(!lift(block))return 0;
+        return block.getRegistryName().getResourcePath().startsWith("repulsor_array")?72:36;
+    }
+    public static int hoverCapacity(VehicleStructure structure){
+        if(structure.activeLiftCapacity>=0)return structure.activeLiftCapacity;
+        if(structure.needsComponentView()&&structure.componentView()==null)return 0;
+        int capacity=0,count=0;
+        for(VehicleStructure.Cell cell:structure.liftCells){
+            if(!structure.isActive(cell.pos))continue;
+            capacity+=hoverLift(cell.state.getBlock());
+            count++;
         }
+        structure.activeLiftCount=count;
+        return structure.activeLiftCapacity=capacity;
+    }
+    static double measure(VehicleStructure structure,VehicleWorld view){
+        VehicleWeight weight=new VehicleWeight(structure,view);
+        while(!weight.step(4096,Long.MAX_VALUE)){}
+        return weight.result().units;
+    }
+    private static double snapshotMass(VehicleStructure structure){
+        if(structure.measuredMass<0&&structure.componentView()!=null)
+            structure.measuredMass=measure(structure,structure.componentView());
+        return structure.measuredMass;
+    }
+    public static boolean canHover(VehicleStructure structure){
+        return structure.liftCells.size()>=3&&canHover(structure,snapshotMass(structure));
+    }
+    public static boolean canHover(VehicleStructure structure,double mass){
+        if(!Double.isFinite(mass)||mass<0||mass>hoverCapacity(structure)||structure.activeLiftCount<3)return false;
+        if(structure.couplers.isEmpty())return true;
         VehicleCouplerTopology topology=VehicleCouplerTopology.of(structure);
         return topology!=null&&topology.sufficientLift(structure);
     }
-    public static String hoverRequirement(VehicleStructure structure){return structure.couplers.isEmpty()?"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.":"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters in each connected coupler section.";}
+    public static String hoverRequirement(VehicleStructure structure){
+        return hoverRequirement(structure,structure.measuredMass);
+    }
+    public static String hoverRequirement(VehicleStructure structure,double mass){
+        int capacity=hoverCapacity(structure);
+        if(mass>capacity)return String.format(java.util.Locale.ROOT,"Hover lift supports %d weight units. This craft weighs %.1f.",capacity,mass);
+        return structure.couplers.isEmpty()?"Hover requires three lift blocks and a Vehicle Thruster.":"Hover requires three lift blocks in each connected coupler section and a Vehicle Thruster.";
+    }
     public static boolean canParkHover(EntityGroundVehicle craft){return VehicleLandingGear.extended(craft)&&clearance(craft)<=3;}
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null||craft.flightAltitude()>=com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING)return Double.POSITIVE_INFINITY;

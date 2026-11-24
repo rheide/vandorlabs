@@ -66,7 +66,7 @@ public final class VehicleFlightReadout {
         }
 
         VehicleFlightReadout sample(VehicleWorld current, long now, double scannedMass, boolean scannedPartial) {
-            if (current.structure.maxwellCells.isEmpty()) return EMPTY;
+            if (current.structure.maxwellCells.isEmpty() && current.structure.liftCells.size()<3) return EMPTY;
             if (current != view || current.structure != structure) {
                 boolean worldChanged = current != view;
                 boolean topologyChanged = worldChanged || structure.cells.size() != current.structure.cells.size()

@@ -48,6 +48,22 @@ final class HoverClientRuntimeChecks {
             String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster"};for(int i=0;i<3;i++)cells.add(new VehicleStructure.Cell(new BlockPos(i,0,1),Block.getBlockFromName("vandorlabs:"+lift[i]).getDefaultState().withProperty(BlockPropulsionLight.FACING,EnumFacing.DOWN),null));
             cells.add(new VehicleStructure.Cell(new BlockPos(3,0,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState().withProperty(BlockPropulsionLight.FACING,EnumFacing.SOUTH),null));
             cells.add(new VehicleStructure.Cell(new BlockPos(4,0,0),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
+            BlockPos store=new BlockPos(3,0,1);
+            net.minecraft.tileentity.TileEntityChest chest=new net.minecraft.tileentity.TileEntityChest();
+            chest.setPos(store);
+            chest.setInventorySlotContents(0,new net.minecraft.item.ItemStack(Blocks.IRON_BLOCK,64));
+            cells.add(new VehicleStructure.Cell(store,Blocks.CHEST.getDefaultState(),chest.writeToNBT(new NBTTagCompound())));
+            VehicleStructure loaded=new VehicleStructure(cells,SEAT,EnumFacing.NORTH,1);
+            EntityGroundVehicle heavy=new EntityGroundVehicle(world);
+            heavy.install(loaded);
+            int capacity=VehicleFlight.hoverCapacity(loaded);
+            require(capacity==144&&VehicleFlight.canHover(loaded,capacity)&&!VehicleFlight.canHover(loaded,capacity+.01),"mixed lift capacity includes its boundary");
+            require(!heavy.setHover(true),"64 carried iron blocks overload this craft");
+            ((net.minecraft.tileentity.TileEntityChest)heavy.view.getTileEntity(store)).clear();
+            require(heavy.setHover(true),"unloading the chest immediately permits Hover");
+            heavy.setDead();
+            cells.remove(cells.size()-1);
+            System.out.println("[vandorlabs] hover-weight PASS overload, exact capacity, cargo removal and immediate entry retry");
             EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,1));craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());craft.setTransferInProgress(true);require(world.spawnEntity(craft),"fixture spawn");id=craft.getUniqueID();player.setPositionAndUpdate(ORIGIN.getX()-2,ORIGIN.getY()+2,ORIGIN.getZ());
         }).get();
     }

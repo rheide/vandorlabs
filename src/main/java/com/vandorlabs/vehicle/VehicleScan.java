@@ -376,6 +376,7 @@ public final class VehicleScan {
                 if(validation==null){candidateView=new VehicleWorld(world,candidate);candidateView.origin=origin;validation=new VehicleRotation.Validation(candidate,candidateView);return false;}
                 if(!validated){validated=validation.step(budget,deadline);return false;}
                 if(weightRequested&&weightResult==null){if(weight==null)weight=new VehicleWeight(candidate,candidateView);if(weight.step(4096,deadline))weightResult=weight.result();return false;}
+                if(weightResult!=null)candidate.measuredMass=weightResult.units;
                 candidate.encode();result=candidate;candidate=null;validation=null;candidateView=null;weight=null;return true;
             }
             for(int i=0;i<budget && !queue.isEmpty() && (i==0||System.nanoTime()<deadline);i++) {

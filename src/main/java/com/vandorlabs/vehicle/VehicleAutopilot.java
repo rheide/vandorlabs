@@ -239,7 +239,7 @@ public final class VehicleAutopilot {
         net.minecraft.entity.player.EntityPlayerMP owner;try{owner=com.vandorlabs.tiles.WorldActionAuthorization.actor(tile);}catch(IllegalArgumentException denied){tile.setStatus(denied.getMessage());world.scheduleUpdate(tile.getPos(),tile.getBlockType(),100);return;}
         if(owner==null||owner.world!=world){tile.setStatus("Waiting for owner");world.scheduleUpdate(tile.getPos(),tile.getBlockType(),100);return;}
         try{
-            VehicleScan scan=departures.get(tile);if(scan==null){if(departures.size()>=16){world.scheduleUpdate(tile.getPos(),tile.getBlockType(),20);return;}scan=new VehicleScan(world,tile.departureSeat);departures.put(tile,scan);}
+            VehicleScan scan=departures.get(tile);if(scan==null){if(departures.size()>=16){world.scheduleUpdate(tile.getPos(),tile.getBlockType(),20);return;}scan=new VehicleScan(world,tile.departureSeat);if(tile.departureMode==2)scan.measureWeight();departures.put(tile,scan);}
             if(!scanStep(world,scan)){world.scheduleUpdate(tile.getPos(),tile.getBlockType(),1);return;}departures.remove(tile);
             if(scan.error!=null)throw new IllegalArgumentException(scan.error);
             VehicleStructure.Cell controllerCell=scan.result.at(tile.getPos().subtract(scan.origin));
