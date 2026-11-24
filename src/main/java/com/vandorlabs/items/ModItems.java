@@ -23,6 +23,9 @@ public final class ModItems {
             .setRegistryName(VandorLabs.MODID, "blank_module")
             .setUnlocalizedName("vandorlabs.blank_module")
             .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+    public static final Item SPEED_MODULE = new Item().setRegistryName(VandorLabs.MODID, "speed_autopilot_module")
+            .setUnlocalizedName("vandorlabs.speed_autopilot_module").setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+    // Existing saves keep the original item ID and their navigation settings.
     public static final Item AUTOPILOT_MODULE = new Item()
             .setRegistryName(VandorLabs.MODID, "autopilot_module")
             .setUnlocalizedName("vandorlabs.autopilot_module")
@@ -59,6 +62,7 @@ public final class ModItems {
         event.getRegistry().register(BATTERY_MODULE);
         event.getRegistry().register(NAVIGATION_DATA_MODULE);
         event.getRegistry().register(AUTOPILOT_MODULE);
+        event.getRegistry().register(SPEED_MODULE);
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(PROGRAMMABLE_PLATE);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
@@ -80,6 +84,7 @@ public final class ModItems {
         ModelLoader.setCustomModelResourceLocation(BATTERY_MODULE, 0, new ModelResourceLocation(BATTERY_MODULE.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(BLANK_MODULE, 0,
                 new ModelResourceLocation(BLANK_MODULE.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(SPEED_MODULE, 0,new ModelResourceLocation(SPEED_MODULE.getRegistryName(),"inventory"));
         ModelLoader.setCustomModelResourceLocation(AUTOPILOT_MODULE, 0,
                 new ModelResourceLocation(AUTOPILOT_MODULE.getRegistryName(), "inventory"));
         for(int i=0;i<4;i++)ModelLoader.setCustomModelResourceLocation(REDSTONE_TRANSMITTER,i,new ModelResourceLocation(new ResourceLocation(VandorLabs.MODID,"redstone_transmitter_"+ItemRedstoneTransmitter.VARIANTS[i]),"inventory"));

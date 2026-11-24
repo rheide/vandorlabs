@@ -99,7 +99,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     }
 
     public static boolean accepts(ItemStack stack) {
-        return !stack.isEmpty() && (stack.getItem() == ModItems.BLANK_MODULE || stack.getItem() == ModItems.AUTOPILOT_MODULE || com.vandorlabs.rack.ModuleBatteryData.valid(stack));
+        return !stack.isEmpty() && (stack.getItem() == ModItems.BLANK_MODULE || stack.getItem() == ModItems.SPEED_MODULE || stack.getItem() == ModItems.AUTOPILOT_MODULE || com.vandorlabs.rack.ModuleBatteryData.valid(stack));
     }
 
     /** Offline copies may be edited by validation/import code; live clients and carried
@@ -344,11 +344,13 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
         failedLoad = tag.getBoolean("RackInert") ? new NBTTagCompound() : null;
         previousBatteryPixels=batteryChargeLevels();
         previousModuleKinds = moduleKinds;
-        moduleKinds = tag.hasKey("ModuleKinds",3) ? tag.getInteger("ModuleKinds") & 255 : com.vandorlabs.rack.ModuleRackPolicy.blankKinds(mask);
+        moduleKinds = tag.hasKey("ModuleKinds",3) ? tag.getInteger("ModuleKinds") & 4095 : com.vandorlabs.rack.ModuleRackPolicy.blankKinds(mask);
         for (int slot = 0; slot < modules.length; slot++) {
             if (moduleKind(slot) == com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) {
                 modules[slot] = new ItemStack(ModItems.AUTOPILOT_MODULE);
                 com.vandorlabs.rack.ModuleAutopilotData.state(modules[slot],tag.getCompoundTag("ModuleConfig" + slot));
+            } else if(moduleKind(slot)==4){
+                modules[slot]=new ItemStack(ModItems.SPEED_MODULE);
             } else if(moduleKind(slot)==3){
                 modules[slot]=new ItemStack(ModItems.BATTERY_MODULE);
                 com.vandorlabs.rack.ModuleBatteryData.receive(modules[slot],Math.max(0,Math.min(com.vandorlabs.rack.ModuleBatteryData.CAPACITY,tag.getInteger("BatteryCharge"+slot))),false);
@@ -398,8 +400,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     }
 
 
-    public int moduleKind(int slot) { return ModuleRackGeometry.validSlot(slot) ? (moduleKinds >>> (slot * 2)) & 3 : 0; }
-    public int previousModuleKind(int slot) { return (previousModuleKinds >>> (slot*2)) & 3; }
+    public int moduleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.slotKind(moduleKinds,slot); }
+    public int previousModuleKind(int slot) { return com.vandorlabs.rack.ModuleRackPolicy.slotKind(previousModuleKinds,slot); }
     public int getModuleKinds() { return moduleKinds; }
     public int autopilotCount() { int count=0; for(int slot=0;slot<4;slot++) if(moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) count++; return count; }
     public int primaryModuleSlot() { return primary; }
@@ -434,7 +436,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
             moduleKinds=0; primary=-1;
             for(int slot=0;slot<4;slot++) if(!modules[slot].isEmpty()) {
                 int kind=modules[slot].getItem()==ModItems.AUTOPILOT_MODULE?com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT:modules[slot].getItem()==ModItems.BATTERY_MODULE?com.vandorlabs.rack.ModuleRackPolicy.BATTERY:com.vandorlabs.rack.ModuleRackPolicy.BLANK;
-                moduleKinds |= kind << (slot*2); if(kind==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT && primary<0) primary=slot;
+                moduleKinds |= kind << (slot*2);
+                if(modules[slot].getItem()==ModItems.SPEED_MODULE)moduleKinds |= 1 << (8+slot); if(kind==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT && primary<0) primary=slot;
             }
             readAutopilotData(primary<0?new NBTTagCompound():com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary]));
         } finally { loadingModules=false; }

@@ -24,6 +24,10 @@ public final class VehicleStatus {
             BlockPos at=craft==null?screen:new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(screen).addVector(.5,.5,.5)));
             if(player.world!=(craft==null?world:craft.world)||player.getDistanceSqToCenter(at)>64)return;
             if(craft==null)VehicleService.permission(player,at);else VehicleService.carriedPermission(player,craft,at);
+            if(action>=com.vandorlabs.screen.SpeedAutopilotPanel.TOGGLE&&action<=com.vandorlabs.screen.SpeedAutopilotPanel.INCREASE){
+                if(craft!=null&&craft.getControllingPassenger()==player)craft.speedControl(action);
+                return;
+            }
             int mode=action==FLIGHT_ACTION?VehicleStatusLayout.FLIGHT:action>=1&&action<=3?action-1:-1;
             if(mode>=0){
                 if (craft!=null && highModeLocked(craft,mode))
@@ -71,6 +75,9 @@ public final class VehicleStatus {
         EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
         return craft!=null&&!craft.transferInProgress&&!craft.cruise.active()&&player!=null&&player.capabilities.isCreativeMode
                 &&player.getHeldItemMainhand().getItem() instanceof com.vandorlabs.items.ItemConfigurizer;
+    }
+    public static int panelAction(int choice,int height,double x,double y){
+        return choice==com.vandorlabs.screen.VehicleInstrument.AUTOPILOT.choice?com.vandorlabs.screen.SpeedAutopilotPanel.action(height,x,y):panelAction(height,x,y);
     }
     public static int panelAction(int height,double x,double y){
         int target=VehicleStatusLayout.forHeight(height).target(x,y);

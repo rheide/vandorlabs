@@ -15,6 +15,8 @@ import com.vandorlabs.tiles.TileEntityVehicleController;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import com.vandorlabs.screen.SpeedAutopilotPanel;
+import com.vandorlabs.screen.VehicleInstrument;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -53,6 +55,8 @@ final class VehicleFlightClientChecks {
     private static java.util.concurrent.Future<?> runwayStep;
     private static PoweredLanding poweredLanding;
     private static long landingDeadline;
+    private static int speedStep,speedBefore;
+    private static boolean speedClickPending;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -89,6 +93,12 @@ final class VehicleFlightClientChecks {
         Block wheel=Block.getBlockFromName("vandorlabs:wheel_medium");
         for(BlockPos pos:new BlockPos[]{new BlockPos(1,0,0),new BlockPos(3,0,0),new BlockPos(1,0,4),new BlockPos(3,0,4)})
             cells.add(new VehicleStructure.Cell(pos,wheel.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.WEST),null));
+        BlockPos rackPos=new BlockPos(3,2,4);
+        com.vandorlabs.tiles.TileEntityModuleRack rack=new com.vandorlabs.tiles.TileEntityModuleRack();
+        rack.setPos(rackPos);
+        need(rack.insertModule(1,new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.SPEED_MODULE),false)
+                &&rack.autopilotCount()==0,"speed module fits rack without enabling waypoint navigation");
+        cells.add(new VehicleStructure.Cell(rackPos,Block.getBlockFromName("vandorlabs:module_rack").getDefaultState(),rack.writeToNBT(new NBTTagCompound())));
         BlockPos staged=ORIGIN.add(24,8,0);
         world.getChunkFromBlockCoords(staged);
         TileEntityConstructor engine=MaxwellRuntimeChecks.assemble(world,staged,3,EnumFacing.NORTH,0,0);
@@ -117,8 +127,11 @@ final class VehicleFlightClientChecks {
         ScreenSurface.Quad quad=RedstoneScreenInteractions.surface(state,tile,0);
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
         VehicleStatusLayout layout=VehicleStatusLayout.forHeight(height);
-        double column=layout.centerX(mode)/128D;
-        double row=layout.centerY(mode)/(double)height;
+        int action=mode<4?(mode==3?VehicleStatus.FLIGHT_ACTION:mode+1):mode;
+        boolean split=tile.hasSplitVehiclePanel(0);
+        int panelHeight=split?height/2:height;
+        double column=(mode<4?layout.centerX(mode):(SpeedAutopilotPanel.left(action)+SpeedAutopilotPanel.right(action))/2)/128D;
+        double row=(mode<4?layout.centerY(mode):(SpeedAutopilotPanel.top(action,panelHeight)+SpeedAutopilotPanel.bottom(action,panelHeight))/2)/(double)height;
         double x=(quad.topRight.x+(quad.topLeft.x-quad.topRight.x)*column)/16;
         double y=(quad.topRight.y+(quad.bottomRight.y-quad.topRight.y)*row)/16;
         double z=(quad.topRight.z+(quad.bottomRight.z-quad.topRight.z)*row)/16;
@@ -133,7 +146,7 @@ final class VehicleFlightClientChecks {
         mc.player.rotationPitch=mc.player.prevRotationPitch=pitch;
         mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(yaw,pitch,false));
         Vec3d a=craft.toLocal(eye).subtract(new Vec3d(SCREEN)),b=craft.toLocal(eye.add(delta.scale(1.2))).subtract(new Vec3d(SCREEN));
-        need(RedstoneScreenInteractions.statusAction(state,tile,0,a,b)==(mode==3?VehicleStatus.FLIGHT_ACTION:mode+1),"seated ray hits mode "+mode+" button at "+a+" toward "+b);
+        need(RedstoneScreenInteractions.statusAction(state,tile,0,a,b)==action,"seated ray hits mode "+mode+" button at "+a+" toward "+b);
     }
 
     static boolean tick(Minecraft mc,File output)throws Exception{
@@ -206,6 +219,7 @@ final class VehicleFlightClientChecks {
         if(stage==4&&frame>=23){
             if(craft.posY<=climbY+1&&frame<60)return false;
             need(craft.posY>climbY+1&&craft.driveSpeed>FlightEnvelope.TAKEOFF_SPEED,"released keys preserve forward flight and climb");
+            if(!checkSpeedPanel(mc,craft,output))return false;
             mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),runwayY+25,12,0)).get();
             turnYaw=0;turnX=ORIGIN.getX();turnZ=ORIGIN.getZ()-5;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),true);
@@ -568,6 +582,44 @@ final class VehicleFlightClientChecks {
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(this);
             done=true;
         }
+    }
+
+    private static void configureSpeedPanel(EntityGroundVehicle craft,boolean split,boolean speed){
+        TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(SCREEN);
+        tile.frameAppearance.split=split;
+        tile.frameAppearance.splitTop=VehicleInstrument.AUTOPILOT.choice;
+        tile.frameAppearance.splitBottom=VehicleInstrument.STATUS.choice;
+        tile.setSurfaceTexture(0,speed?VehicleInstrument.AUTOPILOT.choice:VehicleInstrument.STATUS.choice);
+    }
+
+    private static boolean checkSpeedPanel(Minecraft mc,EntityGroundVehicle craft,File output)throws Exception{
+        int[] actions={SpeedAutopilotPanel.CAPTURE,SpeedAutopilotPanel.TOGGLE,SpeedAutopilotPanel.DECREASE,
+                SpeedAutopilotPanel.INCREASE,SpeedAutopilotPanel.TOGGLE};
+        need(frame<200,"autopilot click step="+speedStep+" selected="+craft.speedHoldSetting()+" before="+speedBefore);
+        if(speedStep==actions.length){
+            configureSpeedPanel(craft,false,false);
+            mc.getIntegratedServer().addScheduledTask(()->configureSpeedPanel(server(mc),false,false)).get();
+            System.out.println("[vandorlabs] speed autopilot PASS real full and half panel clicks, capture, engage, decrease, increase, disengage");
+            return true;
+        }
+        if(speedClickPending){
+            int selected=craft.speedHoldSetting();
+            if(selected==speedBefore)return false;
+            int expected=speedStep==0?selected:speedStep==1||speedStep==4?-speedBefore:
+                    speedStep==2?speedBefore-100:speedBefore+100;
+            need(selected==expected&&(speedStep!=0||selected<=-684),"autopilot speed setting step="+speedStep+" new="+selected+" old="+speedBefore);
+            speedStep++;speedClickPending=false;
+            return false;
+        }
+        int action=actions[speedStep];boolean split=speedStep>=2;
+        configureSpeedPanel(craft,split,true);
+        mc.getIntegratedServer().addScheduledTask(()->configureSpeedPanel(server(mc),split,true)).get();
+        aim(mc,craft,action);
+        if(!alignedServer(mc))return false;
+        if(speedStep==1||speedStep==2)VehicleStatusRenderChecks.speedPanel(mc,output,craft,SCREEN,split?64:128);
+        speedBefore=craft.speedHoldSetting();
+        useStatus(mc);speedClickPending=true;
+        return false;
     }
 
     private static Vec3d cameraLook(Matrix4f inverse){return new Vec3d(-inverse.m20,-inverse.m21,-inverse.m22);}

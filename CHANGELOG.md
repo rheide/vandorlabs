@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Control powered Forge airspeed with an Autopilot Module and a full or half-height Autopilot panel. Flight instruments report kiloblocks per hour to one decimal place. Existing waypoint modules keep their routes under the name Autonavigation Module.
+
 - Walk on a moving Forge aircraft’s deck with Sprint + Sneak in powered Flight. The aircraft levels out while the pilot walks. Press the same keys to take the controls again.
 - Keep the full width and diagonal of the Shallow screen when lowering its casing by four pixels with a one-pixel lip at each end. Select independent top and bottom cockpit displays and see active throttle knobs in cyan.
 - Project a transparent flight HUD on the canopy windshield. The short rear roof of a Long Angled canopy uses the Side glass finish.

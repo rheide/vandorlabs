@@ -86,6 +86,15 @@ def textures():
                 if pixel=="1":nav.point((x+dx,55+y),fill=PALETTE["cyan"])
     nav.rectangle((19,61,34,62),fill=PALETTE["amber"])
     save_png("autopilot_module", autopilot)
+    route = image.copy()
+    face = ImageDraw.Draw(route)
+    face.rectangle((6, 4, 39, 46), fill=(28, 30, 36), outline=(175, 124, 55))
+    for x, y in ((12, 35), (22, 25), (31, 13)):
+        face.rectangle((x-2,y-2,x+2,y+2), fill=(239, 185, 87))
+    face.line((12, 35, 22, 25, 31, 13), fill=(239, 185, 87), width=2)
+    face.rectangle((9,54,36,61), fill=(28,30,36))
+    face.line((12,59,20,56,26,59,32,55), fill=(239,185,87), width=2)
+    save_png("autonavigation_module", route)
 
     image = Image.new("RGB", (16, 16), PALETTE["trim"])
     draw = ImageDraw.Draw(image)
@@ -256,10 +265,18 @@ def generate():
                                ("slot_seated_autopilot_%d" % slot,seated_cassette(slot))):
             variant=autopilot_model(elements,11.75-slot*3.5)
             save_json(MODELS / (name+".json"),variant)
+            route=model(cassette(11.75-slot*3.5) if "seated" not in name else seated_cassette(slot))
+            route["textures"]["module"]="vandorlabs:blocks/module_rack/autonavigation_module"
+            save_json(MODELS / (name.replace("autopilot","autonavigation")+".json"),route)
     autopilot=autopilot_model(cassette(6.5),6.5)
     autopilot["display"]=item_display(True)
     save_json(MODELS / "autopilot_module.json",autopilot)
-    save_json(ASSETS / "models/item/autopilot_module.json",{"parent":"vandorlabs:block/module_rack/autopilot_module"})
+    save_json(ASSETS / "models/item/speed_autopilot_module.json",{"parent":"vandorlabs:block/module_rack/autopilot_module"})
+    route=model(cassette(6.5))
+    route["textures"]["module"]="vandorlabs:blocks/module_rack/autonavigation_module"
+    route["display"]=item_display(True)
+    save_json(MODELS / "autonavigation_module.json",route)
+    save_json(ASSETS / "models/item/autopilot_module.json",{"parent":"vandorlabs:block/module_rack/autonavigation_module"})
     blank = model(cassette(6.5))
     blank["display"] = item_display(True)
     save_json(MODELS / "blank_module.json", blank)

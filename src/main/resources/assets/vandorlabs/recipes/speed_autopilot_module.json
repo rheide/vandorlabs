@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "vandorlabs:blank_module"},
+    {"item": "minecraft:clock"},
+    {"item": "minecraft:comparator"}
+  ],
+  "result": {"item": "vandorlabs:speed_autopilot_module"}
+}

@@ -86,7 +86,7 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
         }finally{GlStateManager.popMatrix();}
     }
     private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane,VehicleInstrument instrument,boolean split){
-        int height=instrument==VehicleInstrument.STATUS?(split||"touch".equals(plane.role)?64:128)
+        int height=VehicleInstrument.interactive(instrument.choice)?(split||"touch".equals(plane.role)?64:128)
                 :new com.vandorlabs.cockpit.CockpitScreenLayout(plane,0).height;
         FloatBuffer matrix=matrix(plane,128,height);
         GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);

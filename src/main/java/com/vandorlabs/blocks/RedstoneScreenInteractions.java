@@ -134,10 +134,10 @@ public final class RedstoneScreenInteractions {
             if(v<0||v>=1)return -1;
             boolean top=v<.5;
             if(!com.vandorlabs.tiles.FrameAppearance.statusSplit(top?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom))return -1;
-            return com.vandorlabs.vehicle.VehicleStatus.panelAction(height/2,x,(v-(top?0:.5))*height);
+            return com.vandorlabs.vehicle.VehicleStatus.panelAction(top?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom,height/2,x,(v-(top?0:.5))*height);
         }
         double y=v*height;
-        return com.vandorlabs.vehicle.VehicleStatus.panelAction(height,x,y);
+        return com.vandorlabs.vehicle.VehicleStatus.panelAction(tile.getSurfaceTexture(slot),height,x,y);
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){
         ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);

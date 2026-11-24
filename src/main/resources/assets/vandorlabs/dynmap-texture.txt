@@ -21523,12 +21523,13 @@ texture:id=module_rack_trim,filename=assets/vandorlabs/textures/blocks/module_ra
 texture:id=module_rack_dark,filename=assets/vandorlabs/textures/blocks/module_rack/dark.png,xcount=1,ycount=1
 texture:id=module_rack_indicators,filename=assets/vandorlabs/textures/blocks/module_rack/indicators.png,xcount=1,ycount=1
 texture:id=module_rack_contacts,filename=assets/vandorlabs/textures/blocks/module_rack/contacts.png,xcount=1,ycount=1
+texture:id=module_rack_autonavigation_module,filename=assets/vandorlabs/textures/blocks/module_rack/autonavigation_module.png,xcount=1,ycount=1
 texture:id=module_rack_autopilot_module,filename=assets/vandorlabs/textures/blocks/module_rack/autopilot_module.png,xcount=1,ycount=1
 texture:id=module_rack_power_in_icon,filename=assets/vandorlabs/textures/blocks/resource_ports/power_in_icon.png,xcount=1,ycount=1
 texture:id=module_rack_emerald_block,filename=assets/minecraft/textures/blocks/emerald_block.png,xcount=1,ycount=1
 texture:id=module_rack_power_in_off,filename=assets/vandorlabs/textures/blocks/resource_ports/power_in_off.png,xcount=1,ycount=1
 texture:id=module_rack_power_in_on,filename=assets/vandorlabs/textures/blocks/resource_ports/power_in_on.png,xcount=1,ycount=1
-block:id=%module_rack,state=*,patch0=0:module_rack_housing,patch1=0:module_rack_module,patch2=0:module_rack_trim,patch3=0:module_rack_dark,patch4=0:module_rack_indicators,patch5=0:module_rack_contacts,patch6=0:module_rack_autopilot_module,patch7=0:module_rack_power_in_icon,patch8=0:module_rack_emerald_block,patch9=0:module_rack_power_in_off,patch10=0:module_rack_power_in_on,transparency=SEMITRANSPARENT
+block:id=%module_rack,state=*,patch0=0:module_rack_housing,patch1=0:module_rack_module,patch2=0:module_rack_trim,patch3=0:module_rack_dark,patch4=0:module_rack_indicators,patch5=0:module_rack_contacts,patch6=0:module_rack_autopilot_module,patch7=0:module_rack_power_in_icon,patch8=0:module_rack_emerald_block,patch9=0:module_rack_power_in_off,patch10=0:module_rack_power_in_on,patch11=0:module_rack_autonavigation_module,transparency=SEMITRANSPARENT
 
 # Appliance decorations
 texture:id=appliance_printer_bottom,filename=assets/vandorlabs/textures/blocks/appliances/printer/bottom.png,xcount=1,ycount=1

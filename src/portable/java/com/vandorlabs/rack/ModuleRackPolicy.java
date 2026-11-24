@@ -2,19 +2,22 @@ package com.vandorlabs.rack;
 
 /** Four bounded physical module slots, shared by both engine adapters. */
 public final class ModuleRackPolicy {
-    public static final int EMPTY = 0, BLANK = 1, AUTOPILOT = 2, BATTERY = 3;
+    public static final int EMPTY = 0, BLANK = 1, AUTOPILOT = 2, BATTERY = 3, SPEED = 4;
     public static final String BLANK_ID = "vandorlabs:blank_module";
     public static final String AUTOPILOT_ID = "vandorlabs:autopilot_module";
+    public static final String SPEED_ID = "vandorlabs:speed_autopilot_module";
     public static final String BATTERY_ID = "vandorlabs:battery_module";
     private ModuleRackPolicy() { }
     public static int kind(String itemId) {
-        return BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : BATTERY_ID.equals(itemId) ? BATTERY : EMPTY;
+        return SPEED_ID.equals(itemId) ? SPEED : BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : BATTERY_ID.equals(itemId) ? BATTERY : EMPTY;
     }
     public static int slotKind(int packed, int slot) {
-        return ModuleRackGeometry.validSlot(slot) ? packed >>> (slot * 2) & 3 : EMPTY;
+        if (!ModuleRackGeometry.validSlot(slot)) return EMPTY;
+        return (packed & (1 << (8+slot))) != 0 ? SPEED : packed >>> (slot*2) & 3;
     }
     public static boolean validKinds(int packed) {
-        if ((packed & ~255) != 0) return false;
+        if ((packed & ~4095) != 0) return false;
+        for(int slot=0;slot<4;slot++) if((packed & (1 << (8+slot)))!=0 && ((packed >>> (slot*2))&3)!=BLANK)return false;
         return true;
     }
     public static int blankKinds(int occupiedMask) {

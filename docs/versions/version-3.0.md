@@ -27,7 +27,7 @@ For recovery below the cruise band, Creative players holding a Configurizer can 
 
 ## Flight instruments
 
-In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and choose a display for that surface. **Status** keeps the mode controls and fuel readout. The **Attitude Indicator** shows pitch and bank, **Compass** shows heading, **Altimeter** shows elevation, and **Airspeed Indicator** shows speed in kiloblocks per hour (kb/h), to one decimal place. The airspeed dial scales to the craft’s projected maximum.
+In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and choose a display for that surface. **Status** keeps the mode controls and fuel readout. The **Attitude Indicator** shows pitch and bank, **Compass** shows heading, **Altimeter** shows elevation, and **Airspeed Indicator** shows speed in kiloblocks per hour (kb/h), to one decimal place. The airspeed dial scales to the craft’s projected maximum. Install an Autopilot Module in a Module Rack and choose **Autopilot** on a full or split panel to capture airspeed, change the setpoint in 10 kb/h steps and toggle speed hold. Existing route-following modules keep their routes and now appear as **Autonavigation Module**.
 
 On a full-height display, enable **Split display** and choose a **Vehicle Status** option on the **Top** or **Bottom** tab. **Status (Half)** keeps the clickable mode controls. Pair it with a compact instrument or regular artwork, or put a different instrument on each half.
 

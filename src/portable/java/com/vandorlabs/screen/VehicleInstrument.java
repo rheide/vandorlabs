@@ -8,9 +8,11 @@ public enum VehicleInstrument {
     ALTIMETER(-23, "Altimeter"),
     AIRSPEED(-24, "Airspeed Indicator"),
     HUD(-25, "HUD (Small)"),
-    HUD_LARGE(-26, "HUD (Large)");
+    HUD_LARGE(-26, "HUD (Large)"),
+    AUTOPILOT(-28, "Autopilot");
 
     public boolean isHud() { return this == HUD || this == HUD_LARGE; }
+
 
     private static final VehicleInstrument[] CHOICES = values();
     public final int choice;
@@ -28,6 +30,8 @@ public enum VehicleInstrument {
         }
         return null;
     }
+
+    public static boolean interactive(int choice){return choice==STATUS.choice||choice==AUTOPILOT.choice;}
 
     public static boolean includes(int choice) {
         return forChoice(choice) != null;

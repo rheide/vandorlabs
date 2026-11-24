@@ -34,7 +34,7 @@ Place one Vehicle Controller in the connected craft and at least one complete Pi
 
 Pilot Seat dialogs contain independent seat height and automatic Taxi Mode settings and apply changes automatically. Explicit Park/Taxi/Hover channels and redstone trigger settings belong to Vehicle Controller. They do not assemble or park the craft. Multiple Pilot Seats are supported: right-click an empty seat to board it. The first seated pilot controls movement until they dismount, then control passes to the next seated pilot. Each occupant keeps their own seat position and height. Parking transfers seated occupants to their corresponding restored seats.
 
-The Autopilot Module uses a cyan NAV label in its Module Rack, Waypoint an amber route marker, and Vehicle Controller a green chassis symbol. Older Autopilot blocks remain readable and convert to a rack with one module after physical loading.
+The Autonavigation Module uses an amber waypoint route in its Module Rack, Waypoint an amber route marker, and Vehicle Controller a green chassis symbol. Older Autopilot blocks remain readable and convert to a rack with one module after physical loading.
 
 ## Limits and wheels
 

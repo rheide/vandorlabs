@@ -24,7 +24,7 @@ import org.dynmap.renderer.RenderPatchFactory;
 public final class ModuleRackRenderer extends CustomRenderer {
     private static final String[] FIELDS = {"ModuleMask","ModuleKinds","BatteryCharge0","BatteryCharge1","BatteryCharge2","BatteryCharge3"};
     private static final List<String> TEXTURES = Collections.unmodifiableList(Arrays.asList(
-            "housing", "module", "trim", "dark", "indicators", "contacts", "autopilot_module", "power_in_icon", "emerald_block", "power_in_off", "power_in_on"));
+            "housing", "module", "trim", "dark", "indicators", "contacts", "autopilot_module", "power_in_icon", "emerald_block", "power_in_off", "power_in_on","autonavigation_module"));
     private static final class Face {
         final int texture;
         final List<MapSurface.Vertex> vertices;
@@ -35,6 +35,7 @@ public final class ModuleRackRenderer extends CustomRenderer {
     }
     private static final List<Face> SHELL = read("shell");
     private static final List<List<Face>> SLOTS = slots("slot_seated_");
+    private static final List<List<Face>> ROUTE_SLOTS = slots("slot_seated_autonavigation_");
     private static final List<List<Face>> AUTOPILOT_SLOTS = slots("slot_seated_autopilot_");
     private static final List<List<List<Face>>> BATTERY_SLOTS = batteries();
     private static List<List<List<Face>>> batteries(){List<List<List<Face>>> result=new ArrayList<>();for(int level=0;level<5;level++){List<List<Face>> slots=new ArrayList<>();for(int slot=0;slot<4;slot++)slots.add(read("slot_seated_battery_"+slot+"_"+level));result.add(slots);}return result;}
@@ -62,8 +63,8 @@ public final class ModuleRackRenderer extends CustomRenderer {
         int kinds=typed instanceof Number?((Number)typed).intValue():0;
         int key=0,place=1;
         int[] levels=new int[4];for(int slot=0;slot<4;slot++){Object energy=context.getBlockTileEntityField("BatteryCharge"+slot);levels[slot]=energy instanceof Number?Math.max(0,Math.min(4,((Number)energy).intValue()*4/10000)):0;}
-        for(int slot=0;slot<4;slot++,place*=8)if((mask&(1<<slot))!=0)key+=(((kinds>>>(slot*2))&3)==3?3+levels[slot]:((kinds>>>(slot*2))&3)==2?2:1)*place;
-        int cacheKey=orientation*4096+key;
+        for(int slot=0;slot<4;slot++,place*=9)if((mask&(1<<slot))!=0)key+=((kinds & (1<<(slot+8)))!=0?8:((kinds>>>(slot*2))&3)==3?3+levels[slot]:((kinds>>>(slot*2))&3)==2?2:1)*place;
+        int cacheKey=orientation*6561+key;
         RenderPatch[] prepared = cache.get(cacheKey);
         if (prepared != null) return prepared;
         List<RenderPatch> patches = new ArrayList<>();
@@ -71,7 +72,7 @@ public final class ModuleRackRenderer extends CustomRenderer {
         for (int slot = 0; slot < 4; slot++) {
             boolean occupied = (mask & (1 << slot)) != 0;
             emit(context, patches, INDICATORS.get(slot * 2 + (occupied ? 1 : 0)), orientation);
-            emit(context, patches, (occupied ? ((kinds>>>(slot*2)&3)==3?BATTERY_SLOTS.get(levels[slot]):(kinds>>>(slot*2)&3)==2?AUTOPILOT_SLOTS:SLOTS) : EMPTY_SLOTS).get(slot), orientation);
+            emit(context, patches, (occupied ? ((kinds & (1<<(slot+8)))!=0?AUTOPILOT_SLOTS:(kinds>>>(slot*2)&3)==3?BATTERY_SLOTS.get(levels[slot]):(kinds>>>(slot*2)&3)==2?ROUTE_SLOTS:SLOTS) : EMPTY_SLOTS).get(slot), orientation);
         }
         prepared = patches.toArray(new RenderPatch[0]);
         if(cache.size()>=64)cache.remove(cache.keySet().iterator().next());

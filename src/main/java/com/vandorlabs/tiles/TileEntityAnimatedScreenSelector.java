@@ -64,7 +64,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public boolean splitRedstoneSelected(int slot){return slot>=SPLIT_TOP&&slot<REDSTONE_SLOTS
         &&redstoneSplitConfigured()&&FrameAppearance.redstoneSplit(splitChoice(slot));}
     public boolean hasVehicleStatusControls(int slot){
-        return hasSplitVehiclePanel(slot)?FrameAppearance.statusSplit(frameAppearance.splitTop)||FrameAppearance.statusSplit(frameAppearance.splitBottom):hasVehicleStatus(slot);
+        return hasSplitVehiclePanel(slot)?FrameAppearance.statusSplit(frameAppearance.splitTop)||FrameAppearance.statusSplit(frameAppearance.splitBottom):VehicleInstrument.interactive(getSurfaceTexture(slot));
     }
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[REDSTONE_SLOTS];
     private RedstoneScreenContents[] controls=NO_CONTROLS;

@@ -45,8 +45,8 @@ public final class CanopyDisplayHit {
             for(int i=1;i<face.vertices.length-1;i++){
                 double[] pixel=pixel(face,i,i+1,local,eye);
                 if(pixel==null)continue;
-                if(face.display!=VehicleInstrument.STATUS)return !emergencyOnly;
-                int action=VehicleStatus.panelAction(height(face),pixel[0],pixel[1]);
+                if(!VehicleInstrument.interactive(face.display.choice))return !emergencyOnly;
+                int action=VehicleStatus.panelAction(face.display.choice,height(face),pixel[0],pixel[1]);
                 if(emergencyOnly!=(action==VehicleStatus.EMERGENCY_PARK_ACTION))return false;
                 if(action>=0)VehicleStatus.activate(root.getWorld(),root.getPos(),player,action);
                 return true;

@@ -594,7 +594,8 @@ tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 tile.vandorlabs.module_rack.name=Module Rack
 item.vandorlabs.blank_module.name=Blank Module
-item.vandorlabs.autopilot_module.name=Autopilot Module
+item.vandorlabs.autopilot_module.name=Autonavigation Module
+item.vandorlabs.speed_autopilot_module.name=Autopilot Module
 message.vandorlabs.module_rack.inventory_full=Make room in your inventory to remove this module.
 
 tile.vandorlabs.redstone_transmitter_block.name=Redstone Transmitter Block

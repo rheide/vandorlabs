@@ -108,6 +108,7 @@ public final class VehicleStructure {
     }
     public final List<Cell> cells;
     final List<Cell> maxwellCells;
+    public final boolean speedModule;
     public final BlockPos seat;
     public final EnumFacing facing;
     public final int gearCount;
@@ -213,6 +214,7 @@ public final class VehicleStructure {
         Map<BlockPos,Cell> positions=new LinkedHashMap<>();
         List<BlockPos> seats=new ArrayList<>(),passengers=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>(),couplerCells=new ArrayList<>();
         List<Cell> drives=Collections.emptyList();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
+        boolean speedModule=false;
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
             if(cell.tile!=null&&cell.tile.hasKey("ForgeData",10)&&cell.tile.getCompoundTag("ForgeData").hasKey(VehiclePaintings.KEY,9)){NBTTagList list=cell.tile.getCompoundTag("ForgeData").getTagList(VehiclePaintings.KEY,10);for(int i=0;i<list.tagCount();i++){if(paintingData.tagCount()>=64)throw new IllegalArgumentException("Too many vehicle paintings");paintingData.appendTag(list.getCompoundTagAt(i).copy());}}
@@ -226,6 +228,13 @@ public final class VehicleStructure {
             if(control==null&&cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)control=cell;
             if(com.vandorlabs.blocks.BlockNonWheeledLandingGear.forbidsTaxi(cell.state.getBlock()))nonWheeled=true;
             net.minecraft.block.Block gear=cell.state.getBlock();
+            if(gear instanceof com.vandorlabs.blocks.BlockModuleRack && cell.tile!=null){
+                NBTTagList items=cell.tile.getTagList("Items",10);
+                for(int i=0;i<items.tagCount();i++){
+                    NBTTagCompound item=items.getCompoundTagAt(i);
+                    if(com.vandorlabs.rack.ModuleRackPolicy.SPEED_ID.equals(item.getString("id")) && item.getByte("Count")>0 && (item.getByte("Slot")&255)<4)speedModule=true;
+                }
+            }
             if(gear instanceof com.vandorlabs.blocks.BlockConstructorCore&&com.vandorlabs.drives.MaxwellEngine.DESIGN.equals(((com.vandorlabs.blocks.BlockConstructorCore)gear).design)){
                 if(drives.isEmpty())drives=new ArrayList<>();
                 drives.add(cell);
@@ -244,6 +253,7 @@ public final class VehicleStructure {
             throw new IllegalArgumentException("Missing pilot seat");
         this.splitComponents=cells.stream().filter(c->c.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController).limit(2).count()>1;
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
+        this.speedModule=speedModule;
         this.maxwellCells=drives.isEmpty()?drives:Collections.unmodifiableList(drives);
         this.pilotSeats=Collections.unmodifiableList(seats);this.passengerSeats=Collections.unmodifiableList(passengers);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.couplers=Collections.unmodifiableList(couplerCells);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);this.displayOnly=displayOnly;

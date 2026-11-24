@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.screen.VehicleStatusLayout;
+import com.vandorlabs.screen.SpeedAutopilotPanel;
 import com.vandorlabs.screen.VehicleInstrument;
 import com.vandorlabs.vehicle.VehicleStatus;
 
@@ -104,7 +105,37 @@ final class RedstoneScreenRenderer {
     static void drawVehicleSelection(VehicleInstrument instrument, net.minecraft.world.World world,
                                      net.minecraft.util.math.BlockPos pos, int height){
         if(instrument==VehicleInstrument.STATUS)drawVehicleContents(world,pos,height);
+        else if(instrument==VehicleInstrument.AUTOPILOT)drawSpeedPanel(world,height);
         else if(instrument!=null)VehicleInstrumentRenderer.draw(instrument,world,pos,height);
+    }
+    private static void drawSpeedPanel(net.minecraft.world.World world,int height){
+        com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;
+        boolean installed=craft!=null&&craft.structure!=null&&craft.structure.speedModule;
+        boolean available=installed&&craft.canHoldSpeed();
+        int selected=installed?craft.speedHoldSetting():0;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
+        GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+        bindWhite();BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+        buffer.begin(7,BlockSurfaceFormat.get());rect(buffer,0,0,128,height,0,0xff14212e);
+        for(int action=SpeedAutopilotPanel.TOGGLE;action<=SpeedAutopilotPanel.INCREASE;action++)
+            rect(buffer,SpeedAutopilotPanel.left(action),SpeedAutopilotPanel.top(action,height),
+                    SpeedAutopilotPanel.right(action),SpeedAutopilotPanel.bottom(action,height),.01,
+                    !available?0xff3c4148:action==SpeedAutopilotPanel.TOGGLE&&selected>0?0xff26886c:0xff345d74);
+        Tessellator.getInstance().draw();
+        FontRenderer font=Minecraft.getMinecraft().fontRenderer;
+        String title=!installed?"Autopilot Module required":!available?"Powered Flight required":"SPEED AUTOPILOT";
+        statusText(font,title,6,3,116,0xffffff);
+        String target=selected==0?"---":oneDecimal(Math.abs(selected)/10D);
+        statusText(font,"SET "+target+" kb/h",6,height/4-4,116,0x9cf8df);
+        if(height>=96&&craft!=null)statusText(font,"IAS "+oneDecimal(Math.abs(craft.driveSpeed)*72)+" kb/h",6,15,116,0xe1eeff);
+        for(int action=SpeedAutopilotPanel.TOGGLE;action<=SpeedAutopilotPanel.INCREASE;action++){
+            String label=action==SpeedAutopilotPanel.TOGGLE?(selected>0?"Autopilot ON":"Autopilot OFF"):
+                    action==SpeedAutopilotPanel.CAPTURE?"Lock IAS":action==SpeedAutopilotPanel.INCREASE?"+10":"-10";
+            int x=(SpeedAutopilotPanel.left(action)+SpeedAutopilotPanel.right(action)-font.getStringWidth(label))/2;
+            int y=(SpeedAutopilotPanel.top(action,height)+SpeedAutopilotPanel.bottom(action,height))/2-4;
+            text(font,label,x,y,available?0xffffff:0x9aa9af);
+        }
+        GlStateManager.disableBlend();
     }
     static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height){
         boolean missing=!VehicleStatus.hasController(world,pos);
@@ -155,7 +186,7 @@ final class RedstoneScreenRenderer {
                 motion=state+"  "+oneDecimal(Math.abs(craft.driveSpeed)*72)+" kb/h";
             }
             if(autopilot!=null){
-                statusText(font,on?"AUTOPILOT ON":"Autopilot OFF",8,layout.autopilotTop+2,112,on?0x072D24:0xFFFFFF);
+                statusText(font,on?"AUTONAV ON":"Autonav OFF",8,layout.autopilotTop+2,112,on?0x072D24:0xFFFFFF);
                 statusText(font,"Next >",8,layout.footerTop+2,38,0xFFFFFF);
             }else if(compact)statusText(font,flightTelemetry?motion:name,8,3,112,0xE1EEFF);
             if(emergency)statusText(font,"Emergency Park",55,layout.footerTop+2,64,0xFFFFFF);

@@ -173,9 +173,9 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         boolean bottom=screen.split&&uv[1]<.5;
         if(screen.split){nearest=nearest.half(bottom);uv[1]=uv[1]*2-(bottom?0:1);}
         int choice=screen.choice(bottom);
-        if(choice==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){
+        if(com.vandorlabs.screen.VehicleInstrument.interactive(choice)){
             int height=screen.split||"touch".equals(nearest.role)?64:128;
-            int action=com.vandorlabs.vehicle.VehicleStatus.panelAction(height,uv[0]*128,(1-uv[1])*height);
+            int action=com.vandorlabs.vehicle.VehicleStatus.panelAction(choice,height,uv[0]*128,(1-uv[1])*height);
             if(emergencyOnly!=(action==com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION))return false;
             if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);
             return true;

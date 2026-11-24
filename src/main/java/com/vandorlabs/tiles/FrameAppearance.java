@@ -33,7 +33,7 @@ public final class FrameAppearance {
     public static boolean redstoneSplit(int choice){return choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;}
     public static boolean interactiveSplit(int choice){return redstoneSplit(choice)||vehicleSplit(choice);}
     public static boolean vehicleSplit(int choice){return com.vandorlabs.screen.VehicleInstrument.includes(choice);}
-    public static boolean statusSplit(int choice){return choice==com.vandorlabs.screen.VehicleInstrument.STATUS.choice;}
+    public static boolean statusSplit(int choice){return com.vandorlabs.screen.VehicleInstrument.interactive(choice);}
     public static boolean displayBlock(net.minecraft.block.Block block){
         return block.getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class
             ||block instanceof com.vandorlabs.blocks.BlockProgrammableFullInput

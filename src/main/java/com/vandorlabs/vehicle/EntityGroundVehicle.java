@@ -15,6 +15,24 @@ import net.minecraft.world.World;
 
 /** One persistent, ground craft. All movement decisions are server authoritative. */
 public final class EntityGroundVehicle extends Entity implements net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData {
+    // Tenths of a kiloblock per hour. A negative setpoint is selected but disengaged.
+    private static final net.minecraft.network.datasync.DataParameter<Integer> SPEED_HOLD=
+            net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.VARINT);
+    public boolean canHoldSpeed(){return structure!=null&&structure.speedModule&&flightPhase==POWERED_FLIGHT;}
+    public int speedHoldSetting(){return dataManager.get(SPEED_HOLD);}
+    void speedControl(int action){
+        if(!canHoldSpeed())return;
+        int current=speedHoldSetting();
+        int selected=Math.abs(current);
+        if(selected==0||action==com.vandorlabs.screen.SpeedAutopilotPanel.CAPTURE)
+            selected=(int)Math.round(Math.abs(driveSpeed)*720);
+        if(action==com.vandorlabs.screen.SpeedAutopilotPanel.INCREASE)selected+=100;
+        if(action==com.vandorlabs.screen.SpeedAutopilotPanel.DECREASE)selected-=100;
+        selected=MathHelper.clamp(selected,684,10800);
+        boolean on=action==com.vandorlabs.screen.SpeedAutopilotPanel.TOGGLE?current<=0:current>0;
+        dataManager.set(SPEED_HOLD,on?selected:-selected);
+    }
+    private void disengageSpeedHold(){if(speedHoldSetting()>0)dataManager.set(SPEED_HOLD,-speedHoldSetting());}
     private static final net.minecraft.network.datasync.DataParameter<Boolean> TRANSFERRING=
             net.minecraft.network.datasync.EntityDataManager.createKey(EntityGroundVehicle.class,net.minecraft.network.datasync.DataSerializers.BOOLEAN);
     private static final net.minecraft.network.datasync.DataParameter<Boolean> HOVER_EXHAUST=
@@ -168,6 +186,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     private boolean canResumeHover(){return VehicleFlight.canHover(structure)&&structure.activeThruster();}
     private void beginFlightRecovery(int phase){
+        disengageSpeedHold();
         if(phase==RETURN_HOVER&&flightPhase!=RETURN_HOVER)driveSpeed*=Math.cos(Math.toRadians(flightPitch));
         flightPhase=phase;
         cruisingRecovery|=cruise.active()||flightAltitude()>FlightEnvelope.WORLD_CEILING;
@@ -180,10 +199,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         velocityChanged=true;fallDistance=0;
     }
     void writeFlightMode(NBTTagCompound tag){
+        if(speedHoldSetting()!=0)tag.setInteger("SpeedHold",speedHoldSetting());
         if(flightPhase!=NO_FLIGHT){tag.setByte("MaxwellFlightPhase",(byte)flightPhase);tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);if(flightBank!=0)tag.setFloat("MaxwellFlightBank",flightBank);if(Float.isFinite(flightViewYaw))tag.setFloat("MaxwellFlightViewYaw",flightViewYaw);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
     }
     void readFlightMode(NBTTagCompound tag){
         flightPhase=MathHelper.clamp(tag.getByte("MaxwellFlightPhase"),NO_FLIGHT,GLIDING_FLIGHT);
+        int hold=tag.getInteger("SpeedHold");
+        dataManager.set(SPEED_HOLD,structure!=null&&structure.speedModule&&Math.abs((long)hold)>=684&&Math.abs((long)hold)<=10800 ? (canHoldSpeed()?hold:-Math.abs(hold)) : 0);
         flightRollRate=0;
         float savedViewYaw=tag.hasKey("MaxwellFlightViewYaw",5)?tag.getFloat("MaxwellFlightViewYaw"):rotationYaw;
         flightViewYaw=flying()?MathHelper.wrapDegrees(Float.isFinite(savedViewYaw)?savedViewYaw:rotationYaw):Float.NaN;
@@ -564,7 +586,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collisionCache.restart(view);
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
-    @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);FlightCabin.define(this);}
+    @Override protected void entityInit(){dataManager.register(SPEED_HOLD,0);dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);FlightCabin.define(this);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
@@ -858,6 +880,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double noseDown=Math.max(0,-pitch);
         double speed=gliding?.78+Math.min(.68,noseDown*.026)
                 :Math.max(.95,flightReadout.cruiseSpeed(altitude));
+        if(canHoldSpeed()&&speedHoldSetting()>0)speed=Math.min(speed,speedHoldSetting()/720D);
         double acceleration=gliding?.009:FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)
                 *AircraftAttitude.propulsion(pitch)*(1+speed/10);
         // Existing airspeed bleeds off gradually when the throttle or supported altitude falls.
@@ -987,6 +1010,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     private void finishFlight(boolean toHover) {finishFlight(toHover,0);}
     private void finishFlight(boolean toHover,double carrySpeed) {
+        disengageSpeedHold();
         cabin.clear();
         if(Float.isFinite(flightViewYaw))for(Entity passenger:getPassengers())
             if(passenger instanceof EntityPlayer)releasePilotView(passenger,rotationYaw);

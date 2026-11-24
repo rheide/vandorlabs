@@ -15,7 +15,7 @@ import java.io.File;
 final class VehicleStatusRenderChecks {
     static void instruments(Minecraft mc,File output)throws Exception{
         for(VehicleInstrument gauge:VehicleInstrument.values()){
-            if(gauge==VehicleInstrument.STATUS)continue;
+            if(VehicleInstrument.interactive(gauge.choice))continue;
             for(int height:new int[]{64,128}){
                 BufferedImage first=instrumentFrame(mc,height,()->VehicleInstrumentRenderer.drawFace(gauge,height,0,0,0,200,80,320));
                 BufferedImage second=instrumentFrame(mc,height,()->VehicleInstrumentRenderer.drawFace(gauge,height,24,35,115,2350,80,900));
@@ -36,12 +36,21 @@ final class VehicleStatusRenderChecks {
         require(craft.flightReadout().projectedSpeed(com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)>5,
                 "flight fixture computes a live instrument speed range above 100 m/s");
         for(VehicleInstrument gauge:VehicleInstrument.values()){
-            if(gauge==VehicleInstrument.STATUS)continue;
+            if(VehicleInstrument.interactive(gauge.choice))continue;
             BufferedImage image=instrumentFrame(mc,128,()->VehicleInstrumentRenderer.draw(gauge,craft.view,screen,128));
             javax.imageio.ImageIO.write(image,"png",new File(output,"shot_airborne-"+gauge.name().toLowerCase(java.util.Locale.ROOT)+".png"));
         }
     }
 
+    static void speedPanel(Minecraft mc,File output,EntityGroundVehicle craft,BlockPos screen,int height)throws Exception{
+        BufferedImage image=instrumentFrame(mc,height,()->RedstoneScreenRenderer.drawVehicleSelection(VehicleInstrument.AUTOPILOT,craft.view,screen,height));
+        for(int i=7;i<=10;i++){
+            int x=com.vandorlabs.screen.SpeedAutopilotPanel.left(i)+1,y=com.vandorlabs.screen.SpeedAutopilotPanel.top(i,height)+1;
+            int rgb=image.getRGB(x*4,y*4)&0xffffff;
+            require(rgb==(i==7&&craft.speedHoldSetting()>0?0x26886c:0x345d74),"enabled speed control "+i+" rendered at the clickable coordinates");
+        }
+        javax.imageio.ImageIO.write(image,"png",new File(output,"shot_autopilot-"+height+".png"));
+    }
     private static BufferedImage instrumentFrame(Minecraft mc,int height,Runnable render){
         Framebuffer frame=new Framebuffer(512,height*4,true);
         GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
