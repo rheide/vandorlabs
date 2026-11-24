@@ -44,9 +44,9 @@ final class VehicleInstrumentRenderer {
         VehiclePose pose = craft.visualPose(Minecraft.getMinecraft().getRenderPartialTicks());
         double ceiling = craft.dimension == 0 ? FlightEnvelope.MAX_ALTITUDE
                 : ((VehicleWorld)world).parent.getActualHeight() - craft.structure.bounds.maxY - 1;
-        double projected = craft.flightReadout().projectedSpeed(ceiling) * 20;
+        double projected = craft.flightReadout().projectedSpeed(ceiling) * 72;
         drawFace(instrument,height,pose.pitch,pose.bank,heading(craft.structure.facing,pose.yaw),
-                craft.flightAltitude(),Math.abs(craft.driveSpeed)*20,projected,frontGlass);
+                craft.flightAltitude(),Math.abs(craft.driveSpeed)*72,projected,frontGlass);
     }
 
     private static double heading(EnumFacing face, double yaw) {
@@ -123,8 +123,8 @@ final class VehicleInstrumentRenderer {
                 break;
             case AIRSPEED:
                 title = "AIRSPEED";
-                value = String.format(Locale.ROOT,"%,.0f m/s",speed);
-                unit = projectedMax > 0 ? String.format(Locale.ROOT,"MAX %,.0f",projectedMax) : "";
+                value = String.format(Locale.ROOT,"%,.1f kb/h",speed);
+                unit = projectedMax > 0 ? String.format(Locale.ROOT,"MAX %,.1f",projectedMax) : "";
                 scaleLabels(font,x,y,radius,compact,-135,270,new String[]{"0",Long.toString(Math.round(airspeedRange/2)),Long.toString(Math.round(airspeedRange))});
                 break;
             default:
@@ -168,7 +168,7 @@ final class VehicleInstrumentRenderer {
         double valueY=height*(frontGlass?.66:.43);
         hudLabel(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),headingX,headingY,34,1,green);
         hudLabel(font,"SPD",speedX,valueY-9,32,.8F,green);
-        hudLabel(font,Math.round(speed)+" m/s",speedX,valueY,34,1,green);
+        hudLabel(font,String.format(Locale.ROOT,"%.1f kb/h",speed),speedX,valueY,34,1,green);
         hudLabel(font,"ALT",altX,valueY-9,32,.8F,green);
         hudLabel(font,Math.round(altitude)+" m",altX,valueY,34,1,green);
         hudLabel(font,String.format(Locale.ROOT,"%+.0f°",pitch),headingX,height*(frontGlass?.38:.54),32,.85F,green);

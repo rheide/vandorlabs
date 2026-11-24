@@ -152,7 +152,7 @@ final class RedstoneScreenRenderer {
             String motion="";
             if(flightTelemetry){
                 String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.descendingToFlightLimit()?"Descending":craft.takeoffRoll()?"Takeoff roll":"Flight";
-                motion=state+"  "+oneDecimal(Math.abs(craft.driveSpeed)*20)+" m/s";
+                motion=state+"  "+oneDecimal(Math.abs(craft.driveSpeed)*72)+" kb/h";
             }
             if(autopilot!=null){
                 statusText(font,on?"AUTOPILOT ON":"Autopilot OFF",8,layout.autopilotTop+2,112,on?0x072D24:0xFFFFFF);

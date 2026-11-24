@@ -518,7 +518,7 @@ public final class VehicleClient {
             double projectedAltitude=readout.projectedAltitude(dimensionCeiling);
             String altitude=projectedAltitude>0?String.format(java.util.Locale.ROOT,"Y %,.0f",projectedAltitude):"Unavailable";
             double projectedSpeed=readout.projectedSpeed(dimensionCeiling);
-            String speed=projectedSpeed>0?String.format(java.util.Locale.ROOT,"%,.0f m/s",projectedSpeed*20):"Unavailable";
+            String speed=projectedSpeed>0?String.format(java.util.Locale.ROOT,"%,.1f kb/h",projectedSpeed*72):"Unavailable";
             fontRenderer.drawString("Projected max altitude: "+altitude,x,y+58,0xc4d0d8);
             fontRenderer.drawString("Projected max speed: "+speed,x,y+72,0xc4d0d8);
             if(!readout.canFly() && readout.thrust>0)haiku(x,y+89,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");

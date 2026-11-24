@@ -27,13 +27,13 @@ For recovery below the cruise band, Creative players holding a Configurizer can 
 
 ## Flight instruments
 
-In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and choose a display for that surface. **Status** keeps the mode controls and fuel readout. The **Attitude Indicator** shows pitch and bank, **Compass** shows heading, **Altimeter** shows elevation, and **Airspeed Indicator** shows speed in m/s. The airspeed dial scales to the craft’s projected maximum.
+In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and choose a display for that surface. **Status** keeps the mode controls and fuel readout. The **Attitude Indicator** shows pitch and bank, **Compass** shows heading, **Altimeter** shows elevation, and **Airspeed Indicator** shows speed in kiloblocks per hour (kb/h), to one decimal place. The airspeed dial scales to the craft’s projected maximum.
 
 On a full-height display, enable **Split display** and choose a **Vehicle Status** option on the **Top** or **Bottom** tab. **Status (Half)** keeps the clickable mode controls. Pair it with a compact instrument or regular artwork, or put a different instrument on each half.
 
 Canopy, Long Canopy, and Front Canopy glazing can also display these instruments. Use the canopy’s **Main** and **Side** tabs to choose each finish independently. Choose **Vehicle Status → HUD** for transparent heading, altitude, airspeed and an artificial horizon with pitch marks. The Side selection applies to both side panes and the short horizontal roof behind the Long Angled windshield. If framebuffers are disabled in your video settings, the pane displays ordinary glass until framebuffers are enabled.
 
-Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height. Top speed is **300 m/s** at Y=10,000 for aircraft with enough thrust, including in a dive.
+Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the normal powered Flight target is 108.0 kb/h. A light craft with one Maxwell can build toward 360.0 kb/h in the first part of its climb above that height. Top speed is **1,080.0 kb/h** at Y=10,000 for aircraft with enough thrust, including in a dive.
 
 ## Overworld cruise
 
