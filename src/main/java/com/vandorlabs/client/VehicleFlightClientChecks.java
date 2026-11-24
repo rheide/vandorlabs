@@ -51,6 +51,7 @@ final class VehicleFlightClientChecks {
     private static float cabinYaw;
     private static double hoverEntrySpeed;
     private static java.util.concurrent.Future<?> runwayStep;
+    private static PoweredLanding poweredLanding;
     private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
@@ -507,6 +508,8 @@ final class VehicleFlightClientChecks {
                     world(mc).setBlockState(p,Blocks.CONCRETE.getDefaultState(),2);
                 }
                 stageAttitude(actual,-5,0);
+                poweredLanding=new PoweredLanding(actual,runwayY);
+                net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(poweredLanding);
             });
             next();return false;
         }
@@ -516,28 +519,54 @@ final class VehicleFlightClientChecks {
             runwayStep.get();
             if(!craft.flying()){
                 KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-                runwayStep=mc.getIntegratedServer().addScheduledTask(()->{
-                    EntityGroundVehicle actual=server(mc);
-                    need(actual.vehicleMode()==1&&actual.onGround&&actual.flightPitch()==0&&actual.flightBank()==0
-                                    &&Math.abs(actual.getEntityBoundingBox().minY-runwayY)<.02&&actual.driveSpeed>.45,
-                            "server wheel contact and rollout: "+flightState(actual)+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
-                    landingZ=actual.posZ;
-                    System.out.println("[vandorlabs] powered runway contact speed="+actual.driveSpeed+" bottom="+actual.getEntityBoundingBox().minY+" runway="+runwayY);
-                });
                 next();return false;
             }
             return false;
         }
         if(stage==24){
             need(frame<75,"server sampled powered wheel contact");
-            if(frame<9||!runwayStep.isDone())return false;
-            runwayStep.get();
-            need(craft.posZ<landingZ-2&&Math.abs(craft.getEntityBoundingBox().minY-runwayY)<.15,
+            if(frame<9||!poweredLanding.done)return false;
+            need(poweredLanding.failure==null,poweredLanding.failure);
+            need(craft.posZ<poweredLanding.contactZ-2&&Math.abs(craft.getEntityBoundingBox().minY-runwayY)<.15,
                     "forward rollout settles on runway with no embeds: "+flightState(craft)+" bottom="+craft.getEntityBoundingBox().minY+" runway="+runwayY);
             System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank sustained-roll cabin-locked-camera carried-ray steep-trim powered-throttle-limit forward-glide reentry exact-clearance touchdown terrain-impact hover-coast powered-wheel-touchdown forward-rollout");
             return true;
         }
         return false;
+    }
+
+    public static final class PoweredLanding {
+        final EntityGroundVehicle craft;
+        final double ground;
+        volatile boolean done;
+        String failure;
+        double contactZ,approachSpeed;
+        int rolloutTicks;
+
+        PoweredLanding(EntityGroundVehicle craft,double ground){
+            this.craft=craft;this.ground=ground;
+            approachSpeed=craft.driveSpeed;
+        }
+        @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+        public void tick(net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent event){
+            if(event.world!=craft.world||event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
+            if(craft.flying()){approachSpeed=craft.driveSpeed;return;}
+            double bottom=craft.getEntityBoundingBox().minY;
+            if(rolloutTicks++==0){
+                contactZ=craft.posZ;
+                if(craft.driveSpeed<approachSpeed*.85||craft.driveSpeed<=.45||craft.vehicleMode()!=1||
+                        !craft.onGround||craft.flightPitch()!=0||craft.flightBank()!=0||Math.abs(bottom-ground)>.02)
+                    failure="server contact "+flightState(craft)+" grounded="+craft.onGround+" bottom="+bottom+" runway="+ground+" approach="+approachSpeed;
+                System.out.println("[vandorlabs] powered runway approach="+approachSpeed+" contact="+craft.driveSpeed+" bottom="+bottom+" runway="+ground);
+            }
+            if(rolloutTicks<7)return;
+            double distance=contactZ-craft.posZ;
+            if(failure==null&&(distance<2||Math.abs(bottom-ground)>.02||!craft.onGround))
+                failure="server six-tick rollout distance="+distance+" bottom="+bottom+" runway="+ground+" "+flightState(craft);
+            System.out.println("[vandorlabs] powered runway six-tick rollout="+distance+" speed="+craft.driveSpeed+" bottom="+bottom);
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(this);
+            done=true;
+        }
     }
 
     private static Vec3d cameraLook(Matrix4f inverse){return new Vec3d(-inverse.m20,-inverse.m21,-inverse.m22);}
