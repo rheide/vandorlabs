@@ -22,6 +22,7 @@ final class FlightCabin {
             EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.COMPOUND_TAG);
     private final EntityGroundVehicle craft;
     private final Map<UUID,Walker> walkers=new HashMap<>();
+    private final Map<EntityPlayerMP,Long> lastToggle=new java.util.WeakHashMap<>();
 
     private static final class Walker {
         Vec3d feet,previous,rendered;
@@ -116,7 +117,10 @@ final class FlightCabin {
     }
 
     boolean toggle(EntityPlayerMP player) {
-        if(craft.transferInProgress||!craft.flying()||player.getRidingEntity()!=craft)return false;
+        if(craft.transferInProgress||!craft.flying()||player.getRidingEntity()!=craft||player.isSpectator()||player.isDead)return false;
+        long tick=craft.world.getTotalWorldTime();
+        Long prior=lastToggle.put(player,tick);
+        if(prior!=null&&prior==tick)return false;
         BlockPos seat=craft.seatForPassenger(player);
         if(walking(player))return craft.board(player,seat);
         if(!craft.poweredFlight()||craft.collision==null)return false;

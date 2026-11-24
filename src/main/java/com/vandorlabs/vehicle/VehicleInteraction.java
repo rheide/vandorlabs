@@ -57,7 +57,7 @@ public final class VehicleInteraction {
         if(target!=null&&target.craft.walkingInCabin(player)&&!player.getHeldItemMainhand().isEmpty()
                 &&player.getHeldItemMainhand().getItem()!=ModItems.CONFIGURIZER){
             if(target.hit.action!=VehicleSelection.Action.DOOR)return false;
-            net.minecraft.tileentity.TileEntity tile=target.craft.view.getTileEntity(target.hit.cell.pos);
+            net.minecraft.tileentity.TileEntity tile=doorTile(target);
             if(!(tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)
                     ||!((com.vandorlabs.tiles.TileEntitySpaceDoor)tile).holdingCredential(player,EnumHand.MAIN_HAND))return false;
         }
@@ -74,6 +74,16 @@ public final class VehicleInteraction {
     }
     public static boolean reversibleThruster(EntityPlayer player,Target target){
         return player.isCreative()&&target!=null&&target.craft.view!=null&&VehicleSignals.thruster(target.craft.view,target.hit.cell.pos);
+    }
+    private static net.minecraft.tileentity.TileEntity doorTile(Target target){
+        BlockPos pos=target.hit.cell.pos;
+        VehicleWorld view=target.craft.view;
+        if(target.hit.cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor)
+            return ((com.vandorlabs.blocks.BlockLargeProgrammableDoor)target.hit.cell.state.getBlock()).root(view,pos);
+        if(target.hit.cell.state.getProperties().containsKey(net.minecraft.block.BlockDoor.HALF)
+                &&target.hit.cell.state.getValue(net.minecraft.block.BlockDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER)
+            pos=pos.down();
+        return view.getTileEntity(pos);
     }
     private static boolean canopyAction(Target target){
         com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(target.craft.view,target.hit.cell.pos);
@@ -146,9 +156,7 @@ public final class VehicleInteraction {
             return true;
         }
         if(target.hit.action==VehicleSelection.Action.DOOR) {
-            BlockPos position=target.hit.cell.pos;net.minecraft.tileentity.TileEntity door=craft.view.getTileEntity(position);
-            if(target.hit.cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor)door=((com.vandorlabs.blocks.BlockLargeProgrammableDoor)target.hit.cell.state.getBlock()).root(craft.view,position);
-            else if(target.hit.cell.state.getProperties().containsKey(net.minecraft.block.BlockDoor.HALF)&&target.hit.cell.state.getValue(net.minecraft.block.BlockDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER)door=craft.view.getTileEntity(position.down());
+            net.minecraft.tileentity.TileEntity door=doorTile(target);
             if(door instanceof com.vandorlabs.tiles.TileEntitySpaceDoor&&((com.vandorlabs.tiles.TileEntitySpaceDoor)door).securityMode()>0){com.vandorlabs.tiles.TileEntitySpaceDoor secure=(com.vandorlabs.tiles.TileEntitySpaceDoor)door;if(secure.readerHit(target.hit.local.hitVec,target.hit.local.sideHit)||secure.holdingCredential(player,net.minecraft.util.EnumHand.MAIN_HAND)){int side=secure.readerIndex(target.hit.local.hitVec);if(!secure.useSecurity(player,net.minecraft.util.EnumHand.MAIN_HAND,side))secure.useSecurity(player,net.minecraft.util.EnumHand.OFF_HAND,side);}return true;}
             if(!VehicleDoors.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This door has an incomplete captured group.");
             return true;
