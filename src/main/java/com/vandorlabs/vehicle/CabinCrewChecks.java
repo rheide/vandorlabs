@@ -21,6 +21,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /** Both riders connect and send normal keyboard and interaction packets through their own Minecraft clients. */
+@net.minecraftforge.fml.relauncher.SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class CabinCrewChecks {
     static final BlockPos CHAIR=new BlockPos(4,1,0), SPARE=new BlockPos(3,1,3);
