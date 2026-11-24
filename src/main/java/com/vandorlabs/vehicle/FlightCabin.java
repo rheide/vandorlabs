@@ -108,7 +108,8 @@ final class FlightCabin {
             Vec3d point=feet(row);
             double vertical=row.getDouble("Vertical");
             if(!Double.isFinite(point.x)||!Double.isFinite(point.y)||!Double.isFinite(point.z)||!Double.isFinite(vertical))continue;
-            if(!craft.collision.bounds.grow(2).contains(point)||!craft.collision.clearBody(point.x,point.z,point.y+.0001,.3,1.7998))continue;
+            AxisAlignedBB body=new AxisAlignedBB(point.x-.3,point.y,point.z-.3,point.x+.3,point.y+1.8,point.z+.3);
+            if(!craft.collision.bounds.grow(0,2,0).intersects(body)||!craft.collision.clearBody(point.x,point.z,point.y+.0001,.3,1.7998))continue;
             Walker walker=new Walker(point);
             walker.vertical=Math.max(-3.92,Math.min(.42,vertical));
             walkers.put(row.getUniqueId("Walker"),walker);
