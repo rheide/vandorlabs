@@ -220,7 +220,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     void readFlightMode(NBTTagCompound tag){
         flightPhase=MathHelper.clamp(tag.getByte("MaxwellFlightPhase"),NO_FLIGHT,GLIDING_FLIGHT);
         int hold=tag.getInteger("SpeedHold");
-        dataManager.set(SPEED_HOLD,structure!=null&&structure.speedModule&&Math.abs((long)hold)>=684&&Math.abs((long)hold)<=10800 ? (canHoldSpeed()?hold:-Math.abs(hold)) : 0);
+        dataManager.set(SPEED_HOLD,Math.abs((long)hold)>=684&&Math.abs((long)hold)<=10800 ? (flightPhase==POWERED_FLIGHT?hold:-Math.abs(hold)) : 0);
         flightRollRate=0;
         float savedViewYaw=tag.hasKey("MaxwellFlightViewYaw",5)?tag.getFloat("MaxwellFlightViewYaw"):rotationYaw;
         flightViewYaw=flying()?MathHelper.wrapDegrees(Float.isFinite(savedViewYaw)?savedViewYaw:rotationYaw):Float.NaN;
@@ -557,6 +557,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     void install(VehicleStructure snapshot,VehicleCollision prepared) {
         VehiclePaintings.entries(snapshot);
+        if(!snapshot.speedModule&&speedHoldSetting()!=0)dataManager.set(SPEED_HOLD,0);
         for(VehicleStructure.Cell cell:snapshot.cells){NBTTagCompound data=cell.tileData();if(data!=null&&data.hasKey(com.vandorlabs.gear.GearTaxiState.KEY,10))com.vandorlabs.gear.GearTaxiState.validate(data.getCompoundTag(com.vandorlabs.gear.GearTaxiState.KEY));}
         VehicleAnimationDiagnostics.selectInstall(this);long installSample=VehicleAnimationDiagnostics.start(this);
         VehicleCanopies.forget(this);
