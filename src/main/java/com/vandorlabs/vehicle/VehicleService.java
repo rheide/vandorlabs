@@ -100,7 +100,7 @@ public final class VehicleService {
         if(event.isMounting() || !(event.getEntityMounting() instanceof EntityPlayerMP) || !(event.getEntityBeingMounted() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityBeingMounted();EntityPlayerMP player=(EntityPlayerMP)event.getEntityMounting();
         if(craft.teleportingPassenger==player)return;
-        if(craft.flying()&&!craft.flightLanded()&&!craft.transferInProgress&&!craft.isDead&&!player.isDead&&player.connection.netManager.isChannelOpen()){
+        if(craft.flying()&&!craft.flightDismount&&!craft.flightLanded()&&!craft.transferInProgress&&!craft.isDead&&!player.isDead&&player.connection.netManager.isChannelOpen()){
             event.setCanceled(true);return;
         }
         if(craft.hover && player.isSneaking() && !craft.flightDismount && !craft.transferInProgress){event.setCanceled(true);return;}

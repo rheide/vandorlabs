@@ -301,10 +301,13 @@ public final class VehicleCollision {
                     floor=Math.max(floor,box.maxY);
         }
         if(!Double.isFinite(floor))return floor;
-        AxisAlignedBB body=new AxisAlignedBB(x-radius,floor+.0001,z-radius,x+radius,floor+height,z+radius);
+        return clearBody(x,z,floor+.0001,radius,height-.0001) ? floor : Double.NaN;
+    }
+    boolean clearBody(double x,double z,double y,double radius,double height) {
+        AxisAlignedBB body=new AxisAlignedBB(x-radius,y,z-radius,x+radius,y+height,z+radius);
         for(Cluster cluster:clusters)if(cluster.bounds.intersects(body))
-            for(AxisAlignedBB box:cluster.boxes)if(box.intersects(body))return Double.NaN;
-        return floor;
+            for(AxisAlignedBB box:cluster.boxes)if(box.intersects(body))return false;
+        return true;
     }
     private float boundedYaw=Float.NaN;private AxisAlignedBB bounded;
     public AxisAlignedBB bounds(float yaw){

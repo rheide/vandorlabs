@@ -238,6 +238,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         VehicleNetwork.state(this);
     }
+    public boolean walkingInCabin(Entity rider){return cabin.walking(rider);}
     public boolean flightDismount;
     void toggleCabin(EntityPlayerMP player){
         if(cabin.toggle(player)){
@@ -375,7 +376,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     Vec3d interactionEye(Entity passenger){
         VehiclePose pose=world.isRemote?visualPose(1):flightPose();
-        return pose.tilted()?seatEye(pose,passenger,world.isRemote?1:0):passenger.getPositionEyes(1);
+        return pose.tilted()||cabin.walking(passenger)?seatEye(pose,passenger,world.isRemote?1:0):passenger.getPositionEyes(1);
     }
     Vec3d interactionLook(Vec3d look){
         VehiclePose pose=world.isRemote?visualPose(1):flightPose();
@@ -632,6 +633,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean board(EntityPlayer player,BlockPos seat) {
         if(world.isRemote || isDead || ownershipBlocked || structure==null || player.isSpectator()
                 || player.isDead || player.world!=world || player.getRidingEntity()==this || !structure.passengerSeats().contains(seat))return false;
+        // Airborne dismounts require an explicit geographic exit. A boarding request
+        // cannot transfer an attached walker between unrelated anchored flight routes.
+        if(player.getRidingEntity() instanceof EntityGroundVehicle && ((EntityGroundVehicle)player.getRidingEntity()).flying())return false;
         for(Entity passenger:getPassengers())if(seatForPassenger(passenger).equals(seat))return false;
         boolean first=getControllingPassenger()==null&&structure.pilotSeats().contains(seat);assignSeat(player,seat);
         if(!player.startRiding(this)){assignSeat(player,null);return false;}
@@ -645,7 +649,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
-            Vec3d at=seatPosition(world.isRemote?visualPose(1):flightPose(),passenger,world.isRemote&&articulation.active()?1:0);
+            Vec3d at=seatPosition(world.isRemote?visualPose(1):flightPose(),passenger,world.isRemote&&(cabin.walking(passenger)||articulation.active())?1:0);
             passenger.setPosition(at.x,at.y,at.z);
             if(world.isRemote) {
                 Vec3d before=seatPosition(visualPose(0),passenger,-1);
@@ -666,6 +670,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(world.isRemote || collision==null || VehicleTransfer.isMutating(world) || passenger==teleportingPassenger)return;
         if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
         else if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
+        if(flightDismount && flying())return; // FlightCabin places the rider at the geographic exit.
         if(cruise.projected()) { cruise.riderLeft(passenger);return; }
         Vec3d exit=null;
         if(exitSeat!=null){Vec3d near=toWorld(new Vec3d(exitSeat).addVector(.5,0,.5));AxisAlignedBB seatArea=new AxisAlignedBB(near.x-.5,near.y,near.z-.5,near.x+.5,near.y+2,near.z+.5);exit=com.vandorlabs.entity.SafeDismount.findNear(world,passenger,seatArea,near);}
@@ -715,7 +720,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!world.isRemote&&VehicleCouplings.preparingArmRelease(this)){super.onUpdate();VehicleCouplings.pollArmReleaseInputs(this);return;}
         if(transferInProgress){motionX=motionY=motionZ=0;return;}
         super.onUpdate();rotationPitch=prevRotationPitch=0;
-        if(world.isRemote)articulation.clientTick();
+        if(world.isRemote){articulation.clientTick();cabin.clientTick();}
         if(rampGeometryUpgradePending&&!world.isRemote&&structure!=null){rampGeometryUpgradePending=false;VehicleRamps.upgradeLoadedGeometry(this);rampGeometryUpgradePending=false;}
         long animationSample=VehicleAnimationDiagnostics.start(this);
         if(animationSample!=0&&view!=null){int gear=0;for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityLandingGear){com.vandorlabs.tiles.TileEntityLandingGear tile=(com.vandorlabs.tiles.TileEntityLandingGear)raw;if(tile.progress!=tile.previous)gear++;}VehicleAnimationDiagnostics.value((world.isRemote?"client/":"server/")+"moving-gear-count",gear);}

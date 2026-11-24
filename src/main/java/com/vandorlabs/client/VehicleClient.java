@@ -202,11 +202,13 @@ public final class VehicleClient {
         int jumpInterval=mc.player.ticksExisted-lastJump;
         boolean toggle=jump && !jumpDown && jumpInterval>=0 && jumpInterval<=7;
         if(jump && !jumpDown)lastJump=toggle?-100:mc.player.ticksExisted;
+        boolean jumpPressed=jump&&!jumpDown;
         jumpDown=jump;
         VehicleNetwork.Packet flight=new VehicleNetwork.Packet(VehicleNetwork.FLIGHT);flight.entity=p.entity;flight.token=p.token;
         boolean exitGesture=mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()&&mc.gameSettings.keyBindSneak.isKeyDown();
         if(entity.hover && !entity.flying() && exitGesture)flight.sequence=1;
         if(entity.flying() && driver && exitGesture && !cabinGesture)flight.sequence=2;
+        if(entity.walkingInCabin(mc.player)&&jumpPressed&&!exitGesture)flight.sequence=3;
         cabinGesture=exitGesture;
         flight.strafe=(byte)(driver&&mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()?1:0);
         flight.flag=driver&&toggle;flight.forward=driver?(byte)((jump?1:0)-(mc.currentScreen==null && mc.gameSettings.keyBindSneak.isKeyDown()?1:0)):0;

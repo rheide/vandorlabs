@@ -17,8 +17,7 @@ final class FlightCabin {
             EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.COMPOUND_TAG);
     private final EntityGroundVehicle craft;
     private UUID walker;
-    private Vec3d feet, previous;
-    private int updatedAt;
+    private Vec3d feet, previous, rendered;
     private long lastToggle = Long.MIN_VALUE;
 
     FlightCabin(EntityGroundVehicle craft) { this.craft = craft; }
@@ -31,19 +30,31 @@ final class FlightCabin {
         if (!POSITION.equals(key)) return;
         NBTTagCompound position = craft.getDataManager().get(POSITION);
         UUID next = position.hasUniqueId("Walker") ? position.getUniqueId("Walker") : null;
-        previous = next != null && next.equals(walker) ? feet : null;
+        boolean same = next != null && next.equals(walker);
         walker = next;
         feet = next == null ? null : new Vec3d(position.getDouble("X"), position.getDouble("Y"), position.getDouble("Z"));
-        updatedAt = craft.ticksExisted;
+        if (!same) previous = rendered = feet;
     }
 
     boolean walking(Entity rider) { return rider != null && rider.getUniqueID().equals(walker); }
 
+    // Metadata can arrive in batches. Consume the latest destination once per simulation
+    // tick and interpolate two stable endpoints for every camera frame in that tick.
+    void clientTick() {
+        if (feet == null) return;
+        previous = rendered;
+        Vec3d delta = feet.subtract(rendered);
+        double distance = delta.lengthVector();
+        // Blend over successive ticks so a quiet tick between two network updates
+        // still advances the same step. Snap the final subpixel when stopped.
+        rendered = distance < .001 ? feet : rendered.add(delta.scale(Math.min(.55,.32/distance)));
+    }
+
     Vec3d position(Entity rider, float partial) {
         if (!walking(rider)) return null;
-        if (!craft.world.isRemote || previous == null || craft.ticksExisted > updatedAt + 1) return feet;
+        if (!craft.world.isRemote || previous == null) return feet;
         float t = Math.max(0, Math.min(1, partial));
-        return previous.add(feet.subtract(previous).scale(t));
+        return previous.add(rendered.subtract(previous).scale(t));
     }
 
     void clear() {
@@ -102,7 +113,7 @@ final class FlightCabin {
             return false;
         }
         set(player.getUniqueID(), best);
-        player.sendStatusMessage(new TextComponentString("Cabin walk. Use movement keys to walk. Sprint + Sneak returns to the pilot seat."), true);
+        player.sendStatusMessage(new TextComponentString("Cabin walk. Use movement keys to walk. Click your seat to return. Face an open deck edge and jump to leave."), true);
         return true;
     }
 
@@ -116,6 +127,34 @@ final class FlightCabin {
         if (target == null) target = step(player,x,feet.z);
         if (target == null || feet.equals(target)) target = step(player,feet.x,z);
         if (target != null && !feet.equals(target)) set(walker,target);
+    }
+
+    void jumpOff(EntityPlayerMP player) {
+        if (!walking(player) || player.getRidingEntity() != craft || !craft.flying() || craft.transferInProgress) return;
+        double angle = Math.toRadians(player.rotationYaw - craft.pilotViewReference(craft.flightPose()));
+        double dx = -Math.sin(angle), dz = Math.cos(angle);
+        double radius = player.width / 2;
+        // Walk the body through the opening. Only detach beyond the lip, with the
+        // entire player clear and unsupported; a seat, hatch or roof can block exit.
+        for (int i = 1; i <= 6; i++) {
+            double distance = i * .20;
+            double x = feet.x + dx * distance, z = feet.z + dz * distance;
+            if (!craft.collision.clearBody(x,z,feet.y+.001,radius,player.height+.42)) break;
+            if (Double.isFinite(craft.collision.deckHeight(x,z,feet.y-.61,feet.y+.01,radius,player.height))) continue;
+            if (!craft.collision.clearBody(x,z,feet.y-.16,radius,player.height+.58)) continue;
+            Vec3d exit = craft.toWorld(new Vec3d(x,feet.y+.12,z));
+            exit = exit.addVector(craft.cruise.x()-craft.posX,craft.flightAltitude()-craft.posY,craft.cruise.z()-craft.posZ);
+            craft.flightDismount = true;
+            try { player.dismountRidingEntity(); } finally { craft.flightDismount = false; }
+            if (player.isRiding()) return;
+            VehicleNetwork.releaseTeleportedRider(player,craft);
+            player.connection.setPlayerLocation(exit.x,exit.y,exit.z,player.rotationYaw,player.rotationPitch);
+            player.motionY = .42;
+            player.fallDistance = 0;
+            player.velocityChanged = true;
+            return;
+        }
+        player.sendStatusMessage(new TextComponentString("Face an open edge of the flight deck to jump off."),true);
     }
 
     private Vec3d step(Entity player, double x, double z) {
