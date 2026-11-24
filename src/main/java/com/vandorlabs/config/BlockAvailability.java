@@ -35,7 +35,7 @@ public final class BlockAvailability {
                 com.vandorlabs.vehicle.VehicleArticulation.MAX_JOINTS,
                 "Maximum independent hinge points allowed in new vehicle assemblies and attachments. Default 7 permits eight articulated segments; 0 allows rigid vehicles only. Rigid/parallel couplers and closed loops do not count. Lowering this does not prevent saved vehicles loading or parking. Other geometry/data limits still apply. Restart required.");
         cruiseHandoffAltitude=config.getInt("cruiseHandoffAltitude","vehicles",FlightEnvelope.CRUISE_ALTITUDE,
-                FlightEnvelope.WORLD_CEILING,FlightEnvelope.DESCENT_BRAKING_ALTITUDE,
+                FlightEnvelope.WORLD_CEILING,FlightEnvelope.MAX_HANDOFF_ALTITUDE,
                 "Altitude where Overworld flight finishes blending and stops normal player chunk tracking. Lower values shorten the band. 256 switches directly to seed terrain. Restart required.");
         String selected=config.getString("cruiseCoordinates","vehicles","anchored",
                 "High Flight coordinates: anchored (default) or physical (geographic F3 X/Z). Other mods can load terrain at physical coordinates. Restart required.",

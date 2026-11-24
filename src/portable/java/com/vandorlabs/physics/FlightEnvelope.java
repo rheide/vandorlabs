@@ -4,14 +4,15 @@ package com.vandorlabs.physics;
 public final class FlightEnvelope {
     public static final int WORLD_CEILING = 256;
     public static final int CRUISE_ALTITUDE = 320;
-    public static final int DESCENT_BRAKING_ALTITUDE = 512;
+    public static final int MAX_HANDOFF_ALTITUDE = 512;
+    public static final int DESCENT_BRAKING_ALTITUDE = 1536;
     public static final int MAX_ALTITUDE = 10000;
     public static final int REENTRY_ALTITUDE = 200;
     public static final double TAKEOFF_SPEED = .32;
     public static final double LOW_SPEED = 1.5;
     public static final double MAX_CRUISE_SPEED = 15;
     private static final double EARLY_CRUISE_SHARE = .55;
-    private static final double EARLY_CLIMB_HEIGHT = 64;
+    private static final double EARLY_CLIMB_HEIGHT = 320;
     public static final float MAX_PITCH = 45;
     private static final double MASS_PER_THRUST = 512;
     private static final double THRUST_ALTITUDE_LIMIT = 100000;
@@ -59,11 +60,12 @@ public final class FlightEnvelope {
         double climb = Math.max(0, Math.min(altitude, ceiling) - WORLD_CEILING);
         double cruiseHeight = MAX_ALTITUDE - WORLD_CEILING;
         double fraction = climb / cruiseHeight;
-        double early = climb / (EARLY_CLIMB_HEIGHT + climb);
-        double blendAtLimit = EARLY_CRUISE_SHARE * cruiseHeight / (EARLY_CLIMB_HEIGHT + cruiseHeight) + 1 - EARLY_CRUISE_SHARE;
+        double early = climb * climb / (EARLY_CLIMB_HEIGHT * EARLY_CLIMB_HEIGHT + climb * climb);
+        double earlyAtLimit = cruiseHeight * cruiseHeight / (EARLY_CLIMB_HEIGHT * EARLY_CLIMB_HEIGHT + cruiseHeight * cruiseHeight);
+        double blendAtLimit = EARLY_CRUISE_SHARE * earlyAtLimit + (1 - EARLY_CRUISE_SHARE);
         double blend = EARLY_CRUISE_SHARE * early + (1 - EARLY_CRUISE_SHARE) * fraction * fraction;
         double power = Math.min(1, takeoffMass(thrust) / (2 * mass));
-        return LOW_SPEED + (MAX_CRUISE_SPEED - LOW_SPEED) * power * blend / blendAtLimit;
+        return LOW_SPEED + (MAX_CRUISE_SPEED - LOW_SPEED) * power * (blend / blendAtLimit);
     }
 
     /** Opacity of the seed surface through the band where real terrain is still tracked. */
@@ -89,9 +91,11 @@ public final class FlightEnvelope {
     public static double descentSpeed(double speed, double altitude, double drop) {
         if (drop <= 0 || speed <= LOW_SPEED || altitude - drop >= DESCENT_BRAKING_ALTITUDE) return speed;
         double remaining = Math.min(altitude, DESCENT_BRAKING_ALTITUDE) - WORLD_CEILING;
-        if (remaining <= 0) return LOW_SPEED;
-        double fraction = Math.max(0, altitude - drop - WORLD_CEILING) / remaining;
-        return LOW_SPEED + (speed - LOW_SPEED) * fraction;
+        double fraction = remaining <= 0 ? 0 : Math.max(0, altitude - drop - WORLD_CEILING) / remaining;
+        // Give up most excess speed high in the approach. Bound the impulse for an
+        // aircraft restored from an older save already diving below the braking band.
+        double desired = LOW_SPEED + (speed - LOW_SPEED) * fraction * fraction;
+        return Math.max(speed - .15, desired);
     }
 
     public static double acceleration(double mass, double thrust) {

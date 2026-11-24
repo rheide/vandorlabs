@@ -954,12 +954,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double acceleration=gliding?.009:FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)
                 *AircraftAttitude.propulsion(pitch)*(1+speed/10);
         // Existing airspeed bleeds off gradually when the throttle or supported altitude falls.
-        double deceleration=.019+Math.max(0,driveSpeed-speed)*.024;
+        double deceleration=Math.min(.12,.019+Math.max(0,driveSpeed-speed)*.024);
         driveSpeed=approach(driveSpeed,speed,driveSpeed<=speed?acceleration:deceleration);
 
         double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);
         EnumFacing front=structure.facing;
-        if(!launching && dimension==0 && !cruise.preparingArrival()){
+        if(!launching && dimension==0){
             double drop=AircraftAttitude.bankSink(roll,driveSpeed)-Math.sin(radians)*driveSpeed;
             driveSpeed=FlightEnvelope.descentSpeed(driveSpeed,altitude,gliding||limited?Math.max(.06,drop):drop);
         }

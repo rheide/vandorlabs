@@ -25,7 +25,11 @@ public final class FlightEnvelopeTest {
 
         require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"light drive handoff is continuous");
         require(FlightEnvelope.cruiseSpeed(257,200,1)<1.62,"first cruise block has no speed jump");
-        require(FlightEnvelope.cruiseSpeed(320,200,1)*20>=100,"one Maxwell with modest cargo can reach 100 m/s soon above the build ceiling");
+        require(FlightEnvelope.cruiseSpeed(320,200,1)<1.8,"low approach speed at terrain handoff");
+        require(FlightEnvelope.cruiseSpeed(600,200,1)*20>=100,"cruise performance returns above the transition");
+        for(int y=256;y<=512;y++)
+            require(FlightEnvelope.cruiseSpeed(y+1,200,1)-FlightEnvelope.cruiseSpeed(y,200,1)<.016,
+                    "climb speed changes gradually throughout the approach");
         require(FlightEnvelope.cruiseSpeed(800,400,1)<FlightEnvelope.cruiseSpeed(800,200,1),"payload reduces cruise speed");
         require(FlightEnvelope.cruiseSpeed(10000,120,1)==15,"light craft retain the absolute speed cap");
         require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
@@ -37,15 +41,18 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.sustainableClimb(3,500)==3&&FlightEnvelope.sustainableClimb(3,48)==.75
                 &&FlightEnvelope.sustainableClimb(3,0)==0&&FlightEnvelope.sustainableClimb(-2,0)==-2,
                 "climb rate tapers to the service ceiling and descent remains available");
-        double speed=75,y=520;
+        double speed=FlightEnvelope.MAX_CRUISE_SPEED,y=FlightEnvelope.DESCENT_BRAKING_ALTITUDE;
         while(y>250){
             double previous=speed;
-            speed=FlightEnvelope.descentSpeed(speed,y,5);
-            require(speed<=previous && previous-speed<1.5,"progressive descent braking");
-            y-=5;
+            double drop=speed; // Steepest possible approach, one tick at a time.
+            speed=FlightEnvelope.descentSpeed(speed,y,drop);
+            require(speed<=previous && previous-speed<=.150001,"bounded descent braking");
+            y-=drop;
+            if(y<=320)require(speed<1.55,"shed excess speed before default handoff");
         }
         require(speed==FlightEnvelope.LOW_SPEED&&FlightEnvelope.descentSpeed(1,290,60)==1,"low-flight limit without speeding up a slow craft");
-        require(FlightEnvelope.descentSpeed(55,400,0)==55,"level flight retains speed");
+        require(FlightEnvelope.descentSpeed(15,320,12)>=14.85,"late legacy overspeed begins braking smoothly");
+        require(FlightEnvelope.descentSpeed(15,400,0)==15,"level flight retains speed");
 
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
