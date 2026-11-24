@@ -32,6 +32,7 @@ final class CruisePhysicalChecks {
     private static final boolean ENABLED=Boolean.getBoolean("vandorlabs.cruisePhysicalChecks");
     private static final int FAR=8192, SWEEP=768, STEP=12;
     private static final String RESTART=System.getenv("VANDOR_LABS_CRUISE_PHASE");
+    private static final boolean WARM="true".equals(System.getenv("VANDOR_LABS_WARM_APPROACH"));
     private static final String EXIT=System.getenv("VANDOR_LABS_PHYSICAL_EXIT");
     private static final String MODE=System.getenv().getOrDefault("VANDOR_LABS_REENTRY_MODE","physical");
     private static final int BAND_HANDOFF=Integer.parseInt(System.getenv().getOrDefault("VANDOR_LABS_BAND_ROUTE_HANDOFF","0"));
@@ -323,6 +324,14 @@ final class CruisePhysicalChecks {
         exitTick=world.getTotalWorldTime();
         arrivalX=craft.cruise.x();
         if("descend".equals(EXIT)) {
+            if(WARM){
+                // Model a landing site that has already been visited and remains loaded.
+                // Prepare it after the independent high-flight route audit has finished.
+                int cx=(int)Math.floor(arrivalX/16),cz=(int)Math.floor(craft.cruise.z()/16);
+                for(int x=cx-3;x<=cx+6;x++)for(int z=cz-3;z<=cz+3;z++)
+                    world.getChunkProvider().provideChunk(x,z);
+                require(world.getChunkProvider().getLoadedChunk(cx,cz).isTerrainPopulated(),"warm approach fixture");
+            }
             // Start an eastbound glide over fresh columns. Subsequent movement comes from normal server flight ticks.
             craft.rotationYaw=90;
             NBTTagCompound flight=new NBTTagCompound();
