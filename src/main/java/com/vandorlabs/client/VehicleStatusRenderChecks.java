@@ -114,7 +114,7 @@ final class VehicleStatusRenderChecks {
     }
     static void fuel(Minecraft mc,File output,EntityGroundVehicle craft,BlockPos pos)throws Exception{
         VehicleFlightReadout reading=craft.flightReadout();
-        require(reading.fuel==1000&&reading.capacity==1000,"full-sized 100% fuel label");
+        require(reading.capacity==com.vandorlabs.drives.MaxwellEngine.tankCapacity(3)&&reading.fuel==reading.capacity,"full-sized 100% fuel label; fuel="+reading.fuel+" capacity="+reading.capacity);
         for(int height:new int[]{64,128}){
             Framebuffer frame=new Framebuffer(512,height*4,true);
             GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,128,height,0,-10,10);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();

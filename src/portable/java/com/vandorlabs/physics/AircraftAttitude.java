@@ -2,19 +2,20 @@ package com.vandorlabs.physics;
 
 /** Control rates and lift response shared by Forge's aircraft and its tests. */
 public final class AircraftAttitude {
-    public static final float TRIM_PITCH = 45, MAX_PITCH = 75, MIN_PITCH = -85;
-    private static final float ROLL_RATE = 8.5F;
+    // Values live in FlightTuning; keep docs/flight-calculator.html in sync with any change.
+    public static final float TRIM_PITCH = FlightTuning.TRIM_PITCH, MAX_PITCH = FlightTuning.MAX_PITCH, MIN_PITCH = FlightTuning.MIN_PITCH;
+    private static final float ROLL_RATE = FlightTuning.ROLL_RATE;
 
     private AircraftAttitude() {}
 
     public static float pitch(float current, float input) {
         float next = current + input;
-        if (next > TRIM_PITCH) next -= (next - TRIM_PITCH) * .085F;
+        if (next > TRIM_PITCH) next -= (next - TRIM_PITCH) * FlightTuning.PITCH_TRIM_DECAY;
         return Math.max(MIN_PITCH, Math.min(MAX_PITCH, next));
     }
 
     public static float rollRate(float current, int steer, double response) {
-        float target = ROLL_RATE * steer * (float) (.72 + .07 * response);
+        float target = ROLL_RATE * steer * (float) (FlightTuning.ROLL_SHARE + FlightTuning.ROLL_SHARE_PER_RESPONSE * response);
         return approach(current, target, steer == 0 ? 2.25F : 1.35F);
     }
 
@@ -27,11 +28,11 @@ public final class AircraftAttitude {
     }
 
     public static float coordinatedTurn(double roll, double response) {
-        return (float) (Math.sin(roll) * (.95 + .3 * response));
+        return (float) (Math.sin(roll) * (FlightTuning.TURN_RATE + FlightTuning.TURN_RATE_PER_RESPONSE * response));
     }
 
     public static double bankSink(double roll, double speed) {
-        return (1 - Math.cos(roll)) * Math.min(.28, .065 + speed * .016);
+        return (1 - Math.cos(roll)) * Math.min(FlightTuning.MAX_BANK_SINK, FlightTuning.BANK_SINK + speed * FlightTuning.BANK_SINK_PER_SPEED);
     }
 
     public static float recoveryPitch(float current, float pilotPitch, double excessAltitude, boolean gliding) {
@@ -41,7 +42,7 @@ public final class AircraftAttitude {
     }
 
     public static double propulsion(float pitch) {
-        return 1 - .65 * Math.min(1, Math.max(0, (pitch - TRIM_PITCH) / (MAX_PITCH - TRIM_PITCH)));
+        return 1 - FlightTuning.STEEP_CLIMB_THRUST_LOSS * Math.min(1, Math.max(0, (pitch - TRIM_PITCH) / (MAX_PITCH - TRIM_PITCH)));
     }
 
     public static boolean validPitch(float pitch) {

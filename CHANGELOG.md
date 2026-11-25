@@ -1,10 +1,15 @@
 # Changelog
 
-## 3.0.0 (in development)
+## 3.1.0 (in development)
 
 - Build Rocket Thrusters, Ion Drives, Plasma Vents, Impulse Engines, Antigravity Plates, Repulsor Arrays and Vertical Hover Thrusters in the Forge Enclosed Gantry, alongside the arms and landing gear. Their crafting-table recipes are removed. Existing blocks and items are unchanged.
-
 - Power a carried Survey Dish or Sentinel Array from the Battery Modules in a Forge vehicle's Module Rack while the vehicle is in Flight, including high cruise. Wired RF to the observer's Power Port is used first. The modules are not drained in Taxi or Hover and keep their charge through saving, parking and recapture.
+- Rebalance Forge Flight so weight and drive count matter. A craft needs 30 blocks of runway when lightly loaded and up to 200 at its takeoff limit, lifting off at 43.2 kb/h. Below Y=256, powered Flight cruises at 72 kb/h at the takeoff limit and up to 144 kb/h with twice the thrust it needs.
+- Maxwell Drives burn fuel by thrust and load: 100 mB per minute per thrust unit at the takeoff limit, and as little as 15% of that when lightly loaded. Larger drives weigh less for their thrust (160 down to 120 per thrust unit) but burn more (up to 1.4 times). Drive tanks hold 250 mB per thrust unit, so pipe an onboard reserve tank for long flights. Fuel saved in a fuller 3.0 tank is kept.
+- Hover and Taxi speed depend on thrusters: each Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine moves 200 units of gross weight at full speed. Heavier craft hover more slowly, down to 35% of full speed.
+- Plan aircraft and hover craft with the offline [flight calculator](docs/flight-calculator.html). Enter hull weight, lift blocks, thrusters and Maxwell Drives to see mode readiness, effective weight, altitude ceiling, speed by altitude, a takeoff and climb profile, endurance, range by throttle, trip time and how many drives a target altitude needs. Share a build as a compact link.
+
+## 3.0.0
 
 - Keep Forge aircraft moving and steering on descent while terrain loads under the hull and ahead along its course. Ease into cruise speed on climb and start shedding excess airspeed well above the terrain handoff.
 

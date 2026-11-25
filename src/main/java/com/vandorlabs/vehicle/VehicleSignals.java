@@ -210,7 +210,7 @@ public final class VehicleSignals {
         settleThrusters();
         resources.tick();
         resources.flushChanges(dirty,false);
-        for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.maxwellFlightDemand());
+        {boolean demand=craft.maxwellFlightDemand();double load=craft.maxwellBurnFactor();for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(demand,load);}
         for(StorageChannelOutput storage:storageOutputs){Link link=links.get(storage);if(link!=null)RedstoneChannels.inputChanged(link);}
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();

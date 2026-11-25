@@ -54,6 +54,26 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.descentSpeed(15,320,12)>=14.85,"late legacy overspeed begins braking smoothly");
         require(FlightEnvelope.descentSpeed(15,400,0)==15,"level flight retains speed");
 
+        // 3.1 Forge rules.
+        require(Math.abs(FlightEnvelope.runwayLength(0,1)-FlightTuning.RUNWAY_MIN)<1e-9
+                &&Math.abs(FlightEnvelope.runwayLength(limit,1)-FlightTuning.RUNWAY_MAX)<1e-9
+                &&FlightEnvelope.runwayLength(256,1)>FlightTuning.RUNWAY_MIN&&FlightEnvelope.runwayLength(256,1)<FlightTuning.RUNWAY_MAX,"runway grows with load");
+        for(double mass:new double[]{1,128,300,512}){
+            double a=FlightEnvelope.takeoffAcceleration(mass,1),v=0,run=0;
+            while(v<FlightTuning.RUNWAY_TAKEOFF_SPEED){v=Math.min(FlightTuning.RUNWAY_TAKEOFF_SPEED,v+a);run+=v;}
+            require(Math.abs(run-FlightEnvelope.runwayLength(mass,1))<1,"discrete roll covers the planned runway, mass="+mass+" run="+run);
+        }
+        require(FlightEnvelope.lowAltitudeSpeed(limit,1)==FlightTuning.LOW_SPEED_MIN&&FlightEnvelope.lowAltitudeSpeed(limit/2,1)==FlightTuning.LOW_SPEED_MAX
+                &&FlightEnvelope.lowAltitudeSpeed(limit/4,1)==FlightTuning.LOW_SPEED_MAX,"low-altitude speed follows thrust reserve up to twice the need");
+        require(FlightEnvelope.reserveCruiseSpeed(200,limit/2,1)==FlightTuning.LOW_SPEED_MAX
+                &&FlightEnvelope.reserveCruiseSpeed(256,limit,1)==FlightTuning.LOW_SPEED_MIN,"reserve speed holds below the cruise band");
+        require(FlightEnvelope.reserveCruiseSpeed(10000,120,1)==15&&FlightEnvelope.reserveCruiseSpeed(1,1,0)==0,"reserve speed keeps the cap and needs thrust");
+        for(int h=256;h<=600;h++)require(FlightEnvelope.reserveCruiseSpeed(h+1,300,1)>=FlightEnvelope.reserveCruiseSpeed(h,300,1),"reserve speed rises with altitude");
+        require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"3.0 cruise speed is unchanged for NeoForge");
+        require(Math.abs(FlightEnvelope.burnLoadFactor(limit,1)-1)<1e-12&&Math.abs(FlightEnvelope.burnLoadFactor(1,0)-1)<1e-12
+                &&Math.abs(FlightEnvelope.burnLoadFactor(0,1)-(1-FlightTuning.MAXWELL_LOAD_BURN_SHARE))<1e-12
+                &&FlightEnvelope.burnLoadFactor(100,1)<FlightEnvelope.burnLoadFactor(400,1),"lighter craft burn less");
+
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
         require(!hull.intersects(pane)&&hull.sweepsInto(pane,1.5,0,0),"thin terrain crossed between positional samples");

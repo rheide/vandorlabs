@@ -2,7 +2,8 @@
 
 Release highlights, feature explanations and illustrated examples, newest first. For detailed changes, see the [changelog](../../CHANGELOG.md). Older guides describe their release; use the current feature documentation for present-day behavior.
 
-- [Vandor Labs 3.0 (in development)](version-3.0.md)
+- [Vandor Labs 3.1 (in development): runways, fuel and thrust that matter](version-3.1.md)
+- [Vandor Labs 3.0: Flight](version-3.0.md)
 - [Vandor Labs 2.12: corners, joined doors and working Arms](version-2.12.md)
 - [Vandor Labs 2.11: powered builders, seed navigation and appliances](version-2.11.md)
 - [Vandor Labs 2.10.0: double-hinge arms, Module Racks, Resource Ports and native families](version-2.10.md)

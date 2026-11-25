@@ -148,9 +148,10 @@ final class MaxwellDriveLiveChecks {
             long[] current=mc.getIntegratedServer().callFromMainThread(()->placedBurn(mc)).get();
             long elapsed=current[0]-placedBurnStart[0];
             if(elapsed<200)return false;
-            long used=(placedBurnStart[1]-current[1])*com.vandorlabs.drives.MaxwellEngine.BURN_UNITS_PER_MB+current[2]-placedBurnStart[2];
-            require(current[1]<placedBurnStart[1]&&Math.abs(used-elapsed*15)<=15,
-                    "placed Maxwell consumes 1 mB per 200 real server ticks at full signal; elapsed="+elapsed+" burn units="+used);
+            long perTick=com.vandorlabs.drives.MaxwellEngine.burnMicroUnits(engine.structureWidth(),15,1);
+            long used=(placedBurnStart[1]-current[1])*(long)com.vandorlabs.physics.FlightTuning.MAXWELL_BURN_MICRO_PER_MB+current[2]-placedBurnStart[2];
+            require(current[1]<placedBurnStart[1]&&Math.abs(used-elapsed*perTick)<=perTick,
+                    "placed Maxwell burns its sized full-load amount each real server tick at full signal; elapsed="+elapsed+" burn micro-units="+used+" per tick="+perTick);
             System.out.println("[vandorlabs][reprolab] maxwell-block-burn PASS native placed core, wireless throttle, "+elapsed+" world ticks, "+placedBurnStart[1]+" -> "+current[1]+" mB");
             mc.getIntegratedServer().addScheduledTask(()->{
                 WorldServer w=player(mc).getServerWorld();
@@ -200,8 +201,9 @@ final class MaxwellDriveLiveChecks {
             System.out.println("[vandorlabs][reprolab] maxwell-fluiduct-formation PASS same existing duct connects to newly formed inlet");
         }
         for (TileEntityConstructor engine : new TileEntityConstructor[]{base, large}) {
-            require(MaxwellRuntimeChecks.inlet(engine, EnumFacing.NORTH).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(), 650), true) == 650,
-                    "gallery fixture fills the formed front inlet");
+            int part = engine.maxwellCapacity() * 13 / 20;
+            require(MaxwellRuntimeChecks.inlet(engine, EnumFacing.NORTH).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(), part), true) == part,
+                    "gallery fixture fills the formed front inlet to 65%");
         }
         base.configureMachine(new com.vandorlabs.navigation.NavigationScreenSettings(-1, false, 1, true, false), new int[0],
                 false, 127, 0, com.vandorlabs.redstone.ChannelList.EMPTY);
@@ -253,14 +255,14 @@ final class MaxwellDriveLiveChecks {
         TileEntityConstructor engine=(TileEntityConstructor)player(mc).getServerWorld().getTileEntity(ROOT);
         require(engine.maxwellFuel()>0&&engine.maxwellActiveLevel()==0&&engine.maxwellThrustLevel(false)==0,
                 "fuel remains with zero authoritative throttle and activity");
-        return engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger("MaxwellBurnUnits");
+        return engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger(com.vandorlabs.drives.MaxwellTank.BURN_TAG);
     }
     private static long[] placedBurn(Minecraft mc){
         WorldServer world=player(mc).getServerWorld();
         TileEntityConstructor engine=(TileEntityConstructor)world.getTileEntity(ROOT);
         require(engine.maxwellActiveLevel()==15&&engine.formed(),"world ticks the placed formed drive at full throttle");
         return new long[]{world.getTotalWorldTime(),engine.maxwellFuel(),
-                engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger("MaxwellBurnUnits")};
+                engine.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getInteger(com.vandorlabs.drives.MaxwellTank.BURN_TAG)};
     }
 
     private static void prepareClick(Minecraft mc, ItemStack held) {

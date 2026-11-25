@@ -24,7 +24,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
 public final class TileEntityConstructor extends TileEntitySecuredDisplay implements ITickable {
-    private final MaxwellTank maxwellTank = new MaxwellTank(this::maxwellChanged);
+    private final MaxwellTank maxwellTank = new MaxwellTank(this::maxwellChanged, this::maxwellCapacity);
     private int maxwellWidth;
     private int maxwellActiveLevel;
     private long maxwellTick = Long.MIN_VALUE;
@@ -36,9 +36,16 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
 
     public int maxwellFuel() { return maxwellTank.amount(); }
-    public int maxwellCapacity() { return MaxwellEngine.CAPACITY; }
+    /** Size used for the tank, burn and weight: the formed width, or the base size before forming. */
+    private int maxwellSize() {
+        com.vandorlabs.machines.CoreLayout shape = maxwell() ? layout() : null;
+        int width = shape != null ? shape.width : maxwellWidth;
+        for (int valid : MaxwellEngine.widths()) if (valid == width) return width;
+        return MaxwellEngine.BASE_WIDTH;
+    }
+    public int maxwellCapacity() { return MaxwellEngine.tankCapacity(maxwellSize()); }
     public FluidStack maxwellFuelContents() { return maxwellTank.contents(); }
-    public double maxwellDryMass() { return MaxwellEngine.dryMass(structureWidth()); }
+    public double maxwellDryMass() { return MaxwellEngine.sizedDryMass(maxwellSize()); }
     public double maxwellThrustUnits() { return MaxwellEngine.thrustUnits(structureWidth()); }
     public int maxwellActiveLevel() { return maxwellActiveLevel; }
     public int maxwellThrustLevel(boolean flightDemand) {
@@ -99,7 +106,11 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         }
     }
 
-    public void tickMaxwell(boolean flightDemand) {
+    /** A placed drive, or one burning outside Flight, burns at the full-load rate. */
+    public void tickMaxwell(boolean flightDemand) { tickMaxwell(flightDemand, 1); }
+
+    /** @param loadFactor {@link com.vandorlabs.physics.FlightEnvelope#burnLoadFactor} of the carrying craft */
+    public void tickMaxwell(boolean flightDemand, double loadFactor) {
         if (!maxwellAvailable()) return;
         long tick = world.getTotalWorldTime();
         if (maxwellTick == tick) return;
@@ -109,7 +120,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         }
         maxwellTick = tick;
         int level = maxwellThrustLevel(flightDemand);
-        maxwellTank.burn(level);
+        maxwellTank.burn(MaxwellEngine.burnMicroUnits(maxwellSize(), level, loadFactor));
         if (level > 0 && !(world instanceof VehicleWorld)) world.markChunkDirty(pos, this);
         setMaxwellActive(maxwellFuel() > 0 ? level : 0);
         if (maxwellSync && tick % 5 == 0) {

@@ -1,6 +1,7 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.physics.FlightTuning;
 import com.vandorlabs.tiles.TileEntityConstructor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -24,9 +25,12 @@ public final class VehicleFlightReadout {
     }
 
     public double takeoffMass() { return FlightEnvelope.takeoffMass(thrust); }
+    /** Maxwell burn multiplier for the current weight and thrust; see {@link FlightEnvelope#burnLoadFactor}. */
+    public double burnLoadFactor() { return FlightEnvelope.burnLoadFactor(effectiveMass, thrust); }
+    public double takeoffAcceleration() { return FlightEnvelope.takeoffAcceleration(effectiveMass, thrust); }
     public double maximumAltitude() { return FlightEnvelope.maximumAltitude(effectiveMass, thrust); }
     public boolean canFly() { return FlightEnvelope.canFly(effectiveMass, thrust); }
-    public double cruiseSpeed(double altitude) { return FlightEnvelope.cruiseSpeed(altitude, effectiveMass, thrust); }
+    public double cruiseSpeed(double altitude) { return FlightEnvelope.reserveCruiseSpeed(altitude, effectiveMass, thrust); }
 
     public double projectedAltitude(double dimensionCeiling) {
         return Math.max(0, Math.min(dimensionCeiling, FlightEnvelope.maximumAltitude(effectiveMass, ratedThrust)));
@@ -34,7 +38,7 @@ public final class VehicleFlightReadout {
 
     public double projectedSpeed(double dimensionCeiling) {
         double ceiling = projectedAltitude(dimensionCeiling);
-        return ceiling == 0 ? 0 : FlightEnvelope.cruiseSpeed(ceiling, effectiveMass, ratedThrust);
+        return ceiling == 0 ? 0 : FlightEnvelope.reserveCruiseSpeed(ceiling, effectiveMass, ratedThrust);
     }
 
     private static int liftUnits(VehicleStructure structure) {
@@ -42,8 +46,8 @@ public final class VehicleFlightReadout {
         for (VehicleStructure.Cell cell : structure.liftCells) {
             if (!structure.isActive(cell.pos)) continue;
             String name = cell.state.getBlock().getRegistryName().getResourcePath();
-            if (name.startsWith("antigravity_plate")) units++;
-            if (name.startsWith("repulsor_array")) units += 2;
+            if (name.startsWith("antigravity_plate")) units += FlightTuning.PLATE_FLIGHT_LIFT_UNITS;
+            if (name.startsWith("repulsor_array")) units += FlightTuning.REPULSOR_FLIGHT_LIFT_UNITS;
         }
         return units;
     }

@@ -5,6 +5,7 @@ import com.vandorlabs.entity.EntityChairSeat;
 import com.vandorlabs.items.ModItems;
 import com.vandorlabs.physics.FlightEnvelope;
 import com.vandorlabs.physics.AircraftAttitude;
+import com.vandorlabs.physics.FlightTuning;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -276,11 +277,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte vertical;
     private boolean flightSprint;
     private int exhaustCursor,liftExhaustCursor;
-    public static final double CRUISE_SPEED=.4,UNPOWERED_TAXI_SPEED=.3;
-    public static final double HOVER_CRUISE_SPEED=.8;
-    public static final double HOVER_VERTICAL_SPEED=.42;
-    private static final double HOVER_SPRINT_MULTIPLIER=1.25;
-    public static final double HOVER_SPRINT_SPEED=HOVER_CRUISE_SPEED*HOVER_SPRINT_MULTIPLIER;
+    // Values live in FlightTuning; keep docs/flight-calculator.html in sync with any change.
+    public static final double CRUISE_SPEED=FlightTuning.TAXI_SPEED,UNPOWERED_TAXI_SPEED=FlightTuning.UNPOWERED_TAXI_SPEED;
+    public static final double HOVER_CRUISE_SPEED=FlightTuning.HOVER_SPEED;
+    public static final double HOVER_VERTICAL_SPEED=FlightTuning.HOVER_VERTICAL_SPEED;
+    public static final double HOVER_SPRINT_SPEED=HOVER_CRUISE_SPEED*FlightTuning.HOVER_SPRINT_MULTIPLIER;
     public void predictFlight(boolean sprint){if(!world.isRemote)return;flightSprint=sprint;verticalAt=world.getTotalWorldTime();}
     private long verticalAt=-100,clearanceAt=-100;
     private double clearance=Double.POSITIVE_INFINITY;
@@ -883,7 +884,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             flightPhase=NO_FLIGHT;
             return;
         }
-        if(driveSpeed>=FlightEnvelope.TAKEOFF_SPEED&&forward<0){
+        if(driveSpeed>=FlightTuning.RUNWAY_TAKEOFF_SPEED&&forward<0){
             flightPhase=POWERED_FLIGHT;
             flightViewYaw=MathHelper.wrapDegrees(rotationYaw);
             double length=structure.facing.getAxis()==EnumFacing.Axis.X?structure.bounds.maxX:structure.bounds.maxZ;
@@ -929,7 +930,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         flightRollRate=AircraftAttitude.rollRate(flightRollRate,steer,response);
         float bank=AircraftAttitude.bank(flightBank,flightRollRate);
         double roll=Math.toRadians(bank);
-        float elevator=controlled&&!launching?-forward*(float)(.7+.36*response):0;
+        float elevator=controlled&&!launching?-forward*(float)(FlightTuning.PITCH_RATE+FlightTuning.PITCH_RATE_PER_RESPONSE*response):0;
         float pitch=AircraftAttitude.pitch(flightPitch,(float)(elevator*Math.cos(roll)));
         float yaw=rotationYaw+AircraftAttitude.coordinatedTurn(roll,response)+(float)(elevator*Math.sin(roll));
         if(getControllingPassenger()==null||cabin.walking(getControllingPassenger())){
@@ -948,13 +949,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
 
         double noseDown=Math.max(0,-pitch);
-        double speed=gliding?.78+Math.min(.68,noseDown*.026)
-                :Math.max(.95,flightReadout.cruiseSpeed(altitude));
+        double speed=gliding?FlightTuning.GLIDE_SPEED+Math.min(FlightTuning.GLIDE_DIVE_MAX_GAIN,noseDown*FlightTuning.GLIDE_DIVE_GAIN_PER_DEGREE)
+                :Math.max(FlightTuning.MIN_FLIGHT_SPEED,flightReadout.cruiseSpeed(altitude));
         if(canHoldSpeed()&&speedHoldSetting()>0)speed=Math.min(speed,speedHoldSetting()/720D);
-        double acceleration=gliding?.009:FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)
+        double acceleration=gliding?FlightTuning.GLIDE_ACCELERATION:FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)
                 *AircraftAttitude.propulsion(pitch)*(1+speed/10);
         // Existing airspeed bleeds off gradually when the throttle or supported altitude falls.
-        double deceleration=Math.min(.12,.019+Math.max(0,driveSpeed-speed)*.024);
+        double deceleration=Math.min(FlightTuning.MAX_FLIGHT_DECELERATION,FlightTuning.FLIGHT_DECELERATION+Math.max(0,driveSpeed-speed)*FlightTuning.FLIGHT_DECELERATION_PER_EXCESS);
         driveSpeed=approach(driveSpeed,speed,driveSpeed<=speed?acceleration:deceleration);
 
         double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);
@@ -1067,7 +1068,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             driveSpeed=motionX=motionY=motionZ=0;
             return;
         }
-        if(!flightTilted()&&driveSpeed<=HOVER_CRUISE_SPEED&&Math.abs(motionY)<.025)
+        if(!flightTilted()&&driveSpeed<=hoverCruiseSpeed()&&Math.abs(motionY)<.025)
             finishFlight(true,driveSpeed);
     }
 
@@ -1094,19 +1095,44 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         driveSpeed=carrySpeed;
         if(toHover)VehicleLandingGear.refreshSignals(this);
     }
-    public double cruiseSpeed(){
-        if(hover)return HOVER_CRUISE_SPEED;
-        return structure.activeThruster()?CRUISE_SPEED:UNPOWERED_TAXI_SPEED;
+    /**
+     * Thruster push against gross weight, from 0 to 1. A craft whose weight has not been sampled yet (for example
+     * one without Maxwell Drives or Hover lift) counts as fully pushed, so both sides predict the same speed.
+     */
+    private double thrusterPush(){
+        int thrusters=structure.activeThrusterCount();
+        if(thrusters<=0)return 0;
+        double mass=flightReadout.mass;
+        return mass>0?Math.min(1,thrusters*FlightTuning.THRUSTER_PUSH/mass):1;
     }
+    /** Share of the full Hover speed the fitted thrusters reach. */
+    public double hoverSpeedShare(){
+        if(structure.activeThrusterCount()<=0)return 1;
+        return Math.max(FlightTuning.MIN_THRUSTER_SPEED_SHARE,Math.sqrt(thrusterPush()));
+    }
+    public double hoverCruiseSpeed(){return HOVER_CRUISE_SPEED*hoverSpeedShare();}
+    public double hoverSprintSpeed(){return HOVER_SPRINT_SPEED*hoverSpeedShare();}
+    public double cruiseSpeed(){
+        if(hover)return hoverCruiseSpeed();
+        if(!structure.activeThruster())return UNPOWERED_TAXI_SPEED;
+        return UNPOWERED_TAXI_SPEED+(CRUISE_SPEED-UNPOWERED_TAXI_SPEED)*thrusterPush();
+    }
+    /** Maxwell burn multiplier for the carried drives; see {@link FlightEnvelope#burnLoadFactor}. */
+    public double maxwellBurnFactor(){return flightReadout.burnLoadFactor();}
+    /** Takeoff-roll acceleration for the current weight and thrust; see {@link FlightEnvelope#takeoffAcceleration}. */
+    public double takeoffAcceleration(){return flightReadout.takeoffAcceleration();}
     private void advanceController(boolean active) {
         boolean boost=hover&&structure.activeThruster()&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
         if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost);
         double cruise=cruiseSpeed();
-        double limit=hover?HOVER_SPRINT_SPEED:takeoffRoll()?Math.max(cruise,FlightEnvelope.TAKEOFF_SPEED):cruise;
+        double limit=hover?hoverSprintSpeed():takeoffRoll()?Math.max(cruise,FlightTuning.RUNWAY_TAKEOFF_SPEED):cruise;
         driveSpeed=approach(driveSpeed,takeoffRoll()?limit:active&&(!brake || hover)?forward*(boost?limit:cruise):0,
-                takeoffRoll()?FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust):brake||!active?.045:forward==0?.008:boost?.028:.018);
+                takeoffRoll()?flightReadout.takeoffAcceleration()
+                        :brake||!active?FlightTuning.BRAKE_DECELERATION:forward==0?FlightTuning.COAST_DECELERATION
+                        :boost?FlightTuning.BOOST_ACCELERATION:FlightTuning.DRIVE_ACCELERATION);
         // Preserve forward rollout on touchdown and shed excess speed through wheel braking.
-        if(landedFromFlight&&!hover&&!takeoffRoll()&&driveSpeed>limit)driveSpeed=approach(driveSpeed,limit,brake?.055:.025);
+        if(landedFromFlight&&!hover&&!takeoffRoll()&&driveSpeed>limit)
+            driveSpeed=approach(driveSpeed,limit,brake?FlightTuning.ROLLOUT_BRAKE_DECELERATION:FlightTuning.ROLLOUT_DECELERATION);
         else{
             driveSpeed=MathHelper.clamp(driveSpeed,-limit,limit);
             landedFromFlight=false;
@@ -1150,7 +1176,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double capacity=VehicleFlight.hoverCapacity(structure);
         double mass=flightReadout.mass>0?flightReadout.mass:hoverAdmissionMass;
         double load=capacity>0&&mass>0?Math.min(1,mass/capacity):1;
-        double acceleration=.030+.105*(1-load);
+        double acceleration=FlightTuning.HOVER_VERTICAL_ACCELERATION_MIN+FlightTuning.HOVER_VERTICAL_ACCELERATION_RANGE*(1-load);
         double top=world.getHeight()-structure.bounds.maxY;
         if(command!=0)hoverTarget=command>0?top:1;
         hoverTarget=MathHelper.clamp(hoverTarget,1,top);

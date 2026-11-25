@@ -5,6 +5,7 @@ import com.vandorlabs.blocks.BlockVandorDirectional;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.blocks.RedstoneScreenInteractions;
 import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.physics.FlightTuning;
 import com.vandorlabs.drives.MaxwellRuntimeChecks;
 import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.screen.VehicleStatusLayout;
@@ -102,7 +103,8 @@ final class VehicleFlightClientChecks {
         BlockPos staged=ORIGIN.add(24,8,0);
         world.getChunkFromBlockCoords(staged);
         TileEntityConstructor engine=MaxwellRuntimeChecks.assemble(world,staged,3,EnumFacing.NORTH,0,0);
-        need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,"fill the assembled engine's inlet");
+        int capacity=engine.maxwellCapacity();
+        need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),capacity),true)==capacity,"fill the assembled engine's inlet");
         cells.add(new VehicleStructure.Cell(new BlockPos(4,1,1),Blocks.STONE.getDefaultState(),null));
         BlockPos offset=DRIVE.subtract(staged);
         for(BlockPos at:BlockPos.getAllInBox(staged,staged.add(2,2,3))){
@@ -114,7 +116,7 @@ final class VehicleFlightClientChecks {
         craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,4));
         craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());
         TileEntityConstructor carried=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
-        need(carried.formed()&&carried.maxwellFuel()==1000&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
+        need(carried.formed()&&carried.maxwellFuel()==capacity&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
         need(world.spawnEntity(craft),"spawn craft");
         id=craft.getUniqueID();
         player.connection.setPlayerLocation(ORIGIN.getX()+2.5,ORIGIN.getY()+2,ORIGIN.getZ()+5,180,0);
@@ -150,7 +152,7 @@ final class VehicleFlightClientChecks {
     }
 
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(++total>1850)throw new IllegalStateException("Vehicle Flight timeout stage="+stage+" frame="+frame);
+        if(++total>2150)throw new IllegalStateException("Vehicle Flight timeout stage="+stage+" frame="+frame);
         EntityGroundVehicle craft=client(mc);
         if(craft==null||craft.structure==null||mc.player.getRidingEntity()!=craft)return false;
         frame++;
@@ -194,14 +196,15 @@ final class VehicleFlightClientChecks {
                 if(alignedServer(mc)){useStatus(mc);retriedTakeoff=true;}
             }
             if(frame<22)return false;
-            String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed;
-            if(!craft.flying()&&(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4)&&frame<100)return false;
+            String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed
+                    +" acceleration="+craft.takeoffAcceleration()+" budget="+rollFrames(craft);
+            if(!craft.flying()&&(!craft.takeoffRoll()||craft.driveSpeed<FlightTuning.RUNWAY_TAKEOFF_SPEED-1e-4)&&frame<rollFrames(craft))return false;
             if(!craft.takeoffRoll())motion+=mc.getIntegratedServer().callFromMainThread(()->{
                 EntityGroundVehicle actual=server(mc);EntityPlayerMP pilot=player(mc);
                 return " server roll="+actual.takeoffRoll()+" ground="+actual.onGround+" acknowledged="+actual.acknowledgedInput()
                         +" Y="+actual.posY+" seated="+(actual.getControllingPassenger()==pilot)+" held="+pilot.getHeldItemMainhand();
             }).get();
-            need(craft.takeoffRoll()&&!craft.flying()&&Math.abs(craft.posY-runwayY)<.08&&craft.driveSpeed>=FlightEnvelope.TAKEOFF_SPEED-1e-4,
+            need(craft.takeoffRoll()&&!craft.flying()&&Math.abs(craft.posY-runwayY)<.08&&craft.driveSpeed>=FlightTuning.RUNWAY_TAKEOFF_SPEED-1e-4,
                     "ground roll builds speed without liftoff before pitch input; "+motion);
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
@@ -218,7 +221,7 @@ final class VehicleFlightClientChecks {
         }
         if(stage==4&&frame>=23){
             if(craft.posY<=climbY+1&&frame<60)return false;
-            need(craft.posY>climbY+1&&craft.driveSpeed>FlightEnvelope.TAKEOFF_SPEED,"released keys preserve forward flight and climb");
+            need(craft.posY>climbY+1&&craft.driveSpeed>FlightTuning.RUNWAY_TAKEOFF_SPEED,"released keys preserve forward flight and climb");
             if(!checkSpeedPanel(mc,craft,output))return false;
             mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),runwayY+25,12,0)).get();
             turnYaw=0;turnX=ORIGIN.getX();turnZ=ORIGIN.getZ()-5;
@@ -404,7 +407,8 @@ final class VehicleFlightClientChecks {
                 EntityGroundVehicle actual=server(mc);
                 TileEntityConstructor engine=(TileEntityConstructor)actual.view.getTileEntity(DRIVE);
                 configureAnalog(engine,false,0);
-                need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,
+                int refill=engine.maxwellCapacity()-engine.maxwellFuel();
+                need(refill<=0||MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),refill),true)==refill,
                         "refuel the real carried Maxwell for the impact sortie");
                 landingX=actual.posX;
                 landingZ=actual.posZ;
@@ -428,8 +432,8 @@ final class VehicleFlightClientChecks {
             next();return false;
         }
         if(stage==15){
-            if(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4){
-                need(frame<85,"second takeoff uses the real Status button");return false;
+            if(!craft.takeoffRoll()||craft.driveSpeed<FlightTuning.RUNWAY_TAKEOFF_SPEED-1e-4){
+                need(frame<rollFrames(craft),"second takeoff uses the real Status button; speed="+craft.driveSpeed+" acceleration="+craft.takeoffAcceleration());return false;
             }
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
@@ -489,12 +493,12 @@ final class VehicleFlightClientChecks {
             if(craft.flying()){
                 double travel=craft.getPositionVector().subtract(hoverEntry).lengthVector();
                 sawHoverCoast|=craft.descendingFromFlight()&&travel>2
-                        &&craft.driveSpeed<hoverEntrySpeed-.12&&craft.driveSpeed>EntityGroundVehicle.HOVER_CRUISE_SPEED;
+                        &&craft.driveSpeed<hoverEntrySpeed-.12&&craft.driveSpeed>craft.hoverCruiseSpeed();
                 return false;
             }
             boolean carryingSpeed=mc.getIntegratedServer().callFromMainThread(()->{
                 EntityGroundVehicle actual=server(mc);
-                return actual.hover&&!actual.flying()&&actual.driveSpeed>.35&&actual.driveSpeed<=EntityGroundVehicle.HOVER_CRUISE_SPEED
+                return actual.hover&&!actual.flying()&&actual.driveSpeed>.35&&actual.driveSpeed<=actual.hoverCruiseSpeed()
                         &&Math.hypot(actual.posX-hoverEntry.x,actual.posZ-hoverEntry.z)>5;
             }).get();
             need(sawHoverCoast&&craft.hover&&carryingSpeed,
@@ -676,7 +680,7 @@ final class VehicleFlightClientChecks {
         need(craft.setHover(true)&&world(mc).spawnEntity(craft),"spawn the truly equipped Hover aircraft");
         TileEntityConstructor drive=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
         if(drive.maxwellFuel()==0)need(MaxwellRuntimeChecks.inlet(drive,drive.facing())
-                .fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,"fuel the Hover aircraft");
+                .fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),drive.maxwellCapacity()),true)==drive.maxwellCapacity(),"fuel the Hover aircraft");
         grounded.setTransferInProgress(true);
         pilot.dismountRidingEntity();
         grounded.setDead();
@@ -685,6 +689,11 @@ final class VehicleFlightClientChecks {
         id=craft.getUniqueID();
     }
 
+    /** Frames for a takeoff roll to reach takeoff speed: the 3.1 runway scales with load, plus margin for input sync. */
+    private static int rollFrames(EntityGroundVehicle craft){
+        double acceleration=Math.max(1e-4,craft.takeoffAcceleration());
+        return 85+(int)Math.ceil(1.5*FlightTuning.RUNWAY_TAKEOFF_SPEED/acceleration);
+    }
     private static void stagePose(EntityGroundVehicle craft,double altitude,float pitch,float bank){
         stageAttitude(craft,pitch,bank);
         craft.setPosition(ORIGIN.getX(),altitude,ORIGIN.getZ()-5);

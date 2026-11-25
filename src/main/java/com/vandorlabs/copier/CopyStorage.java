@@ -55,6 +55,7 @@ final class CopyStorage {
         if(id.equals("vandorlabs:constructor")&&data.hasKey("MaxwellFuel",10)){
             data.removeTag("MaxwellFuel");
             data.removeTag("MaxwellBurnUnits");
+            data.removeTag("MaxwellBurnMicro");
             data.removeTag("MaxwellActiveLevel");
             changed=true;
         }

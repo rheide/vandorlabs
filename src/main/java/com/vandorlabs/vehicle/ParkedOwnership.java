@@ -73,7 +73,7 @@ final class ParkedOwnership {
             tag.removeTag("LatchedChannels");tag.removeTag("LatchedLevels");tag.removeTag("LocalOn");
         }
         if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).maxwell()){
-            tag.removeTag("NavigationScreenOn");tag.removeTag("MaxwellActiveLevel");tag.removeTag("MaxwellBurnUnits");
+            tag.removeTag("NavigationScreenOn");tag.removeTag("MaxwellActiveLevel");tag.removeTag("MaxwellBurnUnits");tag.removeTag("MaxwellBurnMicro");
         }
         if(tile instanceof TileEntityAnimatedScreenSelector)for(int slot=0;slot<TileEntityAnimatedScreenSelector.REDSTONE_SLOTS;slot++){
             NBTTagList rows=tag.getCompoundTag(TileEntityAnimatedScreenSelector.redstoneTag(slot)).getTagList("Rows",10);

@@ -10,6 +10,8 @@ The Maxwell Drive gives a Forge 1.12.2 vehicle sustained forward thrust. Build a
 
 See the [illustrated Maxwell build guide](../multiblocks/maxwell-drive/README.md) for frame counts, port positions and a table of how much each drive lifts at takeoff and at altitude.
 
+Plan an aircraft with the [flight calculator](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/flight-calculator.html). It estimates takeoff limit, Hover lift, altitude ceiling, speed by altitude, climb time and range from your hull weight, lift blocks and drives. It also shows which throttle setting flies farthest on the fuel you carry. The same page works offline from `docs/flight-calculator.html`.
+
 Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to choose **Redstone ON** or **Redstone OFF** as its activation, select a **Digital** or **Analog** signal, or purge the tank before changing fuels. At full thrust, a drive uses **1 mB every 10 seconds** at 20 ticks per second. Analog signal strength scales thrust and consumption together. A signaled drive burns at the same rate in Block, Taxi, and Hover modes. With **Activation: Disabled**, the drive starts automatically when the pilot engages Flight.
 
 ## Taking off

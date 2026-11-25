@@ -10,7 +10,7 @@ The Maxwell Drive supplies thrust for Flight on Forge 1.12.2 and NeoForge 1.21.1
 | 6 × 6 × 8 | 87 |
 | 9 × 9 × 12 | 173 |
 
-The construction below shows the 3 × 3 × 4 frame. Use the same base, pillars and roof rim for each size. Drive mass and thrust increase with the enclosed volume.
+The construction below shows the 3 × 3 × 4 frame. Use the same base, pillars and roof rim for each size. Thrust and tank size increase with the enclosed volume. On Forge, larger drives weigh less for their thrust but burn more fuel per thrust unit; see the [3.1 drive table](../../versions/version-3.1.md#maxwell-drive-fuel).
 
 ## How many drives do I need?
 
@@ -25,6 +25,8 @@ Read the **effective weight** on the Vehicle Controller. It includes the install
 | 9 × 9 × 12 | 13,824 | 11,711 | 6,287 | 3,841 | 5,000 units reach Y≈7,088 |
 
 Choose the column for your target altitude and add the capacities of the drives you plan to run. For example, a finished craft weighing **1,000 effective units** can take off with **two 3 × 3 × 4 drives** (2 × 512), but needs **five** of that size for Y=5,000 (5 × 232). **One 5 × 5 × 7** also covers that climb. Recheck the weight after adding engines or loading cargo.
+
+To plan a whole craft, use the [flight calculator](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/flight-calculator.html). Enter the hull weight, lift blocks, thrusters and drives to see Hover and Flight readiness, the altitude ceiling, top speed, a takeoff and climb profile, and range for your fuel. For offline use, open `docs/flight-calculator.html` from a checkout.
 
 The Controller’s **Theoretical Max Takeoff Weight** includes every installed drive at full power. The **current takeoff limit** responds to fuel and redstone throttle. The altitude ceiling uses that current thrust.
 
@@ -58,7 +60,7 @@ The assembled drive shown here has fuel in its tank.
 
 ## Fuel and throttle
 
-The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time. On NeoForge, the `vandorlabs:maxwell_fuels` fluid tag can add other registered fuels.
+The front and sides each have a Fluid Port In that feeds the same tank. On Forge it holds 250 mB per thrust unit, from 250 mB for a 3 × 3 × 4 to 6,750 mB for a 9 × 9 × 12; on NeoForge every drive holds 1,000 mB. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time. On NeoForge, the `vandorlabs:maxwell_fuels` fluid tag can add other registered fuels.
 
 On Forge 1.12.2, a powered Thermal Dynamics fluid servo also fills its fluiduct network. For refined fuel, each standard fluiduct can hold 3,000 mB. Starting with 16,000 mB and an empty drive, two ducts can leave 9,000 mB in the source tank, 6,000 mB in the ducts and 1,000 mB in the drive. Five ducts can hold the remaining 15,000 mB and empty the source tank. The buffered fuel supplies the drive as it burns. To keep more fuel in the source tank, use fewer ducts or switch off the servo once the drive fills.
 
@@ -66,9 +68,9 @@ Right-click the formed drive or use the Configurizer to open its **Engine** and 
 
 - **Activation: Disabled** lets the drive run automatically during powered Flight and its takeoff roll.
 - **Activation: Redstone ON** uses the stronger of the physical input and any assigned receiving channel. **Activation: Redstone OFF** inverts that signal.
-- **Signal: Digital** applies full thrust when the effective signal is positive. **Signal: Analog** scales thrust and consumption from 0 to 15. Full throttle uses 1 mB every 10 seconds and produces a yellow-white afterburner plume.
+- **Signal: Digital** applies full thrust when the effective signal is positive. **Signal: Analog** scales thrust and consumption from 0 to 15. On Forge, full throttle burns 100 mB per minute per thrust unit at the takeoff limit and less when the craft is lightly loaded; on NeoForge it uses 1 mB every 10 seconds per drive. Full throttle produces a yellow-white afterburner plume.
 
-An active redstone input consumes fuel at the same rate in **Block** mode. At full throttle the **Engine** tab shows one whole millibucket less every 200 server ticks. The front bars show coarser changes in the tank level.
+An active redstone input consumes fuel at the full-load rate in **Block** mode. At full throttle a placed 3 × 3 × 4 shows one whole millibucket less every 12 server ticks on Forge, or every 200 server ticks on NeoForge. The front bars show coarser changes in the tank level.
 
 A redstone command can burn fuel when the drive is parked, for example to test the exhaust before flight. Vehicles can use several drives. Their weight contributes to takeoff and altitude limits.
 

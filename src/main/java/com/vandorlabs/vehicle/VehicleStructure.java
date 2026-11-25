@@ -166,12 +166,12 @@ public final class VehicleStructure {
         VehicleWorld.CouplerScope next=view.couplerScope();
         if(!explicit&&componentScope!=null&&next==null)return;
         boolean changed=!VehicleWorld.CouplerScope.same(componentScope,next);
-        if(componentView!=view||changed){componentView=view;componentScope=next;activeFootKinds=-1;activePropulsion=-1;if(changed){activeCells=null;couplerTopology=null;activeLiftCapacity=-1;}}
+        if(componentView!=view||changed){componentView=view;componentScope=next;activeFootKinds=-1;activePropulsion=-1;activeThrusters=-1;if(changed){activeCells=null;couplerTopology=null;activeLiftCapacity=-1;}}
     }
     void inheritComponents(VehicleStructure before){
         if(before.activeCells==null||before.cells.size()!=cells.size()||!VehicleWorld.CouplerScope.same(componentScope,before.componentScope))return;
         for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell)||cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&!old.sameTileData(cell))return;}
-        activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;activePropulsion=before.activePropulsion;
+        activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;activePropulsion=before.activePropulsion;activeThrusters=before.activeThrusters;
     }
     /** Validate every known claim before a view can authorize motion, including non-articulated heads. */
     void requireCouplerScope(VehicleWorld.CouplerScope scope){for(int i=0;i<cells.size();i++){List<com.vandorlabs.coupler.CouplerAssociation> claims=cells.get(i).couplerClaims();for(int j=0;j<claims.size();j++){com.vandorlabs.coupler.CouplerAssociation proof=claims.get(j);if(scope==null||!proof.vehicle.equals(scope.owner)||!proof.generation.equals(scope.generation))throw new IllegalArgumentException("Coupler association requires matching external ownership scope");}}}
@@ -190,6 +190,12 @@ public final class VehicleStructure {
         if(!splitComponents)return hasThruster;
         if(activePropulsion<0){activePropulsion=0;for(Cell cell:exhaustCells)if(isActive(cell.pos)&&!VehicleFlight.lift(cell.state.getBlock())){activePropulsion=1;break;}}
         return activePropulsion==1;
+    }
+    private int activeThrusters=-1;
+    /** Active vehicle thruster blocks (Rocket Thruster, Ion Drive, Plasma Vent, Impulse Engine), excluding lift blocks. */
+    public int activeThrusterCount(){
+        if(activeThrusters<0){int count=0;for(Cell cell:exhaustCells)if((!splitComponents||isActive(cell.pos))&&!VehicleFlight.lift(cell.state.getBlock()))count++;activeThrusters=count;}
+        return activeThrusters;
     }
     private int activeFootKinds=-1;
     private int activeFootKinds(){
@@ -292,7 +298,7 @@ public final class VehicleStructure {
         NBTTagCompound before=a.tileData(),after=b.tileData();
         if(before==null||after==null)return false;
         // The final, frozen snapshot still retains the drive's current fuel and throttle.
-        for(String key:new String[]{"MaxwellFuel","MaxwellBurnUnits","MaxwellActiveLevel","NavigationScreenOn"}){
+        for(String key:new String[]{"MaxwellFuel","MaxwellBurnUnits","MaxwellBurnMicro","MaxwellActiveLevel","NavigationScreenOn"}){
             before.removeTag(key);after.removeTag(key);
         }
         return com.vandorlabs.surface.TextureJoinMigration.same(before,after);

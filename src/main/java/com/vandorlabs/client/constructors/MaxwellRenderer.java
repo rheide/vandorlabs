@@ -56,7 +56,7 @@ final class MaxwellRenderer {
         BlockPos gauge = tile.cell(MaxwellEngine.faceCenter(shape.width) + 1, MaxwellEngine.faceCenter(shape.height), 0);
         face(buffer, atlas.getAtlasSprite(GAUGE), gauge, front, x, y, z, -.4375, .4375, -.4375, .4375, light, .001);
         TextureAtlasSprite bar = atlas.getAtlasSprite(BAR);
-        int filled = MaxwellEngine.bars(tile.maxwellFuel(), BARS);
+        int filled = MaxwellEngine.bars(tile.maxwellFuel(), tile.maxwellCapacity(), BARS);
         for (int i = 0; i < filled; i++) {
             double bottom = (-21 + 6 * i) * .875 / 64;
             face(buffer, bar, gauge, front, x, y, z, -.26, .26, bottom, bottom + 4 * .875 / 64, FULL_LIGHT, .002);

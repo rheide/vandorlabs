@@ -1,6 +1,7 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.blocks.BlockPropulsionLight;
+import com.vandorlabs.physics.FlightTuning;
 import net.minecraft.util.math.*;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -30,7 +31,10 @@ public final class VehicleFlight {
     /** Gross weight units supported in Hover, including carried stores. */
     public static int hoverLift(net.minecraft.block.Block block){
         if(!lift(block))return 0;
-        return block.getRegistryName().getResourcePath().startsWith("repulsor_array")?72:36;
+        String name=block.getRegistryName().getResourcePath();
+        // Values live in FlightTuning; keep docs/flight-calculator.html in sync with any change.
+        if(name.startsWith("repulsor_array"))return FlightTuning.REPULSOR_HOVER_LIFT;
+        return name.startsWith("vertical_hover_thruster")?FlightTuning.VERTICAL_THRUSTER_HOVER_LIFT:FlightTuning.PLATE_HOVER_LIFT;
     }
     public static int hoverCapacity(VehicleStructure structure){
         if(structure.activeLiftCapacity>=0)return structure.activeLiftCapacity;
@@ -55,10 +59,10 @@ public final class VehicleFlight {
         return structure.measuredMass;
     }
     public static boolean canHover(VehicleStructure structure){
-        return structure.liftCells.size()>=3&&canHover(structure,snapshotMass(structure));
+        return structure.liftCells.size()>=FlightTuning.MIN_LIFT_BLOCKS&&canHover(structure,snapshotMass(structure));
     }
     public static boolean canHover(VehicleStructure structure,double mass){
-        if(!Double.isFinite(mass)||mass<0||mass>hoverCapacity(structure)||structure.activeLiftCount<3)return false;
+        if(!Double.isFinite(mass)||mass<0||mass>hoverCapacity(structure)||structure.activeLiftCount<FlightTuning.MIN_LIFT_BLOCKS)return false;
         if(structure.couplers.isEmpty())return true;
         VehicleCouplerTopology topology=VehicleCouplerTopology.of(structure);
         return topology!=null&&topology.sufficientLift(structure);

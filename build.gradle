@@ -34,7 +34,7 @@ dependencies {
     compileOnly 'curse.maven:hwyla-253449:2568753'
 }
 
-version = '3.0.0'
+version = '3.1.0'
 // Forge reads @Mod.version independently of the expanded mcmod.info metadata.
 def declaredModVersion = file('src/main/java/com/vandorlabs/VandorLabs.java').getText('UTF-8') =~ /public static final String VERSION = "([^"]+)";/
 if (!declaredModVersion.find() || declaredModVersion.group(1) != version.toString()) {

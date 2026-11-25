@@ -102,12 +102,17 @@ public final class MaxwellRuntimeChecks {
                     IFluidHandler front = inlet(engine, facing), west = inlet(engine, left), east = inlet(engine, right);
                     require(front != null && west != null && east != null && handler(engine, facing) == null
                             && handler(world.getTileEntity(engine.maxwellPort(facing)), facing.getOpposite()) == null, "fill capability only on correct outward inlet faces");
-                    require(front.getTankProperties()[0].getCapacity() == 1000 && !front.getTankProperties()[0].canDrain(), "one bucket, no extraction");
+                    int cap = MaxwellEngine.tankCapacity(width);
+                    require(engine.maxwellCapacity() == cap && cap == Math.round(250 * width * width * depth / 36.0)
+                            && front.getTankProperties()[0].getCapacity() == cap && !front.getTankProperties()[0].canDrain(), "tank scales with thrust, no extraction");
                     require(front.fill(new FluidStack(FluidRegistry.WATER, 1000), true) == 0, "rejects water");
-                    require(front.fill(new FluidStack(ethanol, 1500), false) == 1000 && engine.maxwellFuel() == 0, "simulation respects capacity");
-                    require(west.fill(new FluidStack(ethanol, 725), true) == 725 && east.fill(new FluidStack(ethanol, 500), true) == 275
-                            && engine.maxwellFuel() == 1000 && front.drain(1000, true) == null, "three inlets feed one bounded tank");
-                    require(Math.abs(engine.maxwellDryMass() - 160 * width * width * depth / 36.0) < .001, "assembled dry weight scales by volume");
+                    require(front.fill(new FluidStack(ethanol, cap + 500), false) == cap && engine.maxwellFuel() == 0, "simulation respects capacity");
+                    int first = cap / 3;
+                    require(west.fill(new FluidStack(ethanol, first), true) == first && east.fill(new FluidStack(ethanol, cap), true) == cap - first
+                            && engine.maxwellFuel() == cap && front.fill(new FluidStack(ethanol, 1), true) == 0 && front.drain(cap, true) == null,
+                            "three inlets feed one bounded tank");
+                    require(Math.abs(engine.maxwellDryMass() - MaxwellEngine.sizedDryMass(width)) < .001
+                            && (width == 3 || engine.maxwellDryMass() / engine.maxwellThrustUnits() < 160), "larger drives weigh less per thrust unit");
                     require(engine.maxwellThrustLevel(false) == 0 && engine.maxwellThrustLevel(true) == 15, "automatic mode burns only on flight demand");
                     if (i == 0 && facing == EnumFacing.NORTH) burnAndCarry(world, engine, front, ethanol);
                     engine.dismantle();
@@ -126,20 +131,38 @@ public final class MaxwellRuntimeChecks {
         engine.configureDrive(new DriveSettings(true, false, 1, 8));
         engine.configureMachine(new NavigationScreenSettings(-1, false, 1, true, false), new int[0], false, 127, 0, ChannelList.EMPTY);
         engine.setChannelLevel(7);
-        for (int i = 0; i < 428; i++) tick(world, engine);
-        require(engine.maxwellFuel() == 1000 && engine.maxwellActiveLevel() == 7, "analog burn leaves sub-millibucket progress");
+        int width = engine.structureWidth(), cap = engine.maxwellCapacity(), micro = com.vandorlabs.physics.FlightTuning.MAXWELL_BURN_MICRO_PER_MB;
+        // A placed drive burns at the full-load rate.
+        long analog = MaxwellEngine.burnMicroUnits(width, 7, 1), full = MaxwellEngine.burnMicroUnits(width, 15, 1);
+        int below = (int) ((micro - 1) / analog);
+        for (int i = 0; i < below; i++) tick(world, engine);
+        require(engine.maxwellFuel() == cap && engine.maxwellActiveLevel() == 7, "analog burn leaves sub-millibucket progress");
         NBTTagCompound save = engine.writeToNBT(new NBTTagCompound());
+        require(save.getInteger(MaxwellTank.BURN_TAG) == below * analog && !save.hasKey("MaxwellBurnUnits"), "burn progress saves in micro-units");
         engine.readFromNBT(save);
         tick(world, engine);
-        require(engine.maxwellFuel() == 999, "fractional burn progress survives save and reload");
+        require(engine.maxwellFuel() == cap - 1, "fractional burn progress survives save and reload");
+        long progress = (below + 1) * analog - micro;
+        int toNext = (int) ((micro - progress + full - 1) / full);
         engine.configureDrive(new DriveSettings(false, false, 1, 8));
         engine.setChannelLevel(1);
-        for (int i = 0; i < 199; i++) tick(world, engine);
-        require(engine.maxwellFuel() == 999 && engine.maxwellActiveLevel() == 15, "digital input gives full afterburner");
+        for (int i = 0; i < toNext - 1; i++) tick(world, engine);
+        require(engine.maxwellFuel() == cap - 1 && engine.maxwellActiveLevel() == 15, "digital input gives full afterburner");
         tick(world, engine);
-        require(engine.maxwellFuel() == 998, "full throttle consumes 1 mB every 200 ticks");
+        require(engine.maxwellFuel() == cap - 2, "full throttle burns the sized per-tick amount");
         engine.purgeMaxwell();
         require(engine.maxwellFuel() == 0 && engine.maxwellActiveLevel() == 0, "purge empties and extinguishes the tank");
+        // A 3.0 save: 1,000 mB in what is now a smaller tank, with the old level-tick burn counter.
+        NBTTagCompound legacy = engine.writeToNBT(new NBTTagCompound());
+        NBTTagCompound legacyFuel = new FluidStack(ethanol, 1000).writeToNBT(new NBTTagCompound());
+        legacy.setTag("MaxwellFuel", legacyFuel);
+        legacy.removeTag(MaxwellTank.BURN_TAG);
+        legacy.setInteger("MaxwellBurnUnits", 1500);
+        engine.readFromNBT(legacy);
+        require(engine.maxwellFuel() == 1000 && engine.writeToNBT(new NBTTagCompound()).getInteger(MaxwellTank.BURN_TAG) == micro / 2,
+                "3.0 fuel above the new capacity and partial burn load without loss");
+        require(inlet.fill(new FluidStack(ethanol, 1), true) == (cap > 1000 ? 1 : 0), "an over-full 3.0 tank accepts no fuel until it burns below capacity");
+        engine.purgeMaxwell();
         String[] supported = {"refined_fuel", "ethanol", "fuelium", "rocketfuel", "fuelgc", "fuel"};
         for (String name : supported) {
             Fluid fuel = FluidRegistry.getFluid(name);
@@ -149,7 +172,8 @@ public final class MaxwellRuntimeChecks {
             if (fuel != ethanol) require(inlet.fill(new FluidStack(ethanol, 1), false) == 0, "refuses mixing two accepted fuels");
             engine.purgeMaxwell();
         }
-        inlet.fill(new FluidStack(ethanol, 650), true);
+        int start = Math.max(1, cap - 100);
+        require(inlet.fill(new FluidStack(ethanol, start), true) == start, "refill before capture");
         engine.configureDrive(new DriveSettings(true, true, 1, 8));
         engine.setChannelLevel(11);
         require(engine.maxwellThrustLevel(false) == 4, "inversion subtracts the analog input from 15");
@@ -157,13 +181,13 @@ public final class MaxwellRuntimeChecks {
         EntityGroundVehicle craft = capture(world, engine);
         try {
             TileEntityConstructor carried = findEngine(craft);
-            require(carried.maxwellFuel() == 650, "carried snapshot keeps exact tank contents");
+            require(carried.maxwellFuel() == start, "carried snapshot keeps exact tank contents");
             IFluidHandler carriedInput = inlet(carried, carried.facing());
-            require(carriedInput.fill(new FluidStack(ethanol, 250), true) == 250 && carried.maxwellFuel() == 900,
+            require(carriedInput.fill(new FluidStack(ethanol, 250), true) == cap - start && carried.maxwellFuel() == cap,
                     "live carried capability feeds the owner tank");
             craft.signals.persist();
             NBTTagCompound persisted = craft.structure.at(carried.getPos()).tileData();
-            require(persisted.getCompoundTag("MaxwellFuel").getInteger("Amount") == 900,
+            require(persisted.getCompoundTag("MaxwellFuel").getInteger("Amount") == cap,
                     "vehicle saves the tank through the normal dirty-tile path");
             VehicleWeight estimate = new VehicleWeight(craft.structure, craft.view);
             while (!estimate.step(1024, Long.MAX_VALUE)) { }

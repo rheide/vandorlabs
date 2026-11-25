@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vandor Labs · Flight calculator</title>
+<style>
+:root{
+  color-scheme:dark;font:15px/1.5 system-ui,sans-serif;
+  --bg:#111a22;--panel:#17232c;--panel-2:#1d2c37;--line:#314653;--grid:#263744;
+  --text:#e3edf4;--text-2:#a8bdcc;--muted:#7f97a8;--accent:#86deef;
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#0ca30c;
+  --good:#3fbf5f;--warn:#e0a32e;--bad:#e66767;
+  background:var(--bg);color:var(--text)
+}
+*{box-sizing:border-box}
+body{margin:0}
+a{color:var(--accent)}
+header{border-bottom:1px solid var(--line);background:#19232cf5;padding:18px max(20px,calc((100vw - 1440px)/2))}
+h1{font-size:24px;margin:0}
+header p{color:var(--text-2);margin:4px 0 0;max-width:900px}
+header nav{margin-top:8px;font-size:14px;color:var(--text-2)}
+.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:20px;max-width:1440px;margin:20px auto;padding:0 20px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}}
+aside{align-self:start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
+@media(max-width:980px){aside{position:static;max-height:none}}
+fieldset{border:1px solid var(--line);border-radius:6px;background:var(--panel);margin:0 0 12px;padding:10px 14px 12px}
+legend{font-weight:650;padding:0 6px}
+.field{display:grid;grid-template-columns:1fr 104px;gap:8px;align-items:center;margin:6px 0}
+.field label{font-size:13.5px;color:var(--text);line-height:1.3}
+.field label small{display:block;color:var(--muted);font-size:11.5px}
+input,select,button{font:inherit;color:inherit}
+input[type=number],select{width:100%;padding:5px 8px;border:1px solid #456171;border-radius:5px;background:#223543;font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid #67d4e8;outline-offset:2px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--text-2);margin:8px 0 2px}
+.check input{margin-top:3px}
+button{border:1px solid #456171;border-radius:5px;background:#223543;padding:6px 10px;cursor:pointer}
+button:hover{background:#304d60}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.toolbar select{width:auto;flex:1;min-width:0}
+.drive-grid{display:grid;grid-template-columns:1fr 70px 72px;gap:4px 8px;align-items:center;font-size:13px}
+.drive-grid .h{color:var(--muted);font-size:11.5px}
+.drive-grid input{padding:4px 6px}
+details.helper{margin-top:8px;font-size:13px}
+details.helper summary{cursor:pointer;color:var(--accent)}
+.mat-grid{display:grid;grid-template-columns:1fr 54px 70px;gap:4px 8px;align-items:center;margin-top:8px}
+.mat-grid .w{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+main{min-width:0}
+section{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px 16px;margin:0 0 16px}
+section h2{font-size:17px;margin:0 0 4px}
+section>p.lede{color:var(--text-2);margin:0 0 12px;font-size:13.5px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+.tile{background:var(--panel-2);border-radius:6px;padding:10px 12px;min-width:0}
+.tile .k{font-size:12px;color:var(--text-2)}
+.tile .v{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+.tile .s{font-size:12px;color:var(--muted)}
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.mode{background:var(--panel-2);border-radius:6px;padding:10px 12px;border-left:4px solid var(--line)}
+.mode.ok{border-left-color:var(--good)}.mode.no{border-left-color:var(--bad)}
+.mode h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}
+.badge{font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:#2a3b47}
+.ok .badge{background:#1e3f2a;color:#9be3ad}.no .badge{background:#4a2326;color:#f3b0b0}
+.mode ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--text-2)}
+.mode li{margin:2px 0}
+.mode li b{color:var(--text);font-weight:600}
+.equation{font-family:ui-monospace,Consolas,monospace;background:#0f171e;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font-size:13px;margin:10px 0 0;overflow:auto}
+.chart{position:relative;margin-top:8px}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart-title{font-size:13.5px;font-weight:600;margin:14px 0 0}
+.chart-title small{font-weight:400;color:var(--muted);margin-left:6px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--text-2);margin:4px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.legend i.sq{width:10px;height:10px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)!important;height:2px}
+.tip{position:absolute;pointer-events:none;background:#0d151bf0;border:1px solid #456171;border-radius:5px;padding:6px 9px;font-size:12.5px;white-space:nowrap;z-index:5;display:none;font-variant-numeric:tabular-nums}
+.tip b{font-weight:600}
+.tip .row{display:flex;align-items:center;gap:6px}
+.tip i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:4px 20px}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--grid);padding:5px 8px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th[colspan]{text-align:center}
+thead th{color:var(--text-2);font-weight:600;font-size:12px}
+td.na{color:var(--muted)}
+td.hl{color:#9be3ad;font-weight:600}
+td.up{color:#9be3ad}td.down{color:#f3b0b0}
+.scroll{overflow:auto}
+.weightbar{display:flex;gap:2px;height:22px;margin:10px 0 4px}
+.weightbar div{height:100%;min-width:2px;position:relative}
+.weightbar div:first-child{border-radius:4px 0 0 4px}.weightbar div:last-child{border-radius:0 4px 4px 0}
+.tips{margin:0;padding-left:20px;font-size:13.5px}
+.tips li{margin:5px 0}
+.tips li b{font-weight:600}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+details.data{margin-top:8px;font-size:13px}
+details.data summary{cursor:pointer;color:var(--accent)}
+.sim-msg{font-size:13px;color:var(--warn);margin:6px 0 0}
+footer{max-width:1440px;margin:0 auto 30px;padding:0 20px;color:var(--muted);font-size:13px}
+.copied{color:var(--good);font-size:12.5px;align-self:center}
+.lab-only{display:none!important}
+body.lab .lab-only{display:revert!important}
+body.lab .field.lab-only{display:grid!important}
+fieldset.lab{border-color:#7a5a1e;background:#1f1d17}
+.lab-banner{background:#3a2c10;border:1px solid #7a5a1e;color:#f2d49a;border-radius:6px;padding:8px 12px;font-size:13px;margin:0 0 16px}
+.param-grid{display:grid;grid-template-columns:1fr 80px;gap:4px 8px;align-items:center;font-size:12.5px;margin-top:8px}
+.param-grid input{padding:3px 6px}
+.param-grid .g{grid-column:1/-1;color:var(--text-2);font-weight:600;margin-top:6px}
+pre.java{background:#0f171e;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font-size:12px;overflow:auto;white-space:pre}
+.seg{display:inline-flex;border:1px solid #456171;border-radius:5px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:#1a2a35}
+.seg button[aria-pressed=true]{background:#3a5a70}
+</style>
+</head>
+<body>
+<header>
+  <h1>Flight calculator</h1>
+  <p>Plan a Vandor Labs vehicle before you build it. Enter the hull weight, lift blocks, thrusters and Maxwell Drives to see Taxi, Hover and Flight readiness, takeoff limits, altitude ceiling, speeds, climb profile, endurance and range. Numbers follow the Vandor Labs 3.1 rules on Forge 1.12.2. NeoForge 1.21.1 shares the altitude envelope but still uses the 3.0 drive, runway and speed rules.</p>
+  <nav><a href="https://github.com/rheide/vandorlabs/blob/master/docs/multiblocks/maxwell-drive/README.md">Maxwell Drive guide</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/versions/version-3.0.md#taking-off">Flight controls</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/pilot-seat-taxi.md">Taxi and Hover</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/pilot-seat-taxi.md#estimated-vehicle-weight">Vehicle weight rules</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/vanilla-vehicle-weights.md">Block weights</a></nav>
+</header>
+
+<div class="layout">
+<aside aria-label="Vehicle inputs">
+  <div class="toolbar">
+    <select id="preset" aria-label="Example build">
+      <option value="">Load an example build…</option>
+      <option value="scout">Scout: one small drive</option>
+      <option value="shuttle">Shuttle: hover and flight</option>
+      <option value="freighter">Freighter: repulsors and 5 × 5 × 7 drives</option>
+      <option value="heavy">Heavy lifter: one 9 × 9 × 12 drive</option>
+      <option value="hover">Hover barge: no Maxwell Drive</option>
+    </select>
+    <button type="button" id="share" title="Copy a link that reopens this build">Copy link</button>
+    <button type="button" id="reset">Reset</button>
+    <span class="copied" id="copied" hidden>Link copied</span>
+  </div>
+
+  <fieldset class="lab lab-only">
+    <legend>Tuning lab</legend>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:13px">Show</span>
+      <span class="seg" role="group" aria-label="Tuning model"><button type="button" data-model="current">3.0</button><button type="button" data-model="proposed">Lab</button></span>
+    </div>
+    <label class="check"><input type="checkbox" id="overlay"> <span>Draw the other tuning as dashed lines on the profile and airspeed charts</span></label>
+    <details class="helper" open>
+      <summary>Lab values (default: 3.1)</summary>
+      <div class="param-grid" id="paramGrid"></div>
+      <div style="display:flex;gap:6px;margin-top:8px"><button type="button" id="pReset">Reset to 3.1</button></div>
+    </details>
+  </fieldset>
+
+  <fieldset>
+    <legend>Hull and cargo</legend>
+    <div class="field"><label for="hull">Hull weight<small>Weight units; one stone block = 1</small></label><input type="number" id="hull" min="0" step="1"></div>
+    <div class="field"><label for="cargo">Cargo and fluids<small>Inventories and tank contents</small></label><input type="number" id="cargo" min="0" step="1"></div>
+    <label class="check"><input type="checkbox" id="scanned"> <span>Hull weight is the Controller’s scanned total, which already includes drives, lift blocks, thrusters and fuel</span></label>
+    <details class="helper">
+      <summary>Estimate hull weight from block counts</summary>
+      <div class="mat-grid" id="matGrid"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span id="matTotal">0 units</span><button type="button" id="matApply">Use as hull weight</button></div>
+      <p class="note">Count full blocks. A slab counts as ½, stairs ¾, panels and walls ¼. Values come from the vehicle weight estimator.</p>
+    </details>
+  </fieldset>
+
+  <fieldset>
+    <legend>Lift and thrusters</legend>
+    <div class="field"><label for="plates">Antigravity Plates<small>36 Hover lift · reduces Flight weight</small></label><input type="number" id="plates" min="0" step="1"></div>
+    <div class="field"><label for="repulsors">Repulsor Arrays<small>72 Hover lift · counts double in Flight</small></label><input type="number" id="repulsors" min="0" step="1"></div>
+    <div class="field"><label for="vht">Vertical Hover Thrusters<small>36 Hover lift · no Flight reduction</small></label><input type="number" id="vht" min="0" step="1"></div>
+    <div class="field"><label for="thrusters">Vehicle thrusters<small>Rocket Thruster, Ion Drive, Plasma Vent, Impulse Engine</small></label><input type="number" id="thrusters" min="0" step="1"></div>
+    <div class="field lab-only"><label for="rf">Onboard RF storage<small>Powers lift blocks; one Battery Block = 100,000</small></label><input type="number" id="rf" min="0" step="100000"></div>
+    <div class="field lab-only"><label for="rfGen">RF generation<small>RF per tick while flying</small></label><input type="number" id="rfGen" min="0" step="10"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Maxwell Drives</legend>
+    <div class="drive-grid" id="driveGrid">
+      <span class="h">Size (W × H × D)</span><span class="h">Count</span><span class="h">Thrust each</span>
+    </div>
+    <div class="field" style="margin-top:10px"><label for="fill">Drive tanks filled<small id="fillHint">%, each tank holds 1,000 mB</small></label><input type="number" id="fill" min="0" max="100" step="5"></div>
+    <div class="field"><label for="throttle">Throttle<small>Analog signal 1–15; Disabled or Digital = 15</small></label><input type="number" id="throttle" min="1" max="15" step="1"></div>
+    <div class="field"><label for="reserve">Onboard reserve tank<small>mB piped to the drives</small></label><input type="number" id="reserve" min="0" step="1000"></div>
+    <div class="field"><label for="density">Fuel density<small>Forge fluid density, default 1,000</small></label><input type="number" id="density" min="1" step="50"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Flight plan</legend>
+    <div class="field"><label for="dim">Dimension</label><select id="dim"><option value="0">Overworld (Y 10,000)</option><option value="128">Nether (height 128)</option><option value="256">End or other (height 256)</option></select></div>
+    <div class="field"><label for="startY">Runway altitude<small>Y at takeoff</small></label><input type="number" id="startY" min="0" max="255" step="1"></div>
+    <div class="field"><label for="target">Cruise altitude target<small>Capped at your ceiling</small></label><input type="number" id="target" min="0" max="10000" step="100"></div>
+    <div class="field"><label for="pitch">Climb pitch<small>Degrees nose-up</small></label><input type="number" id="pitch" min="5" max="75" step="1"></div>
+    <div class="field"><label for="trip">Trip distance<small>Blocks, for trip time and fuel</small></label><input type="number" id="trip" min="0" step="1000"></div>
+    <div class="field"><label for="hold">Speed hold<small>kb/h, 0 = off (Autopilot Module)</small></label><input type="number" id="hold" min="0" step="10"></div>
+    <div class="field"><label for="length">Craft length<small>Blocks, front to back</small></label><input type="number" id="length" min="1" step="1"></div>
+    <div class="field"><label for="height">Craft height<small>Blocks, for dimension ceilings</small></label><input type="number" id="height" min="1" step="1"></div>
+    <div class="field"><label for="units">Speed unit</label><select id="units"><option value="kbh">kb/h (instruments)</option><option value="bps">blocks per second</option><option value="bpt">blocks per tick</option></select></div>
+    <details class="helper">
+      <summary>Advanced</summary>
+      <div class="field"><label for="propW">Weight of each lift or thruster block<small>Propulsion blocks estimate as iron</small></label><input type="number" id="propW" min="0" step="0.25"></div>
+    </details>
+  </fieldset>
+</aside>
+
+<main>
+  <div class="lab-banner lab-only" id="labBanner"></div>
+
+  <section aria-labelledby="labH" class="lab-only">
+    <h2 id="labH">3.0 and lab tuning</h2>
+    <p class="lede">The same build under the 3.0 rules and under the lab values from the left panel, which start at the 3.1 rules. 3.1 burns fuel per thrust unit and less when lightly loaded, scales the takeoff run with load, varies drive weight and burn by size, scales Hover and Taxi speed with thrusters, and lets spare thrust raise low-altitude speed. Lift-block RF draw is a planned rule and is off in 3.1.</p>
+    <div class="scroll" id="cmpTable"></div>
+    <div class="grid2">
+      <div>
+        <div class="chart-title">Range by drive count <small id="sweepDriveLbl"></small></div>
+        <div class="chart" id="chSweepDrives"></div>
+        <div class="legend" id="sweepDrivesLegend"></div>
+      </div>
+      <div>
+        <div class="chart-title">Trip time by drive count <small id="sweepTripLbl"></small></div>
+        <div class="chart" id="chSweepTrip"></div>
+        <div class="legend" id="sweepTripLegend"></div>
+      </div>
+      <div>
+        <div class="chart-title">Range by Antigravity Plates <small>% of each tuning’s best</small></div>
+        <div class="chart" id="chSweepPlates"></div>
+        <div class="legend" id="sweepPlatesLegend"></div>
+      </div>
+    </div>
+    <p class="note" id="sweepNote"></p>
+    <details class="data"><summary>Lab values as Java constants</summary><pre class="java" id="javaOut"></pre><button type="button" id="copyJava">Copy</button></details>
+  </section>
+
+  <section aria-labelledby="sumH">
+    <h2 id="sumH">Overview</h2>
+    <p class="lede" id="sumLede"></p>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section aria-labelledby="modesH">
+    <h2 id="modesH">Mode readiness</h2>
+    <p class="lede">What the Vehicle Controller will allow with this build. Every mode also needs a Vehicle Controller, a Pilot Seat and at least three wheel or landing gear supports. Flight needs a Vehicle Status screen to select it.</p>
+    <div class="modes" id="modes"></div>
+  </section>
+
+  <section aria-labelledby="weightH">
+    <h2 id="weightH">Weight</h2>
+    <p class="lede">Hover compares lift capacity with the gross weight. Flight uses the effective weight after Antigravity Plates and Repulsor Arrays.</p>
+    <div class="weightbar" id="weightBar" role="img"></div>
+    <div class="legend" id="weightLegend"></div>
+    <div class="equation" id="weightEq"></div>
+    <div class="tiles" id="weightTiles" style="margin-top:12px"></div>
+  </section>
+
+  <section aria-labelledby="profH">
+    <h2 id="profH">Takeoff and climb profile</h2>
+    <p class="lede">A tick-by-tick run of the Flight controller: Taxi takeoff roll, nose-up at takeoff speed, climb at the chosen pitch, then level at the cruise altitude. Hover over a chart to compare the three together.</p>
+    <div id="simMsg" class="sim-msg" hidden></div>
+    <div class="chart-title">Airspeed <small id="spdUnitLbl"></small></div>
+    <div class="chart" id="chSpeed"></div>
+    <div class="chart-title">Altitude <small>Y</small></div>
+    <div class="chart" id="chAlt"></div>
+    <div class="chart-title">Acceleration <small id="accUnitLbl"></small></div>
+    <div class="chart" id="chAcc"></div>
+    <div class="legend" id="profLegend"></div>
+    <details class="data"><summary>Show profile as a table</summary><div class="scroll" id="profTable"></div></details>
+  </section>
+
+  <section aria-labelledby="envH">
+    <h2 id="envH">Altitude envelope</h2>
+    <p class="lede">The heaviest effective weight your thrust can hold at each altitude. Where it meets your effective weight is your ceiling. Thrust needed rises by <code>1 + 24 × (Y − 256) / (100,000 − Y)</code> above Y=256.</p>
+    <div class="chart" id="chEnv"></div>
+    <div class="legend" id="envLegend"></div>
+    <div class="chart-title">Target airspeed by altitude</div>
+    <div class="chart" id="chCruise"></div>
+    <div class="legend" id="cruiseLegend"></div>
+  </section>
+
+  <section aria-labelledby="rangeH">
+    <h2 id="rangeH">Fuel, endurance and range</h2>
+    <p class="lede" id="rangeLede"></p>
+    <div class="tiles" id="fuelTiles"></div>
+    <div class="chart-title">Range by throttle <small>climb plus cruise until the fuel runs out</small></div>
+    <div class="chart" id="chRange"></div>
+    <details class="data"><summary>Show throttle table</summary><div class="scroll" id="rangeTable"></div></details>
+  </section>
+
+  <section aria-labelledby="drivesH">
+    <h2 id="drivesH">How many drives?</h2>
+    <p class="lede" id="drivesLede"></p>
+    <div class="scroll" id="driveTable"></div>
+  </section>
+
+  <section aria-labelledby="handH">
+    <h2 id="handH">Handling</h2>
+    <p class="lede">Roll, pitch and turn rates scale with the thrust-to-weight response factor, from 1 at the takeoff limit to 4 with four times the thrust needed.</p>
+    <div class="tiles" id="handTiles"></div>
+    <div class="scroll" style="margin-top:12px" id="turnTable"></div>
+  </section>
+
+  <section aria-labelledby="tipsH">
+    <h2 id="tipsH">Build notes</h2>
+    <ul class="tips" id="tips"></ul>
+  </section>
+</main>
+</div>
+<footer>Estimates follow the mod’s Flight formulas for steady inputs and a pilot holding the controls. Terrain, turns, cruise handoff loading and weight changes from burned fuel are not simulated. The in-game Vehicle Controller Flight tab is authoritative. <a href="#lab=true" id="labLink">Tuning lab</a></footer>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------------------
+// 3.0 rules and values shared by both rule sets. Keep in sync with src/portable/java/com/vandorlabs/physics/FlightTuning.java.
+// ---------------------------------------------------------------------------
+const T = {
+  WORLD_CEILING: 256, MAX_ALTITUDE: 10000,
+  TAKEOFF_SPEED: .32, LOW_SPEED: 1.5, MAX_CRUISE_SPEED: 15, MIN_FLIGHT_SPEED: .95,
+  EARLY_CRUISE_SHARE: .55, EARLY_CLIMB_HEIGHT: 320,
+  MASS_PER_THRUST: 512, THRUST_ALTITUDE_LIMIT: 100000, ALTITUDE_THRUST_FACTOR: 24,
+  LIFT_REDUCTION_PER_UNIT: 24, MIN_EFFECTIVE_SHARE: .25,
+  BASE_ACCELERATION: .012, MIN_RESPONSE: 1, MAX_RESPONSE: 4,
+  DECEL_BASE: .019, DECEL_PER_EXCESS: .024, DECEL_MAX: .12,
+  LAUNCH_CLIMB: .17,
+  TRIM_PITCH: 45, MAX_PITCH: 75, PITCH_TRIM_DECAY: .085, ROLL_RATE: 8.5,
+  PLATE_LIFT: 36, REPULSOR_LIFT: 72, VERTICAL_THRUSTER_LIFT: 36, MIN_LIFT_BLOCKS: 3,
+  TAXI_SPEED: .4, UNPOWERED_TAXI_SPEED: .3, HOVER_SPEED: .8, HOVER_SPRINT: 1.25, HOVER_VERTICAL_SPEED: .42,
+  HOVER_VERTICAL_ACCEL_MIN: .030, HOVER_VERTICAL_ACCEL_RANGE: .105,
+  DRIVE_ACCEL: .018, BOOST_ACCEL: .028, BRAKE_DECEL: .045,
+  MAXWELL_CAPACITY: 1000, BURN_UNITS_PER_MB: 3000, MAXWELL_DRY_MASS_PER_THRUST: 160,
+  FLUID_WEIGHT_PER_BUCKET: .4
+};
+const DRIVES = [ {w:3,d:4}, {w:4,d:5}, {w:5,d:7}, {w:6,d:8}, {w:9,d:12} ]
+  .map(s => ({...s, id:'d'+s.w, thrust: s.w*s.w*s.d/36, label:`${s.w} × ${s.w} × ${s.d}`}));
+const MATERIALS = [
+  ['Wood, planks, logs', .25], ['Wool, cloth', .08], ['Dirt, sand, gravel', .6], ['Brick, clay', .8],
+  ['Stone, glass, concrete, quartz', 1], ['Aluminium', 1.1], ['Diamond', 1.4], ['Titanium', 1.8],
+  ['Iron, steel, generic metal', 3], ['Copper, bronze, brass', 3.5], ['Silver', 4.2], ['Lead', 4.5],
+  ['Gold, tungsten, uranium', 7.5], ['Osmium, iridium, platinum', 8.5]
+];
+
+// ---------------------------------------------------------------------------
+// 3.1 rules. The defaults mirror the "3.1 Forge rules" block of FlightTuning.java; the lab edits copies of them.
+// ---------------------------------------------------------------------------
+const PDEF = [
+  ['Takeoff'],
+  ['takeoffSpeed', 'Takeoff speed (blocks/tick)', .6, .05, 'TAKEOFF_SPEED'],
+  ['runwayMin', 'Runway with no load (blocks)', 30, 5, 'RUNWAY_MIN'],
+  ['runwayMax', 'Runway at the takeoff limit (blocks)', 200, 10, 'RUNWAY_MAX'],
+  ['runwayExp', 'Runway load exponent', 2, .25, 'RUNWAY_LOAD_EXPONENT'],
+  ['Fuel'],
+  ['tankPerThrust', 'Drive tank mB per thrust unit', 250, 50, 'MAXWELL_TANK_PER_THRUST'],
+  ['burnRate', 'Burn mB/min per thrust unit at the takeoff limit', 100, 10, 'MAXWELL_BURN_PER_MINUTE'],
+  ['loadShare', 'Share of burn that follows load (0–1)', .85, .05, 'MAXWELL_LOAD_BURN_SHARE'],
+  ['Drive sizes (3, 4, 5, 6, 9 wide)'],
+  ['dry3', 'Dry weight per thrust, 3 × 3 × 4', 160, 5, null], ['dry4', 'Dry weight per thrust, 4 × 4 × 5', 150, 5, null],
+  ['dry5', 'Dry weight per thrust, 5 × 5 × 7', 140, 5, null], ['dry6', 'Dry weight per thrust, 6 × 6 × 8', 130, 5, null],
+  ['dry9', 'Dry weight per thrust, 9 × 9 × 12', 120, 5, null],
+  ['burn3', 'Burn per thrust, 3 × 3 × 4', 1, .02, null], ['burn4', 'Burn per thrust, 4 × 4 × 5', 1.08, .02, null],
+  ['burn5', 'Burn per thrust, 5 × 5 × 7', 1.16, .02, null], ['burn6', 'Burn per thrust, 6 × 6 × 8', 1.24, .02, null],
+  ['burn9', 'Burn per thrust, 9 × 9 × 12', 1.4, .02, null],
+  ['Thrusters and lift'],
+  ['thrusterPush', 'Gross weight per thruster at full Hover speed', 200, 10, 'THRUSTER_PUSH'],
+  ['minThrustShare', 'Slowest Hover speed share', .35, .05, 'MIN_THRUSTER_SPEED_SHARE'],
+  ['plateRF', 'RF per tick, Antigravity Plate (planned, 0 in 3.1)', 0, .05, 'PLATE_RF_PER_TICK'],
+  ['repulsorRF', 'RF per tick, Repulsor Array (planned, 0 in 3.1)', 0, .05, 'REPULSOR_RF_PER_TICK'],
+  ['vhtRF', 'RF per tick, Vertical Hover Thruster (planned, 0 in 3.1)', 0, .05, 'VERTICAL_THRUSTER_RF_PER_TICK'],
+  ['Low-altitude speed'],
+  ['lowMin', 'Below Y 256 at the takeoff limit (blocks/tick)', 1, .1, 'LOW_SPEED_MIN'],
+  ['lowMax', 'Below Y 256 with 2× thrust (blocks/tick)', 2, .1, 'LOW_SPEED_MAX'],
+];
+const PKEYS = PDEF.filter(r => r.length > 1).map(r => r[0]);
+
+// --------------------------- shared physics ---------------------------------
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const approach = (c,t,d) => c < t ? Math.min(t, c+d) : Math.max(t, c-d);
+const rad = d => d*Math.PI/180;
+function effectiveMass(m, liftUnits){
+  const r = liftUnits*T.LIFT_REDUCTION_PER_UNIT;
+  return m*(T.MIN_EFFECTIVE_SHARE + (1-T.MIN_EFFECTIVE_SHARE)/(1 + r/Math.max(1,m)));
+}
+const takeoffMass = th => th*T.MASS_PER_THRUST;
+const canFly = (m,th) => m > 0 && th > 0 && m <= takeoffMass(th);
+function altitudeFactor(y){ return y <= T.WORLD_CEILING ? 1 : 1 + T.ALTITUDE_THRUST_FACTOR*(y-T.WORLD_CEILING)/(T.THRUST_ALTITUDE_LIMIT-y); }
+function maximumAltitude(m, th){
+  if(!canFly(m,th)) return 0;
+  const load = m/takeoffMass(th), reserve = 1-load, wl = T.ALTITUDE_THRUST_FACTOR*load;
+  return Math.min(T.MAX_ALTITUDE, (reserve*T.THRUST_ALTITUDE_LIMIT + wl*T.WORLD_CEILING)/(reserve+wl));
+}
+const EARLY_AT_LIMIT = (()=>{const h=T.MAX_ALTITUDE-T.WORLD_CEILING;return h*h/(T.EARLY_CLIMB_HEIGHT**2+h*h);})();
+const BLEND_AT_LIMIT = T.EARLY_CRUISE_SHARE*EARLY_AT_LIMIT + (1-T.EARLY_CRUISE_SHARE);
+const power = (m, th) => Math.min(1, takeoffMass(th)/(2*m));
+function cruiseBlend(alt, ceiling){
+  const climb = Math.max(0, Math.min(alt, ceiling) - T.WORLD_CEILING);
+  const fraction = climb/(T.MAX_ALTITUDE-T.WORLD_CEILING);
+  const early = climb*climb/(T.EARLY_CLIMB_HEIGHT**2 + climb*climb);
+  return (T.EARLY_CRUISE_SHARE*early + (1-T.EARLY_CRUISE_SHARE)*fraction*fraction)/BLEND_AT_LIMIT;
+}
+const response = (m,th) => clamp(takeoffMass(th)/Math.max(1,m), T.MIN_RESPONSE, T.MAX_RESPONSE);
+const propulsion = p => 1 - .65*Math.min(1, Math.max(0, (p-T.TRIM_PITCH)/(T.MAX_PITCH-T.TRIM_PITCH)));
+function sustainableClimb(vertical, remaining){
+  if(vertical <= 0) return vertical;
+  const room = Math.max(0, remaining), band = Math.min(192, Math.max(12, vertical*80));
+  return Math.min(room, vertical*Math.min(1, room/band));
+}
+const bankSink = (roll, speed) => (1-Math.cos(roll))*Math.min(.28, .065 + speed*.016);
+
+// --------------------------- tuning models -----------------------------------
+const CURRENT = {
+  id:'current', label:'3.0', proposed:false,
+  dry: d => T.MAXWELL_DRY_MASS_PER_THRUST*d.thrust,
+  tank: () => T.MAXWELL_CAPACITY,
+  // mB per tick for all drives. Every running drive burns the same, whatever its size or load.
+  burn: (b, throttle) => b.nDrives*throttle/T.BURN_UNITS_PER_MB,
+  takeoffSpeed: T.TAKEOFF_SPEED,
+  rollLimit: () => Math.max(T.TAXI_SPEED, T.TAKEOFF_SPEED),
+  rollAccel: (eff, th) => T.BASE_ACCELERATION*response(eff, th),
+  lowSpeed: () => T.LOW_SPEED,
+  cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; return T.LOW_SPEED + (T.MAX_CRUISE_SPEED-T.LOW_SPEED)*power(m,th)*cruiseBlend(alt, ceiling); },
+  thrustShare: () => 1,
+  taxiSpeed: s => s.thrusters >= 1 ? T.TAXI_SPEED : T.UNPOWERED_TAXI_SPEED,
+  liftRF: () => 0
+};
+function makeProposed(P){
+  const fullBurnPerUnit = P.burnRate/1200; // mB per tick per thrust unit, full throttle, full load
+  const lowSpeed = (m, th) => P.lowMin + (P.lowMax-P.lowMin)*clamp((power(m,th)-.5)/.5, 0, 1);
+  const shareOf = (s, gross) => { if(s.thrusters < 1) return 0; const r = s.thrusters*P.thrusterPush/Math.max(1,gross); return clamp(Math.sqrt(Math.min(1, r)), P.minThrustShare, 1); };
+  return {
+    id:'proposed', label:P.label || 'Lab', proposed:true, P,
+    dry: d => P['dry'+d.w]*d.thrust,
+    tank: d => P.tankPerThrust*d.thrust,
+    burn(b, throttle, thrust){
+      const th = thrust ?? b.rated*throttle/15;
+      const load = th > 0 ? Math.min(1, b.eff/takeoffMass(th)) : 1;
+      const factor = 1 - P.loadShare + P.loadShare*load;
+      let units = 0; for(const d of DRIVES) units += b.s[d.id]*d.thrust*P['burn'+d.w];
+      return units*fullBurnPerUnit*throttle/15*factor;
+    },
+    takeoffSpeed: P.takeoffSpeed,
+    rollLimit: () => P.takeoffSpeed,
+    rollAccel(eff, th){
+      const load = clamp(eff/takeoffMass(th), 0, 1);
+      const run = P.runwayMin + (P.runwayMax-P.runwayMin)*load**P.runwayExp;
+      return P.takeoffSpeed**2/(2*Math.max(1, run));
+    },
+    lowSpeed,
+    cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; const low = lowSpeed(m, th); return low + (T.MAX_CRUISE_SPEED-low)*power(m,th)*cruiseBlend(alt, ceiling); },
+    thrustShare: (s, gross) => shareOf(s, gross),
+    taxiSpeed: (s, gross) => s.thrusters >= 1 ? T.UNPOWERED_TAXI_SPEED + (T.TAXI_SPEED-T.UNPOWERED_TAXI_SPEED)*Math.min(1, s.thrusters*P.thrusterPush/Math.max(1,gross)) : T.UNPOWERED_TAXI_SPEED,
+    liftRF: s => s.plates*P.plateRF + s.repulsors*P.repulsorRF + s.vht*P.vhtRF
+  };
+}
+
+// --------------------------- build model -----------------------------------
+function build(s, M){
+  const nDrives = DRIVES.reduce((a,d)=>a+s[d.id],0);
+  const rated = DRIVES.reduce((a,d)=>a+s[d.id]*d.thrust,0);
+  const drivesDry = DRIVES.reduce((a,d)=>a+s[d.id]*M.dry(d),0);
+  const fill = clamp(s.fill, 0, 100)/100;
+  const driveFuel = DRIVES.reduce((a,d)=>a+s[d.id]*M.tank(d)*fill,0);
+  const tankTotal = DRIVES.reduce((a,d)=>a+s[d.id]*M.tank(d),0);
+  const fuelTotal = (nDrives ? driveFuel : 0) + (nDrives ? s.reserve : 0);
+  const fuelUnitWeight = T.FLUID_WEIGHT_PER_BUCKET/1000*Math.max(1, s.density)/1000; // per mB
+  const fuelW = fuelTotal*fuelUnitWeight;
+  const liftBlocks = s.plates + s.repulsors + s.vht;
+  const liftW = liftBlocks*s.propW, thrW = s.thrusters*s.propW;
+  const parts = s.scanned
+    ? [['Scanned craft', s.hull], ['Cargo', s.cargo]]
+    : [['Hull', s.hull], ['Cargo', s.cargo], ['Maxwell Drives', drivesDry], ['Lift blocks', liftW], ['Thrusters', thrW], ['Fuel', fuelW]];
+  const gross = parts.reduce((a,p)=>a+p[1],0);
+  const baseNoDrives = Math.max(0, gross - (s.scanned ? 0 : drivesDry + driveFuel*fuelUnitWeight));
+  const liftRF = M.liftRF(s);
+  const rfNet = liftRF - s.rfGen;
+  const powered = liftRF <= 0 || s.rf > 0 || rfNet <= 0;
+  const liftUnits = powered ? s.plates + 2*s.repulsors : 0;
+  const eff = effectiveMass(gross, liftUnits);
+  const fueled = nDrives > 0 && fuelTotal > 0;
+  const thrust = fueled ? rated*s.throttle/15 : 0;
+  const capacity = T.PLATE_LIFT*s.plates + T.REPULSOR_LIFT*s.repulsors + T.VERTICAL_THRUSTER_LIFT*s.vht;
+  const dimCeiling = s.dim === 0 ? T.MAX_ALTITUDE : Math.max(0, s.dim - s.height - 1);
+  const ceilingRaw = maximumAltitude(eff, thrust);
+  const ceiling = Math.min(ceilingRaw, dimCeiling);
+  const b = {s, M, nDrives, rated, drivesDry, fill, driveFuel, tankTotal, fuelTotal, fuelUnitWeight, fuelW, liftBlocks, liftW, thrW, parts, gross,
+    baseNoDrives, liftUnits, eff, thrust, capacity, dimCeiling, ceilingRaw, ceiling, fueled, liftRF, rfNet, powered,
+    flies: canFly(eff, thrust) && ceiling > 0, resp: response(eff, thrust)};
+  b.burnPerTick = fueled ? M.burn(b, s.throttle, thrust) : 0;
+  b.thrustShare = M.thrustShare(s, gross);
+  return b;
+}
+
+// --------------------------- tick simulation --------------------------------
+function simulate(b, opts={}){
+  const s = b.s, M = b.M, th = opts.thrust ?? b.thrust, burn = opts.burn ?? b.burnPerTick;
+  const eff = b.eff, record = opts.record !== false;
+  if(!canFly(eff, th)) return {ok:false};
+  const ceilingRaw = maximumAltitude(eff, th), ceiling = Math.min(ceilingRaw, b.dimCeiling);
+  if(ceiling <= 0) return {ok:false};
+  const target = Math.max(s.startY, Math.min(s.target, ceiling));
+  const r = response(eff, th), pitchRate = .7 + .36*r;
+  const maxPitch = Math.min(T.MAX_PITCH, T.TRIM_PITCH + pitchRate/T.PITCH_TRIM_DECAY);
+  const climbPitch = Math.min(s.pitch, maxPitch);
+  const hold = s.hold > 0 ? s.hold/72 : 0;
+  let t = 0, v = 0, alt = s.startY, x = 0, pitch = 0, fuel = b.fuelTotal, used = 0;
+  const samples = [];
+  const push = (a) => { if(record) samples.push({t, v, alt, x, a, pitch, fuel}); };
+  push(0);
+  // Taxi takeoff roll; the pilot raises the nose at takeoff speed.
+  const rollAccel = M.rollAccel(eff, th), rollLimit = M.rollLimit();
+  while(v < M.takeoffSpeed && t < 20*600){
+    const pv = v; v = Math.min(rollLimit, v + rollAccel); x += v; t++;
+    fuel -= burn; used += burn; push(v-pv);
+  }
+  const runway = x, takeoffTick = t;
+  let launch = Math.max(5, 2 + Math.ceil(s.length*.5*Math.sin(rad(3))/T.LAUNCH_CLIMB));
+  let reachedTick = -1, reachedX = 0, fuelOut = false, settle = 0;
+  const LIMIT = 20*60*60;
+  while(t < LIMIT){
+    if(fuel <= 0 && burn > 0){ fuelOut = true; break; }
+    let speedTarget = Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(alt, eff, th, ceilingRaw));
+    if(hold) speedTarget = Math.min(speedTarget, hold);
+    const launching = launch > 0;
+    if(launching){ pitch = launch <= 2 ? 3 : 0; launch--; }
+    else {
+      let desired = climbPitch;
+      const steps = pitch/pitchRate;
+      if(alt + v*(steps + 1) >= target - .5){
+        // Pilot levels off early enough to arrive at the target altitude.
+        let lead = 0, p = pitch;
+        while(p > 0){ p -= pitchRate; lead += Math.sin(rad(Math.max(0,p)))*v; }
+        if(alt + lead >= target - .5) desired = 0;
+      }
+      pitch = approach(pitch, desired, pitchRate);
+    }
+    const accel = T.BASE_ACCELERATION*r*propulsion(pitch)*(1 + speedTarget/10);
+    const decel = Math.min(T.DECEL_MAX, T.DECEL_BASE + Math.max(0, v-speedTarget)*T.DECEL_PER_EXCESS);
+    const pv = v;
+    v = approach(v, speedTarget, v <= speedTarget ? accel : decel);
+    const pr = rad(pitch);
+    const vertical = launching ? T.LAUNCH_CLIMB : Math.sin(pr)*v;
+    let my = sustainableClimb(vertical, ceiling - alt);
+    let hx = Math.cos(pr)*v;
+    const d2 = hx*hx + my*my;
+    if(d2 > T.MAX_CRUISE_SPEED**2){ const k = T.MAX_CRUISE_SPEED/Math.sqrt(d2); hx *= k; my *= k; }
+    alt += my; x += hx; t++; fuel -= burn; used += burn;
+    push(v-pv);
+    if(!launching && pitch === 0 && v === speedTarget && alt >= target - 3){
+      if(reachedTick < 0){ reachedTick = t; reachedX = x; }
+      if(++settle > (opts.tail ?? 0)) break;
+    }
+  }
+  const climbTicks = reachedTick < 0 ? t : reachedTick;
+  const cruiseAt = (alt2, eff2) => { const c = Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(alt2, eff2, th, maximumAltitude(eff2, th))); return hold ? Math.min(c, hold) : c; };
+  const cruiseSpeed = cruiseAt(alt, eff);
+  // Cruise until the fuel runs out. Under the proposal, lift blocks also need RF; when it runs out the
+  // craft carries its full weight, flies on at its lower ceiling if it still can, or has to land.
+  let remaining = Math.max(0, fuel), ticks = t - (climbTicks < t ? t - climbTicks : 0), dist = x;
+  const rfNet = b.rfNet > 0 && b.liftUnits > 0 ? b.rfNet : 0;
+  let rfLeft = b.s.rf - rfNet*climbTicks;
+  let powerOut = false, liftLostAt = null;
+  const tFuel = burn > 0 ? remaining/burn : Infinity;
+  const tPow = rfNet > 0 ? Math.max(0, rfLeft)/rfNet : Infinity;
+  let cruiseTicks = Math.min(tFuel, tPow), range = dist + cruiseSpeed*cruiseTicks, endurance = climbTicks + cruiseTicks;
+  if(tPow < tFuel){
+    powerOut = true; liftLostAt = endurance;
+    remaining -= burn*tPow;
+    const heavy = b.gross;
+    if(canFly(heavy, th)){
+      const burn2 = M.burn({...b, eff: heavy}, opts.throttle ?? s.throttle, th);
+      const alt2 = Math.min(alt, maximumAltitude(heavy, th), b.dimCeiling);
+      const t2 = burn2 > 0 ? remaining/burn2 : Infinity;
+      range += cruiseAt(alt2, heavy)*t2; endurance += t2;
+    }
+  }
+  return {ok:true, samples, runway, takeoffTick, climbTicks, climbDist: reachedTick < 0 ? x : reachedX, cruiseAlt:alt, burn, cruiseSpeed, fuelOut,
+    climbFuel:used, cruiseTicks, range: burn > 0 || powerOut ? range : Infinity,
+    endurance: burn > 0 || powerOut ? endurance : Infinity, climbPitch, maxPitch, target, ceiling, r,
+    powerOut, liftLostAt, timedOut: t >= LIMIT};
+}
+function throttleSweep(b){
+  if(!(b.rated > 0 && b.fueled)) return null;
+  const res = [];
+  for(let t=1;t<=15;t++){
+    const th = b.rated*t/15, burn = b.M.burn(b, t, th);
+    const r = canFly(b.eff, th) ? simulate(b, {thrust:th, burn, throttle:t, record:false}) : {ok:false};
+    res.push({t, ok:r.ok, range:r.ok ? r.range : 0, ceil:r.ok ? r.ceiling : 0, v:r.ok ? r.cruiseSpeed : 0, end:r.ok ? r.endurance : 0, alt:r.ok ? r.cruiseAlt : 0});
+  }
+  const best = res.reduce((a,r)=> r.range > a.range ? r : a, res[0]);
+  return {res, best: best.ok ? best : null};
+}
+const rangeOf = (s, M) => { const b = build(s, M); if(!b.flies) return 0; const r = simulate(b, {record:false}); return r.ok ? r.range : 0; };
+// Time and fuel to cover a trip distance: climb, then cruise. Descent is not modelled.
+function tripOf(r, D){
+  if(!r || !r.ok || !(D > 0)) return null;
+  const ticks = D <= r.climbDist ? r.climbTicks*D/Math.max(1, r.climbDist) : r.climbTicks + (D - r.climbDist)/r.cruiseSpeed;
+  return {ticks, fuel: r.burn*ticks, reachable: r.range >= D};
+}
+
+// --------------------------- formatting --------------------------------------
+const nf = (v, d=0) => Number.isFinite(v) ? v.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d}) : '∞';
+const unitName = () => ({kbh:'kb/h', bps:'blocks/s', bpt:'blocks/tick'})[state.units];
+const speedVal = bt => state.units === 'kbh' ? bt*72 : state.units === 'bps' ? bt*20 : bt;
+function speedFmt(bt, withUnit=true){
+  const u = state.units, val = u === 'kbh' ? nf(bt*72, 1) : u === 'bps' ? nf(bt*20, 1) : nf(bt, 3);
+  return withUnit ? `${val} ${unitName()}` : val;
+}
+function timeFmt(ticks){
+  if(!Number.isFinite(ticks)) return '∞';
+  const sec = ticks/20;
+  if(sec < 60) return `${nf(sec, sec < 10 ? 1 : 0)} s`;
+  if(sec < 3600) return `${Math.floor(sec/60)} min ${Math.round(sec%60)} s`;
+  return `${Math.floor(sec/3600)} h ${Math.round((sec%3600)/60)} min`;
+}
+function distFmt(blocks){
+  if(!Number.isFinite(blocks)) return '∞';
+  return blocks >= 1e6 ? `${nf(blocks/1e6, 2)}M blocks` : blocks >= 10000 ? `${nf(blocks/1000, 1)}k blocks` : `${nf(blocks)} blocks`;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+
+// --------------------------- charts ------------------------------------------
+function niceTicks(min, max, count=5){
+  if(!(max > min)) max = min + 1;
+  const span = max - min, step0 = span/count, mag = 10**Math.floor(Math.log10(step0));
+  const err = step0/mag, step = (err >= 7.5 ? 10 : err >= 3.5 ? 5 : err >= 1.5 ? 2 : 1)*mag;
+  const lo = Math.floor(min/step)*step, hi = Math.ceil(max/step)*step, ticks = [];
+  for(let v = lo; v <= hi + step*1e-6; v += step) ticks.push(+v.toFixed(10));
+  return {lo, hi, ticks};
+}
+const SYNC = {};
+function lineChart(el, cfg){
+  const W = Math.max(300, el.clientWidth || 600), H = cfg.height || 200;
+  const m = {l: 58, r: 16, t: 10, b: 30};
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const live = cfg.series.filter(s => s.data.length);
+  const allX = live.flatMap(s => s.data.map(p => p[0]));
+  const allY = live.flatMap(s => s.data.map(p => p[1])).concat((cfg.refs||[]).map(r=>r.y));
+  if(!allX.length){ el.innerHTML = ''; return; }
+  const xs = niceTicks(cfg.xMin ?? Math.min(...allX), cfg.xMax ?? Math.max(...allX), cfg.xTicks || 6);
+  const xLo = cfg.xMin ?? xs.lo, xHi = cfg.xMax ?? xs.hi;
+  const ys = niceTicks(cfg.yMin ?? Math.min(0, ...allY), cfg.yMax ?? Math.max(...allY), 4);
+  const X = v => m.l + (v - xLo)/(xHi - xLo || 1)*iw, Y = v => m.t + ih - (v - ys.lo)/(ys.hi - ys.lo || 1)*ih;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.aria||'')}">`;
+  for(const v of ys.ticks){ svg += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/>`
+    + `<text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${esc(cfg.yFmt(v))}</text>`; }
+  for(const v of xs.ticks){ if(v < xLo - 1e-9 || v > xHi + 1e-9) continue;
+    svg += `<text x="${X(v)}" y="${H-10}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(cfg.xFmt(v))}</text>`; }
+  svg += `<line x1="${m.l}" x2="${W-m.r}" y1="${m.t+ih}" y2="${m.t+ih}" stroke="#456171"/>`;
+  for(const r of cfg.refs||[]){
+    svg += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(r.y)}" y2="${Y(r.y)}" stroke="var(--text-2)" stroke-dasharray="5 4" stroke-width="1.5"/>`
+      + `<text x="${W-m.r-4}" y="${Y(r.y)-6}" text-anchor="end" font-size="11.5" fill="var(--text-2)">${esc(r.label)}</text>`;
+  }
+  for(const vm of cfg.vmarks||[]){
+    if(vm.x < xLo || vm.x > xHi) continue;
+    svg += `<line x1="${X(vm.x)}" x2="${X(vm.x)}" y1="${m.t}" y2="${m.t+ih}" stroke="#5b7486" stroke-dasharray="2 3"/>`
+      + `<text x="${X(vm.x)+4}" y="${m.t+ih-6}" font-size="11" fill="var(--text-2)">${esc(vm.label)}</text>`;
+  }
+  for(const s of live){
+    const d = s.data.map((p,i)=>`${i?'L':'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('');
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash?' stroke-dasharray="6 4"':''}/>`;
+  }
+  for(const p of cfg.points||[]){
+    svg += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="${p.color}" stroke="var(--panel)" stroke-width="2"/>`
+      + `<text x="${X(p.x)+(p.anchor==='end'?-9:9)}" y="${Y(p.y)-8}" text-anchor="${p.anchor||'start'}" font-size="11.5" fill="var(--text)">${esc(p.label)}</text>`;
+  }
+  svg += `<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--text-2)" visibility="hidden"/>`;
+  cfg.series.forEach((s,i)=> svg += `<circle class="hd hd${i}" r="4.5" fill="${s.color}" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>`);
+  svg += `<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" class="hit"/></svg><div class="tip"></div>`;
+  el.innerHTML = svg;
+  const root = el.querySelector('svg'), tip = el.querySelector('.tip'), xh = root.querySelector('.xh');
+  const nearest = (data, xv) => { let lo = 0, hi = data.length-1; while(hi-lo > 1){ const mid=(lo+hi)>>1; if(data[mid][0] < xv) lo = mid; else hi = mid; }
+    return Math.abs(data[lo][0]-xv) <= Math.abs(data[hi][0]-xv) ? data[lo] : data[hi]; };
+  const hide = () => { tip.style.display = 'none'; xh.setAttribute('visibility','hidden'); root.querySelectorAll('.hd').forEach(c=>c.setAttribute('visibility','hidden')); };
+  const show = (xv) => {
+    if(xv == null || xv < xLo || xv > xHi){ hide(); return; }
+    xh.setAttribute('x1', X(xv)); xh.setAttribute('x2', X(xv)); xh.setAttribute('visibility','visible');
+    let rows = '';
+    cfg.series.forEach((s,i)=>{ const c = root.querySelector('.hd'+i); if(!s.data.length){c.setAttribute('visibility','hidden');return;}
+      const p = nearest(s.data, xv);
+      if(Math.abs(p[0]-xv) > (xHi-xLo)*.04){ c.setAttribute('visibility','hidden'); return; }
+      c.setAttribute('cx', X(p[0])); c.setAttribute('cy', Y(p[1])); c.setAttribute('visibility','visible');
+      rows += `<div class="row"><i style="background:${s.color}"></i>${esc(s.name)}: <b>${esc(cfg.yFmt(p[1], true))}</b></div>`; });
+    tip.innerHTML = `<div>${esc(cfg.tipX ? cfg.tipX(xv) : cfg.xFmt(xv))}</div>${rows}`;
+    tip.style.display = 'block';
+    const left = X(xv) + 14, tw = tip.offsetWidth;
+    tip.style.left = (left + tw > W ? X(xv) - tw - 14 : left) + 'px'; tip.style.top = (m.t + 4) + 'px';
+  };
+  const fromEvent = e => { const r = root.getBoundingClientRect(); const px = (e.clientX - r.left)*W/r.width; return xLo + (px - m.l)/iw*(xHi-xLo); };
+  const api = {show, hide, el};
+  if(cfg.sync){ (SYNC[cfg.sync] ||= new Set()); for(const o of [...SYNC[cfg.sync]]) if(!document.body.contains(o.el) || o.el === el) SYNC[cfg.sync].delete(o); SYNC[cfg.sync].add(api); }
+  const peers = () => cfg.sync ? [...SYNC[cfg.sync]] : [api];
+  const hit = root.querySelector('.hit');
+  hit.addEventListener('pointermove', e => { const xv = fromEvent(e); peers().forEach(p => p.show(xv)); });
+  hit.addEventListener('pointerleave', () => peers().forEach(p => p.hide()));
+}
+function barChart(el, cfg){
+  const W = Math.max(300, el.clientWidth || 600), H = cfg.height || 200, m = {l:58, r:16, t:22, b:30};
+  const iw = W-m.l-m.r, ih = H-m.t-m.b, n = cfg.data.length;
+  const ys = niceTicks(0, Math.max(1e-9, ...cfg.data.map(d=>d.y)), 4);
+  const Y = v => m.t + ih - v/(ys.hi||1)*ih, band = iw/n, bw = Math.max(4, band - 6);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(cfg.aria||'')}">`;
+  for(const v of ys.ticks){ svg += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${m.l-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${esc(cfg.yFmt(v))}</text>`; }
+  cfg.data.forEach((d,i)=>{
+    const x = m.l + i*band + (band-bw)/2, y = Y(d.y), h = Math.max(0, m.t+ih-y);
+    const r = Math.min(4, bw/2, h);
+    const path = h > 0 ? `M${x},${m.t+ih}V${y+r}Q${x},${y} ${x+r},${y}H${x+bw-r}Q${x+bw},${y} ${x+bw},${y+r}V${m.t+ih}Z` : '';
+    svg += `<path d="${path}" fill="${d.color}"/>`;
+    svg += `<text x="${x+bw/2}" y="${H-10}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(d.x)}</text>`;
+    if(d.label) svg += `<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" font-size="11" fill="var(--text)">${esc(d.label)}</text>`;
+    svg += `<rect x="${m.l+i*band}" y="${m.t}" width="${band}" height="${ih}" fill="transparent" data-i="${i}" class="bh"/>`;
+  });
+  svg += `<line x1="${m.l}" x2="${W-m.r}" y1="${m.t+ih}" y2="${m.t+ih}" stroke="#456171"/></svg><div class="tip"></div>`;
+  el.innerHTML = svg;
+  const tip = el.querySelector('.tip'), root = el.querySelector('svg');
+  root.querySelectorAll('.bh').forEach(r => {
+    r.addEventListener('pointerenter', () => { const i = +r.dataset.i; tip.innerHTML = cfg.tip(cfg.data[i]); tip.style.display = 'block';
+      const cx = m.l + (i+.5)*band, tw = tip.offsetWidth; tip.style.left = Math.min(W - tw, Math.max(0, cx - tw/2)) + 'px'; tip.style.top = '0px'; r.setAttribute('fill','#ffffff0d'); });
+    r.addEventListener('pointerleave', () => { tip.style.display = 'none'; r.setAttribute('fill','transparent'); });
+  });
+}
+const decimate = (arr, max=500) => { if(arr.length <= max) return arr; const step = arr.length/max, out = []; for(let i=0;i<max;i++) out.push(arr[Math.floor(i*step)]); out.push(arr[arr.length-1]); return out; };
+const legendHtml = series => series.map(x=>`<span><i class="${x.dash?'dash':''}" style="background:${x.color};color:${x.color}"></i>${esc(x.name)}</span>`).join('');
+
+// --------------------------- inputs & state ----------------------------------
+const DEFAULTS = {hull:130, cargo:10, scanned:false, plates:10, repulsors:0, vht:0, thrusters:2, rf:100000, rfGen:0,
+  d3:1, d4:0, d5:0, d6:0, d9:0, fill:100, throttle:15, reserve:4000, density:1000,
+  dim:0, startY:64, target:10000, pitch:30, trip:20000, hold:0, length:9, height:5, units:'kbh', propW:3,
+  lab:false, model:'current', overlay:true};
+for(const r of PDEF) if(r.length > 1) DEFAULTS['p_'+r[0]] = r[2];
+const FORM_IDS = ['hull','cargo','scanned','plates','repulsors','vht','thrusters','rf','rfGen','d3','d4','d5','d6','d9','fill','throttle','reserve','density',
+  'dim','startY','target','pitch','trip','hold','length','height','units','propW','overlay'];
+const PRESETS = {
+  scout:   {hull:110, cargo:10, plates:4, repulsors:0, vht:0, thrusters:2, d3:1, d4:0, d5:0, d6:0, d9:0},
+  shuttle: {hull:260, cargo:60, plates:24, repulsors:0, vht:0, thrusters:4, d3:0, d4:1, d5:0, d6:0, d9:0, length:14},
+  freighter:{hull:700, cargo:450, plates:0, repulsors:42, vht:0, thrusters:6, d3:0, d4:0, d5:2, d6:0, d9:0, length:24, height:9, reserve:16000, rf:1000000},
+  heavy:   {hull:2400, cargo:1500, plates:0, repulsors:60, vht:0, thrusters:8, d3:0, d4:0, d5:0, d6:0, d9:1, length:32, height:14, rf:1000000},
+  hover:   {hull:300, cargo:200, plates:6, repulsors:4, vht:4, thrusters:2, d3:0, d4:0, d5:0, d6:0, d9:0}
+};
+let state = {...DEFAULTS};
+const PROP = () => { const P = {}; for(const k of PKEYS) P[k] = state['p_'+k]; return makeProposed(P); };
+// The in-game rules: 3.1 with its default values, whatever the lab holds.
+const RULES = (() => { const P = {label:'3.1'}; for(const r of PDEF) if(r.length > 1) P[r[0]] = r[2]; return makeProposed(P); })();
+const MODEL = () => !state.lab ? RULES : state.model === 'proposed' ? PROP() : CURRENT;
+const OTHER = () => state.lab ? (state.model === 'proposed' ? CURRENT : PROP()) : null;
+
+function setupForm(){
+  const grid = document.getElementById('driveGrid');
+  for(const d of DRIVES){
+    grid.insertAdjacentHTML('beforeend', `<label for="${d.id}">${d.label}<br><small style="color:var(--muted)" id="dry_${d.id}"></small></label><input type="number" id="${d.id}" min="0" step="1"><span style="font-variant-numeric:tabular-nums">${nf(d.thrust,2)}</span>`);
+  }
+  const mg = document.getElementById('matGrid');
+  MATERIALS.forEach(([name,w],i)=> mg.insertAdjacentHTML('beforeend', `<label for="mat${i}" style="font-size:12.5px">${name}</label><span class="w">${w}</span><input type="number" id="mat${i}" min="0" step="1" value="0">`));
+  const matTotal = () => MATERIALS.reduce((a,[,w],i)=> a + w*(+document.getElementById('mat'+i).value || 0), 0);
+  mg.addEventListener('input', () => document.getElementById('matTotal').textContent = `${nf(matTotal(),2)} units`);
+  document.getElementById('matApply').addEventListener('click', () => { state.hull = Math.round(matTotal()*100)/100; writeForm(); schedule(); });
+  const pg = document.getElementById('paramGrid');
+  for(const r of PDEF){
+    if(r.length === 1){ pg.insertAdjacentHTML('beforeend', `<div class="g">${esc(r[0])}</div>`); continue; }
+    pg.insertAdjacentHTML('beforeend', `<label for="p_${r[0]}">${esc(r[1])}</label><input type="number" id="p_${r[0]}" step="${r[3]}" min="0">`);
+  }
+  for(const id of FORM_IDS.concat(PKEYS.map(k=>'p_'+k))){
+    const el = document.getElementById(id);
+    el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', () => { readForm(); schedule(); });
+  }
+  document.querySelectorAll('[data-model]').forEach(btn => btn.addEventListener('click', () => { state.model = btn.dataset.model; schedule(); }));
+  document.getElementById('pReset').addEventListener('click', () => { for(const k of PKEYS) state['p_'+k] = DEFAULTS['p_'+k]; writeForm(); schedule(); });
+  document.getElementById('preset').addEventListener('change', e => {
+    const p = PRESETS[e.target.value]; if(!p) return;
+    keepLab(() => Object.assign(state, {...pickBuild(DEFAULTS), ...p})); writeForm(); schedule(); e.target.value = '';
+  });
+  document.getElementById('reset').addEventListener('click', () => { keepLab(() => Object.assign(state, pickBuild(DEFAULTS))); writeForm(); schedule(); });
+  document.getElementById('share').addEventListener('click', async () => {
+    const h = await encodeShare(), url = location.href.split('#')[0] + '#' + h;
+    try { await navigator.clipboard.writeText(url); } catch(e) { try { history.replaceState(null, '', '#' + h); } catch(e2) {} }
+    const c = document.getElementById('copied'); c.hidden = false; setTimeout(()=> c.hidden = true, 1800);
+  });
+  document.getElementById('labLink').addEventListener('click', e => { e.preventDefault(); state.lab = !state.lab; schedule(); });
+  document.getElementById('copyJava').addEventListener('click', () => { try { navigator.clipboard.writeText(document.getElementById('javaOut').textContent); } catch(e) {} });
+}
+// Presets and Reset change the build, never the lab switches or proposed values.
+const pickBuild = src => { const o = {}; for(const k of FORM_IDS) if(k !== 'units' && k !== 'overlay') o[k] = src[k]; return o; };
+function keepLab(fn){ fn(); }
+function readForm(){
+  for(const id of FORM_IDS.concat(PKEYS.map(k=>'p_'+k))){
+    const el = document.getElementById(id);
+    if(el.type === 'checkbox') state[id] = el.checked;
+    else if(id === 'units') state[id] = el.value;
+    else { const v = parseFloat(el.value); state[id] = Number.isFinite(v) ? v : 0; }
+  }
+  for(const k of ['plates','repulsors','vht','thrusters','d3','d4','d5','d6','d9']) state[k] = Math.max(0, Math.floor(state[k]));
+  state.throttle = clamp(Math.round(state.throttle) || 1, 1, 15);
+  state.fill = clamp(state.fill, 0, 100);
+  state.pitch = clamp(state.pitch || 30, 5, 75);
+  state.length = Math.max(1, state.length); state.height = Math.max(1, state.height);
+  for(const k of ['hull','cargo','reserve','hold','propW','startY','target','rf','rfGen','trip']) state[k] = Math.max(0, state[k]);
+  for(const k of PKEYS) state['p_'+k] = Math.max(0, state['p_'+k]);
+  state.p_takeoffSpeed = Math.max(.05, state.p_takeoffSpeed);
+  state.p_loadShare = clamp(state.p_loadShare, 0, 1);
+  state.p_minThrustShare = clamp(state.p_minThrustShare, 0, 1);
+  state.density = Math.max(1, state.density);
+}
+function writeForm(){
+  for(const id of FORM_IDS.concat(PKEYS.map(k=>'p_'+k))){ const el = document.getElementById(id); if(el.type === 'checkbox') el.checked = !!state[id]; else el.value = state[id]; }
+}
+// Share links: "#<version>.<data>". The data is a JSON array of every setting in SHARE_KEYS order,
+// with null for defaults and trailing defaults dropped, deflated and base64url encoded. "#<version>u.<data>"
+// is the same array without compression, for browsers without CompressionStream.
+// Never reorder or remove SHARE_KEYS entries: append new settings and keep old versions decodable.
+const SHARE_VERSION = 1;
+const SHARE_KEYS = Object.keys(DEFAULTS);
+const b64url = bytes => { let s = ''; for(const x of bytes) s += String.fromCharCode(x); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const unb64url = str => { const s = atob(str.replace(/-/g,'+').replace(/_/g,'/') + '==='.slice((str.length + 3) % 4)); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+async function pipeBytes(bytes, stream){ return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+function packState(){
+  const arr = SHARE_KEYS.map(k => state[k] === DEFAULTS[k] ? null : typeof DEFAULTS[k] === 'boolean' ? +state[k] : state[k]);
+  while(arr.length && arr[arr.length-1] === null) arr.pop();
+  return JSON.stringify(arr);
+}
+async function encodeShare(){
+  const json = new TextEncoder().encode(packState());
+  if(typeof CompressionStream === 'function'){
+    try { return `${SHARE_VERSION}.${b64url(await pipeBytes(json, new CompressionStream('deflate-raw')))}`; } catch(e) { /* fall through */ }
+  }
+  return `${SHARE_VERSION}u.${b64url(json)}`;
+}
+async function decodeShare(hash){
+  const m = /^#?(\d+)(u?)\.([A-Za-z0-9_-]*)$/.exec(hash);
+  if(!m) return null;
+  if(+m[1] !== 1) return null; // future versions add their own decoders here
+  let bytes = unb64url(m[3]);
+  if(!m[2]) bytes = await pipeBytes(bytes, new DecompressionStream('deflate-raw'));
+  const arr = JSON.parse(new TextDecoder().decode(bytes));
+  const out = {...DEFAULTS};
+  SHARE_KEYS.forEach((k, i) => {
+    const v = arr[i]; if(v === null || v === undefined) return;
+    out[k] = typeof DEFAULTS[k] === 'boolean' ? !!v : typeof DEFAULTS[k] === 'number' ? (Number.isFinite(+v) ? +v : DEFAULTS[k]) : String(v);
+  });
+  return out;
+}
+let shareSeq = 0;
+async function writeShareHash(){
+  const seq = ++shareSeq, h = await encodeShare();
+  if(seq !== shareSeq) return;
+  const isDefault = packState() === '[]';
+  try { history.replaceState(null, '', location.pathname + location.search + (isDefault ? '' : '#' + h)); } catch(e) { /* opaque origins */ }
+}
+// Earlier "key=value&..." links still open.
+function decodeState(hash){
+  const out = {...DEFAULTS};
+  for(const part of hash.replace(/^#/,'').split('&')){
+    const [k, v] = part.split('='); if(!(k in DEFAULTS) || v === undefined) continue;
+    const raw = decodeURIComponent(v);
+    out[k] = typeof DEFAULTS[k] === 'boolean' ? (raw === 'true' || raw === '1') : typeof DEFAULTS[k] === 'number' ? (parseFloat(raw) || 0) : raw;
+  }
+  return out;
+}
+
+// --------------------------- rendering ---------------------------------------
+const $ = id => document.getElementById(id);
+const tile = (k, v, s='') => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
+const HEX = ['#3987e5','#d95926','#199e70','#c98500','#d55181','#0ca30c'];
+const OTHER_COLOR = '#9085e9';
+
+function solveCount(pred, limit=100000){
+  if(pred(0)) return 0;
+  let lo = 0, hi = 1;
+  while(!pred(hi)){ lo = hi; hi *= 2; if(hi > limit) return -1; }
+  while(hi - lo > 1){ const mid = (lo+hi)>>1; if(pred(mid)) hi = mid; else lo = mid; }
+  return hi;
+}
+function solveMargin(pred){
+  if(!pred(0)) return -1;
+  let lo = 0, hi = 1;
+  while(pred(hi)){ lo = hi; hi *= 2; if(hi > 1e9) return Infinity; }
+  for(let i=0;i<50;i++){ const mid = (lo+hi)/2; if(pred(mid)) lo = mid; else hi = mid; }
+  return lo;
+}
+let pending = 0;
+function schedule(){ clearTimeout(pending); pending = setTimeout(update, 40); }
+
+function update(){
+  writeShareHash();
+  document.body.classList.toggle('lab', !!state.lab);
+  $('labLink').textContent = state.lab ? 'Close tuning lab' : 'Tuning lab';
+  document.querySelectorAll('[data-model]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.model === state.model)));
+  const M = MODEL(), O = OTHER(), s = state, prop = M.proposed;
+  const b = build(s, M);
+  const sim = b.flies ? simulate(b, {tail: 200}) : {ok:false};
+  const sweep = throttleSweep(b);
+  $('spdUnitLbl').textContent = unitName();
+  $('accUnitLbl').textContent = `${unitName()} per second`;
+  $('labBanner').textContent = M === CURRENT ? 'Showing the 3.0 rules, before the 3.1 flight rebalance.' : 'Showing the lab values. They match 3.1 until you edit them; edited values are not in the game.';
+  for(const d of DRIVES) $('dry_'+d.id).textContent = `${nf(M.dry(d),1)} units dry` + (prop ? ` · ${nf(M.tank(d))} mB` : '');
+  $('fillHint').textContent = prop ? `%, tanks hold ${nf(M.P.tankPerThrust)} mB per thrust unit` : '%, each tank holds 1,000 mB';
+
+  // ---------- overview
+  const hoverOk = b.liftBlocks >= T.MIN_LIFT_BLOCKS && s.thrusters >= 1 && b.gross <= b.capacity && b.powered;
+  const topSpeed = b.flies ? Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(b.ceiling, b.eff, b.thrust, b.ceilingRaw)) : 0;
+  const lowV = b.flies ? Math.max(T.MIN_FLIGHT_SPEED, M.lowSpeed(b.eff, b.thrust)) : 0;
+  const lede = [`${nf(b.gross,1)} units gross, ${nf(b.eff,1)} effective.`];
+  lede.push(b.flies ? `Flies to Y ${nf(b.ceiling)} at up to ${speedFmt(topSpeed)}.` : b.nDrives ? 'Cannot take off yet.' : 'No Maxwell Drive, so no Flight.');
+  lede.push(hoverOk ? 'Hover ready.' : 'Hover not available.');
+  $('sumLede').textContent = lede.join(' ');
+  $('tiles').innerHTML =
+    tile('Gross weight', nf(b.gross,1), 'Hover compares this with lift') +
+    tile('Effective weight', nf(b.eff,1), b.powered ? `${nf(b.gross-b.eff,1)} removed by lift` : 'Lift blocks have no power') +
+    tile('Takeoff limit', b.thrust ? nf(Math.floor(takeoffMass(b.thrust))) : '—', b.rated ? `Theoretical max ${nf(Math.floor(takeoffMass(b.rated)))}` : 'Add a fueled Maxwell Drive') +
+    tile('Thrust', `${nf(b.thrust,2)}`, `${nf(b.rated,2)} rated · response ×${nf(b.resp,2)}`) +
+    tile('Altitude ceiling', b.flies ? `Y ${nf(b.ceiling)}` : '—', b.flies && b.ceilingRaw > b.dimCeiling ? 'Limited by the dimension' : b.flies && b.ceiling >= T.MAX_ALTITUDE ? 'Overworld maximum' : '') +
+    tile('Top speed', b.flies ? speedFmt(topSpeed) : '—', b.flies ? `at Y ${nf(b.ceiling)}` : '') +
+    tile('Endurance', sim.ok ? timeFmt(sim.endurance) : '—', b.fueled ? `${nf(b.fuelTotal)} mB on board` : 'No fuel') +
+    tile('Range', sim.ok ? distFmt(sim.range) : '—', sim.ok ? `cruising at Y ${nf(sim.cruiseAlt)}` : '');
+
+  // ---------- modes
+  const taxiV = M.taxiSpeed(s, b.gross);
+  const needPlates = solveCount(n => b.capacity + n*T.PLATE_LIFT >= b.gross + n*s.propW && b.liftBlocks + n >= 3);
+  const needReps = solveCount(n => b.capacity + n*T.REPULSOR_LIFT >= b.gross + n*s.propW && b.liftBlocks + n >= 3);
+  const hoverReasons = [];
+  if(b.liftBlocks < 3) hoverReasons.push(`Needs at least 3 lift blocks (has ${b.liftBlocks})`);
+  if(s.thrusters < 1) hoverReasons.push('Needs a Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine');
+  if(b.gross > b.capacity) hoverReasons.push(`Over lift capacity by ${nf(b.gross-b.capacity,1)} units: add ${needPlates < 0 ? 'many' : nf(needPlates)} Antigravity Plates or ${needReps < 0 ? 'many' : nf(needReps)} Repulsor Arrays`);
+  if(!b.powered) hoverReasons.push(`Lift blocks need ${nf(b.liftRF,1)} RF/t: add a Battery Block or generator`);
+  const load = b.capacity > 0 ? Math.min(1, b.gross/b.capacity) : 1;
+  const vAcc = T.HOVER_VERTICAL_ACCEL_MIN + T.HOVER_VERTICAL_ACCEL_RANGE*(1-load);
+  let stopD = 0, vv = T.HOVER_VERTICAL_SPEED; while(vv > 0){ vv = Math.max(0, vv - vAcc); stopD += vv; }
+  const hoverV = T.HOVER_SPEED*b.thrustShare;
+  const liftEndurance = b.rfNet > 0 ? s.rf/b.rfNet : Infinity;
+  const flightReasons = [];
+  if(!b.nDrives) flightReasons.push('Needs a formed Maxwell Drive');
+  else if(!b.fueled) flightReasons.push('Drives need fuel');
+  else if(!canFly(b.eff, b.thrust)){
+    flightReasons.push(`Effective weight ${nf(b.eff,1)} exceeds the takeoff limit ${nf(takeoffMass(b.thrust))}: needs ${nf(b.eff/T.MASS_PER_THRUST - b.thrust,2)} more thrust`);
+    const needLift = b.powered ? solveCount(n => effectiveMass(b.gross + n*s.propW, b.liftUnits + n) <= takeoffMass(b.thrust), 1e6) : -1;
+    if(needLift > 0) flightReasons.push(`or about ${nf(needLift)} more Antigravity Plates`);
+    if(s.throttle < 15 && canFly(b.eff, b.rated)) flightReasons.push('Raising the throttle would be enough');
+  } else if(b.ceiling <= 0) flightReasons.push('No room under this dimension’s ceiling');
+  const hoverItems = hoverOk ? [
+      `Lift <b>${nf(b.capacity)}</b> for <b>${nf(b.gross,1)}</b> gross (${nf(load*100,0)}% load, ${nf(b.capacity-b.gross,1)} spare)`,
+      `Cruise <b>${speedFmt(hoverV)}</b>, Sprint <b>${speedFmt(hoverV*T.HOVER_SPRINT)}</b>` + (prop && b.thrustShare < 1 ? ` (${nf(b.thrustShare*100)}% of full: ${nf(Math.ceil(b.gross/M.P.thrusterPush))} thrusters reach full speed)` : ''),
+      `Climb or descend at ${speedFmt(T.HOVER_VERTICAL_SPEED)}, full rate in <b>${nf(Math.ceil(T.HOVER_VERTICAL_SPEED/vAcc))} ticks</b>`,
+      `Stops ${nf(stopD,1)} blocks after you release Space or Sneak`] : hoverReasons;
+  if(hoverOk && prop && b.liftRF > 0) hoverItems.push(`Lift draws <b>${nf(b.liftRF,1)} RF/t</b>; ${Number.isFinite(liftEndurance) ? `power lasts <b>${timeFmt(liftEndurance)}</b>` : 'generation covers it'}`);
+  const modes = [
+    {name:'Taxi', ok:true, items:[`Top speed <b>${speedFmt(taxiV)}</b>${s.thrusters ? '' : ' (no thruster)'}`,
+      `Reaches it in <b>${timeFmt(Math.ceil(taxiV/T.DRIVE_ACCEL))}</b>, brakes from it in ${timeFmt(Math.ceil(taxiV/T.BRAKE_DECEL))}`,
+      s.thrusters ? (prop ? `${s.thrusters} thruster${s.thrusters===1?'':'s'} push ${nf(s.thrusters*M.P.thrusterPush)} of ${nf(b.gross)} gross` : 'An active thruster gives the full Taxi speed') : 'Add any vehicle thruster for 8 blocks/s']},
+    {name:'Hover', ok:hoverOk, items: hoverItems},
+    {name:'Flight', ok:b.flies, items: b.flies ? [
+      `Takeoff run <b>${nf(sim.runway,1)} blocks</b> in ${timeFmt(sim.takeoffTick)}`,
+      `Ceiling <b>Y ${nf(b.ceiling)}</b>, reached in ${timeFmt(sim.climbTicks)}`,
+      `${speedFmt(lowV)} below Y 256, <b>${speedFmt(topSpeed)}</b> at the ceiling`,
+      `Weight margin: <b>${nf(solveMargin(d => canFly(effectiveMass(b.gross+d, b.liftUnits), b.thrust)),0)}</b> more gross units still take off`] : flightReasons}
+  ];
+  $('modes').innerHTML = modes.map(m => `<div class="mode ${m.ok?'ok':'no'}"><h3>${m.name} <span class="badge">${m.ok?'✓ Available':'✗ Not available'}</span></h3><ul>${m.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('');
+
+  // ---------- weight
+  const parts = b.parts.filter(p => p[1] > 0);
+  const total = parts.reduce((a,p)=>a+p[1],0) || 1;
+  const colorOf = name => HEX[['Hull','Cargo','Maxwell Drives','Lift blocks','Thrusters','Fuel','Scanned craft'].indexOf(name) % 6];
+  $('weightBar').innerHTML = parts.map(p => `<div style="flex:${p[1]/total};background:${colorOf(p[0])}" title="${esc(p[0])}: ${nf(p[1],2)} units (${nf(p[1]/total*100,1)}%)"></div>`).join('');
+  $('weightBar').setAttribute('aria-label', parts.map(p => `${p[0]} ${nf(p[1],1)}`).join(', '));
+  $('weightLegend').innerHTML = parts.map(p => `<span><i class="sq" style="background:${colorOf(p[0])}"></i>${esc(p[0])} ${nf(p[1],1)} (${nf(p[1]/total*100,0)}%)</span>`).join('');
+  const g = Math.round(b.gross), e = Math.round(b.eff);
+  $('weightEq').textContent = `Weight: ${g} actual - ${g-e} hover plates = ${e}`;
+  const perPlate = b.eff - effectiveMass(b.gross + s.propW, b.liftUnits + (b.powered ? 1 : 0));
+  $('weightTiles').innerHTML =
+    tile('Hover lift capacity', nf(b.capacity), `${b.liftBlocks} lift blocks`) +
+    tile('Flight lift units', nf(b.liftUnits), `${s.plates} plates + 2 × ${s.repulsors} arrays`) +
+    tile('Next plate saves', nf(perPlate,2), 'effective units, after its own weight') +
+    tile('Effective floor', nf(b.gross*T.MIN_EFFECTIVE_SHARE,1), 'lift can never go below 25% of gross') +
+    tile('Fuel weight', nf(b.fuelW,2), `${nf(b.fuelUnitWeight*1000,3)} units per 1,000 mB`) +
+    (prop && b.liftRF > 0 ? tile('Lift power', `${nf(b.liftRF,1)} RF/t`, Number.isFinite(liftEndurance) ? `${nf(s.rf)} RF lasts ${timeFmt(liftEndurance)}` : 'covered by generation') : '');
+
+  // ---------- profile charts (with optional overlay of the other tuning)
+  const msg = $('simMsg');
+  const ob = O && s.overlay ? build(s, O) : null;
+  const osim = ob && ob.flies ? simulate(ob, {tail: 200}) : null;
+  if(!sim.ok){
+    msg.hidden = false; msg.textContent = 'This build cannot take off, so there is no Flight profile. See Mode readiness for what is missing.';
+    ['chSpeed','chAlt','chAcc'].forEach(id => $(id).innerHTML = ''); $('profTable').innerHTML = ''; $('profLegend').innerHTML = '';
+  } else {
+    const notes = [];
+    if(sim.fuelOut) notes.push('Fuel runs out during the climb.');
+    if(sim.timedOut) notes.push('The climb takes more than an hour; the chart stops there.');
+    if(s.pitch > sim.maxPitch + .01) notes.push(`This craft can hold at most ${nf(sim.maxPitch,1)}° nose-up, so the climb uses that.`);
+    if(s.target > b.ceiling) notes.push(`The target is above the ceiling, so the craft climbs to Y ${nf(b.ceiling)}.`);
+    msg.hidden = !notes.length; msg.textContent = notes.join(' ');
+    const sec = p => p.t/20;
+    const smp = decimate(sim.samples, 600), osmp = osim && osim.ok ? decimate(osim.samples, 600) : [];
+    const xMax = Math.max(sec(sim.samples[sim.samples.length-1]), osmp.length ? sec(osmp[osmp.length-1]) : 0);
+    const vm = [{x: sim.takeoffTick/20, label: 'Takeoff'}];
+    if(sim.climbTicks < sim.samples.length - 1) vm.push({x: sim.climbTicks/20, label: 'Cruise'});
+    const tfmt = v => v >= 120 ? `${nf(v/60,v%60?1:0)} min` : `${nf(v)} s`;
+    const common = {xFmt: tfmt, tipX: v => `${timeFmt(v*20)} after brake release`, xMin: 0, xMax, vmarks: vm, sync: 'profile', height: 170};
+    const oname = O ? O.label : '';
+    const spdYFmt = (v,t) => t ? `${nf(v, state.units==='bpt'?3:1)} ${unitName()}` : nf(v, state.units==='bpt'?1:0);
+    const withOther = (main, other) => other && other.data.length ? [main, other] : [main];
+    lineChart($('chSpeed'), {...common, aria:'Airspeed over time', yFmt: spdYFmt,
+      series: withOther({name:'Airspeed', color:HEX[0], data: smp.map(p=>[sec(p), speedVal(p.v)])}, {name: oname, color:OTHER_COLOR, dash:true, data: osmp.map(p=>[sec(p), speedVal(p.v)])})});
+    lineChart($('chAlt'), {...common, aria:'Altitude over time', yFmt: (v,t) => t ? `Y ${nf(v)}` : nf(v),
+      series: withOther({name:'Altitude', color:HEX[2], data: smp.map(p=>[sec(p), p.alt])}, {name: oname, color:OTHER_COLOR, dash:true, data: osmp.map(p=>[sec(p), p.alt])}),
+      refs: b.ceiling < T.MAX_ALTITUDE || s.target >= b.ceiling ? [{y:b.ceiling, label:`Ceiling Y ${nf(b.ceiling)}`}] : []});
+    const accOf = S => { const acc = []; for(let i=0;i<S.length;i+=10){ const j = Math.min(S.length-1, i+20); if(j===i) break; acc.push([S[i].t/20, speedVal((S[j].v - S[i].v)/(j-i))*20]); } return decimate(acc, 600); };
+    lineChart($('chAcc'), {...common, aria:'Acceleration over time', yFmt: (v,t) => t ? `${nf(v, 2)} ${unitName()}/s` : nf(v, Math.abs(v) < 10 ? 1 : 0),
+      series: withOther({name:'Acceleration', color:HEX[1], data: accOf(sim.samples)}, {name: oname, color:OTHER_COLOR, dash:true, data: osim && osim.ok ? accOf(osim.samples) : []})});
+    $('profLegend').innerHTML = osmp.length ? legendHtml([{name: `${M.label} tuning`, color: 'var(--text-2)'}, {name: `${oname} tuning`, color: OTHER_COLOR, dash:true}]) : '';
+    const S = sim.samples, rows = [];
+    for(let i=0;i<S.length;i+= Math.max(20, Math.ceil(S.length/60/20)*20)) rows.push(S[i]);
+    rows.push(S[S.length-1]);
+    $('profTable').innerHTML = `<table><thead><tr><th>Time</th><th>Airspeed (${unitName()})</th><th>Altitude</th><th>Distance</th><th>Pitch</th><th>Fuel left (mB)</th></tr></thead><tbody>${rows.map(p=>`<tr><td>${timeFmt(p.t)}</td><td>${speedFmt(p.v,false)}</td><td>${nf(p.alt,1)}</td><td>${nf(p.x)}</td><td>${nf(p.pitch,1)}°</td><td>${nf(Math.max(0,p.fuel),1)}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  // ---------- envelope
+  const top = s.dim === 0 ? T.MAX_ALTITUDE : Math.max(T.WORLD_CEILING, b.dimCeiling);
+  if(b.thrust > 0 || b.rated > 0){
+    const thr = b.thrust || b.rated, pts = [], ptsR = [];
+    for(let y = 0; y <= top; y += top/200){ pts.push([y, takeoffMass(thr)/altitudeFactor(y)]); if(s.throttle < 15) ptsR.push([y, takeoffMass(b.rated)/altitudeFactor(y)]); }
+    const series = [{name: s.throttle < 15 ? `Throttle ${s.throttle}` : 'Your thrust', color:HEX[0], data:pts}];
+    if(ptsR.length) series.push({name:'Full throttle', color:HEX[2], data:ptsR, dash:true});
+    lineChart($('chEnv'), {aria:'Supportable effective weight by altitude', series, height:220, xMin:0, xMax:top,
+      xFmt: v => nf(v), tipX: v => `Y ${nf(v)}`, yFmt: (v,t) => t ? `${nf(v)} units` : nf(v),
+      refs:[{y:b.eff, label:`Your effective weight ${nf(b.eff)}`}],
+      points: b.flies && b.ceiling < top ? [{x:b.ceiling, y:b.eff, color:HEX[3], label:`Ceiling Y ${nf(b.ceiling)}`, anchor: b.ceiling > top*.7 ? 'end' : 'start'}] : []});
+    $('envLegend').innerHTML = legendHtml(series) + `<span><i class="dash" style="color:var(--text-2)"></i>Your effective weight</span>`;
+  } else { $('chEnv').innerHTML = '<p class="note">Add a Maxwell Drive to see the altitude envelope.</p>'; $('envLegend').innerHTML = ''; }
+  {
+    const light = [], yours = [], other = [];
+    const curve = (MM, bb, arr) => { for(let y = 0; y <= top; y += top/240){ if(y > bb.ceiling) break; arr.push([y, speedVal(Math.max(T.MIN_FLIGHT_SPEED, MM.cruiseSpeed(y, bb.eff, bb.thrust, bb.ceilingRaw)))]); }
+      arr.push([bb.ceiling, speedVal(Math.max(T.MIN_FLIGHT_SPEED, MM.cruiseSpeed(bb.ceiling, bb.eff, bb.thrust, bb.ceilingRaw)))]); };
+    for(let y = 0; y <= top; y += top/240) light.push([y, speedVal(Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(y, 1, 1, T.MAX_ALTITUDE)))]);
+    if(b.flies) curve(M, b, yours);
+    if(ob && ob.flies) curve(O, ob, other);
+    const series = [{name:'Your craft', color:HEX[0], data:yours}];
+    if(other.length) series.push({name:`Your craft, ${O.label.toLowerCase()} tuning`, color:OTHER_COLOR, data:other, dash:true});
+    series.push({name:'Fastest possible', color:'#7f97a8', data:light, dash:true});
+    lineChart($('chCruise'), {aria:'Target airspeed by altitude', series, height:200, xMin:0, xMax:top, xFmt: v => nf(v), tipX: v => `Y ${nf(v)}`,
+      yFmt: (v,t) => t ? `${nf(v, state.units==='bpt'?2:1)} ${unitName()}` : nf(v)});
+    $('cruiseLegend').innerHTML = legendHtml(series);
+  }
+
+  // ---------- fuel & range
+  $('rangeLede').textContent = prop
+    ? 'Burn follows thrust units and drive size, and falls when the craft is lightly loaded. Drive tanks are small buffers, so range comes from onboard reserve tanks piped to the drives. Airspeed depends on altitude and thrust reserve, so the best range is not always full throttle.'
+    : 'Each running drive burns 1 mB every 10 seconds at full throttle, whatever its size, and analog throttle scales burn and thrust together. Airspeed depends on altitude and thrust reserve, so the best range is not always full throttle.';
+  $('fuelTiles').innerHTML =
+    tile('Fuel on board', `${nf(b.fuelTotal)} mB`, `${nf(b.fill*100)}% of ${nf(b.tankTotal)} mB in drives${s.reserve ? ` + ${nf(s.reserve)} reserve` : ''}`) +
+    tile('Burn rate', `${nf(b.burnPerTick*20*60,1)} mB/min`, `${b.nDrives} drive${b.nDrives===1?'':'s'} at throttle ${s.throttle}`) +
+    tile('Endurance', sim.ok ? timeFmt(sim.endurance) : b.fueled && b.burnPerTick ? timeFmt(b.fuelTotal/b.burnPerTick) : '—', sim.ok && sim.powerOut ? `lift power runs out at ${timeFmt(sim.liftLostAt)}` : 'powered Flight time') +
+    tile('Climb fuel', sim.ok ? `${nf(sim.climbFuel,1)} mB` : '—', sim.ok ? `${timeFmt(sim.climbTicks)} to cruise` : '') +
+    tile('Cruise speed', sim.ok ? speedFmt(sim.cruiseSpeed) : '—', sim.ok ? `Y ${nf(sim.cruiseAlt)}` : '') +
+    tile('Range', sim.ok ? distFmt(sim.range) : '—', sim.ok ? `${distFmt(sim.climbDist)} during the climb` : '') +
+    (() => { const tr = tripOf(sim, s.trip); return tr ? tile(`${distFmt(s.trip)} trip`, timeFmt(tr.ticks), tr.reachable ? `${nf(tr.fuel,1)} mB of fuel` : 'out of range') : ''; })();
+  if(sweep){
+    const {res, best} = sweep;
+    barChart($('chRange'), {aria:'Range by throttle setting', height:210, yFmt: v => v >= 1e6 ? `${nf(v/1e6,1)}M` : v >= 1000 ? `${nf(v/1000)}k` : nf(v),
+      data: res.map(r => ({x:r.t, y:r.range, color: best && r.t === best.t ? HEX[2] : r.t === s.throttle ? HEX[0] : '#3f5868',
+        label: best && r.t === best.t ? 'Best' : r.t === s.throttle ? 'Now' : '', r})),
+      tip: d => d.r.ok ? `<div>Throttle <b>${d.r.t}</b></div><div>Range <b>${distFmt(d.r.range)}</b></div><div>Cruise ${speedFmt(d.r.v)} at Y ${nf(d.r.alt)}</div><div>Endurance ${timeFmt(d.r.end)}</div>` : `<div>Throttle <b>${d.r.t}</b></div><div>Too little thrust to take off</div>`});
+    $('rangeTable').innerHTML = `<table><thead><tr><th>Throttle</th><th>Ceiling</th><th>Cruise speed</th><th>Endurance</th><th>Range</th></tr></thead><tbody>${res.map(r=> r.ok
+      ? `<tr><td>${r.t}${best && r.t===best.t?' (best)':''}</td><td>Y ${nf(r.ceil)}</td><td>${speedFmt(r.v)}</td><td>${timeFmt(r.end)}</td><td class="${best && r.t===best.t?'hl':''}">${distFmt(r.range)}</td></tr>`
+      : `<tr><td>${r.t}</td><td class="na" colspan="4">cannot take off</td></tr>`).join('')}</tbody></table>`;
+  } else { $('chRange').innerHTML = '<p class="note">Add a fueled Maxwell Drive to see range.</p>'; $('rangeTable').innerHTML = ''; }
+
+  // ---------- drive table
+  $('drivesLede').textContent = prop
+    ? 'Drives of one size needed to reach each altitude with this hull, cargo and lift at full throttle, including each drive’s own weight and fuel. Larger drives weigh less per thrust unit but burn more fuel per thrust unit.'
+    : 'Drives of one size needed to reach each altitude with this hull, cargo and lift at full throttle. Counts include each drive’s own weight. Every drive size has the same thrust per weight, but one large drive burns the same fuel as one small drive.';
+  const alts = [['Takeoff', T.WORLD_CEILING], ['Y 1,000', 1000], ['Y 5,000', 5000], ['Y 10,000', 10000]];
+  if(s.target > T.WORLD_CEILING && !alts.some(a=>a[1]===s.target) && s.target <= T.MAX_ALTITUDE) alts.push([`Your target Y ${nf(s.target)}`, s.target]);
+  const needDrives = (d, y) => solveCount(n => n > 0 && n*d.thrust*T.MASS_PER_THRUST >= effectiveMass(b.baseNoDrives + n*(M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight), b.liftUnits)*altitudeFactor(y), 4096);
+  const tankLasts = d => { const one = {...b, s:{...s, d3:0,d4:0,d5:0,d6:0,d9:0, [d.id]:1}, nDrives:1, rated:d.thrust, eff: takeoffMass(d.thrust)}; return M.tank(d)/M.burn(one, 15, d.thrust); };
+  $('driveTable').innerHTML = `<table><thead><tr><th>Drive size</th><th>Thrust</th><th>Dry weight</th>${alts.map(a=>`<th>${a[0]}</th>`).join('')}<th>One tank at the takeoff limit</th></tr></thead><tbody>${
+    DRIVES.map(d => `<tr><td>${d.label}${s[d.id] ? ` <small style="color:var(--muted)">(you have ${s[d.id]})</small>` : ''}</td><td>${nf(d.thrust,2)}</td><td>${nf(M.dry(d),1)}</td>${
+      alts.map(a => { const n = needDrives(d, a[1]); return n < 0 ? '<td class="na" title="Each extra drive adds more effective weight than it can lift here">never</td>' : `<td>${nf(n)}</td>`; }).join('')
+    }<td>${timeFmt(tankLasts(d))}</td></tr>`).join('')}</tbody></table>
+    <p class="note">“Never” means each added drive weighs more, after lift, than it can carry at that altitude. Add Antigravity Plates or Repulsor Arrays to make the effective weight per drive smaller.</p>`;
+
+  // ---------- handling
+  if(b.flies){
+    const r = b.resp, rollRate = T.ROLL_RATE*(.72+.07*r)*20, pitchRate = (.7+.36*r)*20;
+    const maxP = Math.min(T.MAX_PITCH, T.TRIM_PITCH + (.7+.36*r)/T.PITCH_TRIM_DECAY);
+    $('handTiles').innerHTML = tile('Response factor', `×${nf(r,2)}`, 'thrust ÷ effective weight, 1 to 4') +
+      tile('Roll rate', `${nf(rollRate)}°/s`, 'full A or D') + tile('Pitch rate', `${nf(pitchRate)}°/s`, 'full W or S') +
+      tile('Steepest climb', `${nf(maxP,1)}°`, 'above 45° the nose settles back') +
+      tile('Takeoff acceleration', `${speedFmt(M.rollAccel(b.eff, b.thrust)*20)}/s`, 'on the runway');
+    const speeds = [['Below Y 256', lowV], ['At the ceiling', topSpeed]];
+    $('turnTable').innerHTML = `<table><thead><tr><th>Bank</th>${speeds.map(sp=>`<th colspan="3">${sp[0]} (${speedFmt(sp[1])})</th>`).join('')}</tr><tr><th></th>${speeds.map(()=>'<th>Turn radius</th><th>Full circle</th><th>Sink if level</th>').join('')}</tr></thead><tbody>${
+      [15,30,45,60,90].map(bank => { const w = Math.sin(rad(bank))*(.95+.3*r);
+        return `<tr><td>${bank}°</td>${speeds.map(sp => `<td>${nf(sp[1]/rad(w))} blocks</td><td>${timeFmt(360/w)}</td><td>${nf(bankSink(rad(bank), sp[1])*20,1)} blocks/s</td>`).join('')}</tr>`; }).join('')}</tbody></table>
+      <p class="note">A banked turn sinks unless you raise the nose. Pitch about ${nf(Math.asin(Math.min(1,bankSink(rad(45),lowV)/lowV))*180/Math.PI,1)}° up holds altitude in a 45° bank below Y 256.</p>`;
+  } else { $('handTiles').innerHTML = '<p class="note">Handling appears once the craft can take off.</p>'; $('turnTable').innerHTML = ''; }
+
+  // ---------- tips
+  const tips = [];
+  if(!b.nDrives) tips.push('Flight needs a Maxwell Drive. A 3 × 3 × 4 drive lifts 512 effective units at takeoff.');
+  if(s.vht > 0) tips.push(`<b>Vertical Hover Thrusters</b> add Hover lift but do not reduce Flight weight. Swapping your ${s.vht} for Antigravity Plates keeps the same Hover lift and lowers effective weight to ${nf(effectiveMass(b.gross, b.liftUnits + s.vht),1)}.`);
+  if(b.liftUnits > 0 && b.eff < b.gross*.4) tips.push(`Lift has strong diminishing returns here: effective weight is already ${nf(b.eff/b.gross*100,0)}% of gross and can never drop below 25%. Thrust is the better lever now.`);
+  if(b.flies && sweep && sweep.best && sweep.best.t !== s.throttle && sweep.best.range > sim.range*1.02)
+    tips.push(`Set an analog throttle of <b>${sweep.best.t}</b> for about ${nf((sweep.best.range/sim.range-1)*100,0)}% more range (${distFmt(sweep.best.range)}).`);
+  if(!prop && b.nDrives > 1) tips.push(`Every drive burns the same fuel regardless of size. Your ${b.nDrives} drives burn ${b.nDrives}× the fuel of one drive; fewer, larger drives with the same total thrust stretch an onboard reserve further.`);
+  if(prop && b.flies){
+    const loadNow = b.eff/takeoffMass(b.thrust);
+    tips.push(`At ${nf(loadNow*100)}% of the takeoff limit, the drives burn ${nf((1 - M.P.loadShare + M.P.loadShare*loadNow)*100)}% of their full-load rate. Shedding weight stretches every tank.`);
+    if(s.thrusters && b.thrustShare < 1) tips.push(`Hover runs at ${nf(b.thrustShare*100)}% speed: ${nf(Math.ceil(b.gross/M.P.thrusterPush))} thrusters would reach the full 16 blocks/s.`);
+    if(s.reserve === 0) tips.push(`Drive tanks hold only ${nf(M.P.tankPerThrust)} mB per thrust unit. Pipe an onboard reserve tank to an inlet for real range; fuel weighs only 0.4 units per 1,000 mB.`);
+    if(sim.ok && sim.powerOut) tips.push(`Lift power runs out after ${timeFmt(sim.liftLostAt)}, well before the fuel. Add Battery Blocks or RF generation.`);
+  }
+  if(b.flies && b.ceiling < T.MAX_ALTITUDE && s.dim === 0){
+    const opts = DRIVES.map(d => { const e2 = effectiveMass(b.gross + M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight*(s.scanned?0:1), b.liftUnits); return [d, Math.min(T.MAX_ALTITUDE, maximumAltitude(e2, b.thrust + d.thrust*s.throttle/15))]; });
+    tips.push('One more drive would raise the ceiling to: ' + opts.map(([d,c]) => `${d.label} → Y ${nf(c)}`).join(', ') + '.');
+  }
+  if(b.flies && b.thrust*T.MASS_PER_THRUST < 2*b.eff) tips.push(`Doubling your thrust reserve raises top speed: cruise speed scales with thrust until the takeoff limit is twice the effective weight (now ${nf(takeoffMass(b.thrust)/b.eff,2)}×).`);
+  if(b.flies && sim.ok) tips.push(`From Taxi, hold <b>W</b> until ${speedFmt(M.takeoffSpeed)} (${nf(sim.runway,1)} blocks) and then press <b>S</b>. Selecting Flight from Hover needs no runway.`);
+  if(hoverOk && b.capacity - b.gross < b.capacity*.1) tips.push('Hover is close to its lift limit: a little more cargo or fuel will make Hover unavailable, and climbs respond slowly.');
+  if(s.dim !== 0 && b.flies) tips.push('Outside the Overworld there is no high cruise: the ceiling is the dimension height and speed stays at the low-altitude limit.');
+  $('tips').innerHTML = tips.map(t => `<li>${t}</li>`).join('') || '<li>No suggestions for this build.</li>';
+
+  if(state.lab) renderLab();
+}
+
+// --------------------------- lab comparison -----------------------------------
+function renderLab(){
+  const s = state, C = CURRENT, P = PROP();
+  const bc = build(s, C), bp = build(s, P);
+  const sc = bc.flies ? simulate(bc, {record:false}) : {ok:false}, sp = bp.flies ? simulate(bp, {record:false}) : {ok:false};
+  const wc = throttleSweep(bc), wp = throttleSweep(bp);
+  const hover = (b, M) => b.liftBlocks >= 3 && s.thrusters >= 1 && b.gross <= b.capacity && b.powered ? T.HOVER_SPEED*b.thrustShare : 0;
+  const rows = [
+    ['Gross weight', bc.gross, bp.gross, v => nf(v,1), 'down'],
+    ['Effective weight', bc.eff, bp.eff, v => nf(v,1), 'down'],
+    ['Takeoff run', sc.ok ? sc.runway : NaN, sp.ok ? sp.runway : NaN, v => `${nf(v,1)} blocks`, null],
+    ['Takeoff roll time', sc.ok ? sc.takeoffTick : NaN, sp.ok ? sp.takeoffTick : NaN, timeFmt, null],
+    ['Ceiling', bc.flies ? bc.ceiling : NaN, bp.flies ? bp.ceiling : NaN, v => `Y ${nf(v)}`, 'up'],
+    ['Speed below Y 256', bc.flies ? C.lowSpeed(bc.eff, bc.thrust) : NaN, bp.flies ? P.lowSpeed(bp.eff, bp.thrust) : NaN, v => speedFmt(v), 'up'],
+    ['Top speed', bc.flies ? C.cruiseSpeed(bc.ceiling, bc.eff, bc.thrust, bc.ceilingRaw) : NaN, bp.flies ? P.cruiseSpeed(bp.ceiling, bp.eff, bp.thrust, bp.ceilingRaw) : NaN, v => speedFmt(v), 'up'],
+    ['Time to cruise', sc.ok ? sc.climbTicks : NaN, sp.ok ? sp.climbTicks : NaN, timeFmt, 'down'],
+    ['Taxi speed', C.taxiSpeed(s, bc.gross), P.taxiSpeed(s, bp.gross), v => speedFmt(v), 'up'],
+    ['Hover speed', hover(bc, C), hover(bp, P), v => v ? speedFmt(v) : 'no Hover', 'up'],
+    ['Fuel on board', bc.fuelTotal, bp.fuelTotal, v => `${nf(v)} mB`, 'up'],
+    ['Burn rate', bc.burnPerTick*1200, bp.burnPerTick*1200, v => `${nf(v,1)} mB/min`, 'down'],
+    ['Endurance', sc.ok ? sc.endurance : NaN, sp.ok ? sp.endurance : NaN, timeFmt, 'up'],
+    ['Range', sc.ok ? sc.range : NaN, sp.ok ? sp.range : NaN, distFmt, 'up'],
+    ['Best throttle', wc && wc.best ? wc.best.t : NaN, wp && wp.best ? wp.best.t : NaN, v => nf(v), null],
+    ['Range at best throttle', wc && wc.best ? wc.best.range : NaN, wp && wp.best ? wp.best.range : NaN, distFmt, 'up'],
+    ['Lift power', Infinity, bp.rfNet > 0 && bp.liftUnits > 0 ? s.rf/bp.rfNet : Infinity, v => Number.isFinite(v) ? timeFmt(v) : 'unlimited', 'up'],
+  ];
+  const change = (a, c, dir) => {
+    if(!Number.isFinite(a) || !Number.isFinite(c)) return '<td class="na">—</td>';
+    if(a === c) return '<td class="na">same</td>';
+    const pct = a ? (c/a - 1)*100 : Infinity;
+    const cls = dir ? ((c > a) === (dir === 'up') ? 'up' : 'down') : '';
+    return `<td class="${cls}">${Number.isFinite(pct) ? `${pct > 0 ? '+' : ''}${nf(pct, Math.abs(pct) < 10 ? 1 : 0)}%` : 'new'}</td>`;
+  };
+  $('cmpTable').innerHTML = `<table><thead><tr><th>This build</th><th>3.0</th><th>${esc(P.label)}</th><th>Change</th></tr></thead><tbody>${
+    rows.map(([k,a,c,f,dir]) => `<tr><td>${k}</td><td>${Number.isNaN(a) ? '—' : f(a)}</td><td>${Number.isNaN(c) ? '—' : f(c)}</td>${change(a,c,dir)}</tr>`).join('')}</tbody></table>`;
+
+  // Sweeps: where does range peak as drives or plates are added?
+  const main = DRIVES.reduce((a,d)=> s[d.id] > s[a.id] ? d : a, DRIVES[0]);
+  const have = s[main.id], maxN = Math.min(30, Math.max(10, have*3 + 6));
+  $('sweepDriveLbl').textContent = `${main.label} drives, % of each tuning’s best`;
+  $('sweepTripLbl').textContent = `${distFmt(s.trip)}, % of each tuning’s fastest`;
+  const runs = (vary, n0, n1, step) => [C, P].map(M => { const out = []; for(let n=n0; n<=n1; n+=step){ const b = build({...s, ...vary(n)}, M);
+    const r = b.flies ? simulate(b, {record:false}) : null; out.push([n, r && r.ok ? r.range : 0, tripOf(r, s.trip)]); } return out; });
+  const toSeries = (raw2, pick, lowerIsBetter) => raw2.map((pts, i) => {
+    const vals = pts.map(p => [p[0], pick(p)]).filter(p => p[1] > 0 && Number.isFinite(p[1]));
+    const best = vals.length ? (lowerIsBetter ? Math.min(...vals.map(p=>p[1])) : Math.max(...vals.map(p=>p[1]))) : 0;
+    return {name: i ? P.label : '3.0', color: i ? HEX[1] : HEX[0], raw: vals, best,
+      data: best > 0 ? vals.map(p => [p[0], lowerIsBetter ? best/p[1]*100 : p[1]/best*100]) : []};
+  });
+  const dRuns = runs(n => ({[main.id]: n}), 1, maxN, 1);
+  const dS = toSeries(dRuns, p => p[1], false);
+  const tS = toSeries(dRuns, p => p[2] && p[2].reachable ? p[2].ticks : 0, true);
+  const sweepSeries = (vary, n0, n1, step) => toSeries(runs(vary, n0, n1, step), p => p[1], false);
+  const pMax = Math.min(80, Math.max(20, s.plates*2 + 10)), pStep = pMax > 40 ? 2 : 1;
+  const pS = sweepSeries(n => ({plates: n}), 0, pMax, pStep);
+  const pctFmt = (v,t) => t ? `${nf(v,1)}% of best` : `${nf(v)}%`;
+  const peak = ser => { const p = ser.data.reduce((a,q)=> q[1] > a[1] ? q : a, [0,0]); return p[1] > 0 ? p[0] : null; };
+  lineChart($('chSweepDrives'), {aria:'Range by drive count', series: dS, height:180, xFmt: v => nf(v), tipX: v => `${nf(Math.round(v))} drives`, yFmt: pctFmt, yMin:0, yMax:100});
+  lineChart($('chSweepPlates'), {aria:'Range by Antigravity Plates', series: pS, height:180, xFmt: v => nf(v), tipX: v => `${nf(Math.round(v))} plates`, yFmt: pctFmt, yMin:0, yMax:100});
+  lineChart($('chSweepTrip'), {aria:'Trip time by drive count', series: tS, height:180, xFmt: v => nf(v), tipX: v => `${nf(Math.round(v))} drives`,
+    yFmt: (v,t) => t ? `${nf(v,1)}% of fastest` : `${nf(v)}%`, yMin:0, yMax:100});
+  $('sweepDrivesLegend').innerHTML = legendHtml(dS);
+  $('sweepTripLegend').innerHTML = legendHtml(tS);
+  $('sweepPlatesLegend').innerHTML = legendHtml(pS);
+  const dc = peak(dS[0]), dp = peak(dS[1]), pc = peak(pS[0]), pp = peak(pS[1]);
+  const knee = ser => { const p = ser.data.find(q => q[1] >= 100/1.05); return p ? p[0] : null; };
+  const count = (n, one, many) => n == null ? '—' : `${n} ${n === 1 ? one : many}`;
+  const kp = knee(tS[1]), kc = knee(tS[0]);
+  const rangeAtKnee = kp != null ? (dS[1].data.find(q => q[0] === kp) || [0, 0])[1] : null;
+  $('sweepNote').textContent = `Range peaks at ${count(dc,'drive','drives')} under 3.0 and ${count(dp,'drive','drives')} under the lab values; with plates, at ${count(pc,'plate','plates')} and ${count(pp,'plate','plates')}. `
+    + `The ${distFmt(s.trip)} trip comes within 5% of its fastest time at ${count(kc,'drive','drives')} (3.0) and ${count(kp,'drive','drives')} (lab)`
+    + (rangeAtKnee != null ? `, where the lab values keep ${nf(rangeAtKnee)}% of their best range. More drives than that mostly cost fuel.` : '.');
+
+  // Java export
+  const p = k => s['p_'+k];
+  const arr = pre => `{${DRIVES.map(d => p(pre+d.w)).join(', ')}}`;
+  $('javaOut').textContent = [
+    '// Lab values exported from docs/flight-calculator.html (tuning lab), for FlightTuning.java.',
+    `public static final double TAKEOFF_SPEED = ${p('takeoffSpeed')};`,
+    `public static final double RUNWAY_MIN = ${p('runwayMin')}, RUNWAY_MAX = ${p('runwayMax')}, RUNWAY_LOAD_EXPONENT = ${p('runwayExp')};`,
+    `public static final double MAXWELL_TANK_PER_THRUST = ${p('tankPerThrust')};`,
+    `public static final double MAXWELL_BURN_PER_MINUTE = ${p('burnRate')};`,
+    `public static final double MAXWELL_LOAD_BURN_SHARE = ${p('loadShare')};`,
+    `/** Indexed by drive width 3, 4, 5, 6, 9. */`,
+    `public static final double[] MAXWELL_DRY_MASS_PER_THRUST = ${arr('dry')};`,
+    `public static final double[] MAXWELL_BURN_PER_THRUST = ${arr('burn')};`,
+    `public static final double THRUSTER_PUSH = ${p('thrusterPush')}, MIN_THRUSTER_SPEED_SHARE = ${p('minThrustShare')};`,
+    `public static final double PLATE_RF_PER_TICK = ${p('plateRF')}, REPULSOR_RF_PER_TICK = ${p('repulsorRF')}, VERTICAL_THRUSTER_RF_PER_TICK = ${p('vhtRF')};`,
+    `public static final double LOW_SPEED_MIN = ${p('lowMin')}, LOW_SPEED_MAX = ${p('lowMax')};`
+  ].join('\n');
+}
+
+setupForm();
+(async () => {
+  const hash = location.hash;
+  let loaded = null;
+  try { loaded = await decodeShare(hash); } catch(e) { console.warn('Could not read the share link', e); }
+  state = loaded || (hash.length > 1 && hash.includes('=') ? decodeState(hash) : {...DEFAULTS});
+  writeForm(); readForm(); update();
+})();
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(update, 150); });
+</script>
+</body>
+</html>

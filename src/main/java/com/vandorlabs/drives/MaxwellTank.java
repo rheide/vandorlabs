@@ -9,16 +9,27 @@ import net.minecraftforge.fml.common.Loader;
 
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
 
-/** One shared, single-fuel reservoir served by the three input-only faces. */
+/**
+ * One shared, single-fuel reservoir served by the three input-only faces. Capacity follows the drive size;
+ * fuel saved above it (from a 3.0 tank of 1,000 mB) is kept and burns down normally, but inlets add none
+ * until the level falls below capacity.
+ */
 public final class MaxwellTank {
     private static final String FUEL_TAG = "MaxwellFuel";
-    private static final String BURN_TAG = "MaxwellBurnUnits";
+    /** 3.0 partial-millibucket counter in throttle level-ticks; read for migration only. */
+    private static final String LEGACY_BURN_TAG = "MaxwellBurnUnits";
+    public static final String BURN_TAG = "MaxwellBurnMicro";
+    private static final int MICRO_PER_MB = com.vandorlabs.physics.FlightTuning.MAXWELL_BURN_MICRO_PER_MB;
     private FluidStack fuel;
     private int burnUnits;
     private final Runnable changed;
+    private final IntSupplier capacity;
 
-    public MaxwellTank(Runnable changed) { this.changed = changed; }
+    public MaxwellTank(Runnable changed, IntSupplier capacity) { this.changed = changed; this.capacity = capacity; }
+
+    public int capacity() { return capacity.getAsInt(); }
 
     public int amount() { return fuel == null ? 0 : fuel.amount; }
 
@@ -46,7 +57,7 @@ public final class MaxwellTank {
             @Override public IFluidTankProperties[] getTankProperties() {
                 boolean connected = available.getAsBoolean();
                 return new IFluidTankProperties[]{
-                        new FluidTankProperties(connected ? contents() : null, MaxwellEngine.CAPACITY, connected, false) {
+                        new FluidTankProperties(connected ? contents() : null, capacity(), connected, false) {
                             @Override public boolean canFillFluidType(FluidStack resource) { return connected && accepts(resource); }
                             @Override public boolean canDrainFluidType(FluidStack resource) { return false; }
                         }
@@ -55,7 +66,7 @@ public final class MaxwellTank {
 
             @Override public int fill(FluidStack resource, boolean commit) {
                 if (!available.getAsBoolean() || !accepts(resource)) return 0;
-                int count = Math.min(resource.amount, MaxwellEngine.CAPACITY - amount());
+                int count = Math.max(0, Math.min(resource.amount, capacity() - amount()));
                 if (commit && count > 0) {
                     if (fuel == null) fuel = new FluidStack(resource, count);
                     else fuel.amount += count;
@@ -69,15 +80,17 @@ public final class MaxwellTank {
         };
     }
 
-    public void burn(int level) {
-        if (fuel == null || level == 0) return;
-        burnUnits += level;
-        if (burnUnits < MaxwellEngine.BURN_UNITS_PER_MB) return;
-        burnUnits -= MaxwellEngine.BURN_UNITS_PER_MB;
-        if (--fuel.amount == 0) {
+    /** Burns {@code microUnits} millionths of a millibucket; see {@link MaxwellEngine#burnMicroUnits}. */
+    public void burn(long microUnits) {
+        if (fuel == null || microUnits <= 0) return;
+        long total = burnUnits + microUnits;
+        long whole = total / MICRO_PER_MB;
+        burnUnits = (int) (total % MICRO_PER_MB);
+        if (whole == 0) return;
+        if (whole >= fuel.amount) {
             fuel = null;
             burnUnits = 0;
-        }
+        } else fuel.amount -= (int) whole;
         changed.run();
     }
 
@@ -90,8 +103,10 @@ public final class MaxwellTank {
 
     public void read(NBTTagCompound tag) {
         FluidStack saved = tag.hasKey(FUEL_TAG, 10) ? FluidStack.loadFluidStackFromNBT(tag.getCompoundTag(FUEL_TAG)) : null;
-        fuel = fuel(saved) && saved.amount <= MaxwellEngine.CAPACITY ? saved : null;
-        burnUnits = fuel == null ? 0 : Math.max(0, Math.min(MaxwellEngine.BURN_UNITS_PER_MB - 1, tag.getInteger(BURN_TAG)));
+        fuel = fuel(saved) && saved.amount <= MaxwellEngine.maxSavedFuel() ? saved : null;
+        if (fuel == null) burnUnits = 0;
+        else if (tag.hasKey(BURN_TAG, 3)) burnUnits = Math.max(0, Math.min(MICRO_PER_MB - 1, tag.getInteger(BURN_TAG)));
+        else burnUnits = MaxwellEngine.legacyBurnToMicro(Math.min(MaxwellEngine.BURN_UNITS_PER_MB - 1, tag.getInteger(LEGACY_BURN_TAG)));
     }
 
     public void write(NBTTagCompound tag) {

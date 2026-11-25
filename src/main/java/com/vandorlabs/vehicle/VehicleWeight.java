@@ -79,6 +79,8 @@ public final class VehicleWeight {
     private void add(double amount){if(Double.isFinite(amount)&&amount>=0&&Double.isFinite(units+amount))units+=amount;else incomplete=true;}
     private static String words(String hint){return "_"+SEPARATORS.matcher(CAMEL.matcher(hint).replaceAll("$1_$2").toLowerCase(Locale.ROOT)).replaceAll("_")+"_";}
     private static boolean has(String words,String... choices){for(String choice:choices)if(words.contains("_"+choice+"_"))return true;return false;}
+    // docs/flight-calculator.html mirrors these material weights and the fluid weight below;
+    // update it (and docs/vanilla-vehicle-weights.md) when they change.
     private static double material(String hint,Material fallback){
         String w=words(hint);double result;
         if(has(w,"gold","golden","uranium","tungsten"))result=7.5;
