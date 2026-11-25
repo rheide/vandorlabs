@@ -328,6 +328,9 @@ case "${1:-}" in
             PREFIX=coupling_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
             export VANDOR_LABS_COUPLING_CHECKS_ONLY=true
+        elif [ "$TARGET" = rack-battery-observers ]; then
+            PREFIX=rack_battery_observers_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.rackBatteryObserverChecksOnly=true"
         elif [ "$TARGET" = vehicle-resources ]; then
             PREFIX=vehicle_resources_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleResourceChecksOnly=true -Dfml.queryResult=confirm"
@@ -1184,6 +1187,11 @@ PYIMAGE
     if [ "$TARGET" = coupling ]; then
         grep -q "coupling-focused PASS" "$RUN_OUT/client.log"
         echo "Live coupling checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = rack-battery-observers ]; then
+        grep -q "rack-battery-observers PASS" "$RUN_OUT/client.log"
+        echo "Rack battery observer checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-resources ]; then

@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Power a carried Survey Dish or Sentinel Array from the Battery Modules in a Forge vehicle's Module Rack while the vehicle is in Flight, including high cruise. Wired RF to the observer's Power Port is used first. The modules are not drained in Taxi or Hover and keep their charge through saving, parking and recapture.
+
 - Keep Forge aircraft moving and steering on descent while terrain loads under the hull and ahead along its course. Ease into cruise speed on climb and start shedding excess airspeed well above the terrain handoff.
 
 - Control powered Forge airspeed with an Autopilot Module and a full or half-height Autopilot panel. Flight instruments report kiloblocks per hour to one decimal place. Existing waypoint modules keep their routes under the name Autonavigation Module.

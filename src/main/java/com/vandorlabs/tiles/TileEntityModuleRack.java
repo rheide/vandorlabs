@@ -489,9 +489,23 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     public int receiveBatteryEnergy(int maximum,boolean simulate){return transferBattery(maximum,simulate,true);}
     public int extractBatteryEnergy(int maximum,boolean simulate){return transferBattery(maximum,simulate,false);}
     private int transferBattery(int maximum,boolean simulate,boolean receive){
-        if(!canMutate())return 0;int previousLevels=batteryChargeLevels(),remaining=Math.max(0,maximum),total=0;
-        for(ItemStack stack:modules){int amount=receive?com.vandorlabs.rack.ModuleBatteryData.receive(stack,remaining,simulate):com.vandorlabs.rack.ModuleBatteryData.extract(stack,remaining,simulate);remaining-=amount;total+=amount;}
+        if(!canMutate())return 0;int previousLevels=batteryChargeLevels(),total=moveBattery(maximum,simulate,receive);
         if(!simulate&&total>0){markDirty();if(previousLevels!=batteryChargeLevels())changed();}return total;
+    }
+    private int moveBattery(int maximum,boolean simulate,boolean receive){
+        int remaining=Math.max(0,maximum),total=0;
+        for(ItemStack stack:modules){int amount=receive?com.vandorlabs.rack.ModuleBatteryData.receive(stack,remaining,simulate):com.vandorlabs.rack.ModuleBatteryData.extract(stack,remaining,simulate);remaining-=amount;total+=amount;}
+        return total;
+    }
+    /** A carried rack cannot change its modules, but its vehicle may spend Battery Module charge
+     * on onboard observers. The items keep owning the charge, so the dirty tile is saved into the
+     * vehicle snapshot and parks with the rack.
+     */
+    public int extractCarriedBatteryEnergy(int maximum,boolean simulate){
+        if(inert()||!com.vandorlabs.vehicle.VehicleResources.live(this))return 0;
+        int total=moveBattery(maximum,simulate,false);
+        if(!simulate&&total>0)markDirty();
+        return total;
     }
 
     @Override public boolean shouldRenderInPass(int pass) { return false; }

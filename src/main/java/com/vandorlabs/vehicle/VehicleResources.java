@@ -32,6 +32,7 @@ public final class VehicleResources {
     private long tick=Long.MIN_VALUE;
     private final List<ResourcePortTile> ports=new ArrayList<>();
     private final List<TileEntityConstructor> observers=new ArrayList<>();
+    private final List<TileEntityModuleRack> racks=new ArrayList<>();
     private final List<Channel> channels=new ArrayList<>();
     private final Map<BlockPos,Channel> powerRoutes=new HashMap<>(),fluidRoutes=new HashMap<>();
     private final List<Route> direct=new ArrayList<>();
@@ -164,6 +165,7 @@ public final class VehicleResources {
                 Channel channel=channels.get(nextChannel);nextChannel=(nextChannel+1)%size;
                 work=channel.transfer(view,work);
             }
+            if(craft.flying()&&!racks.isEmpty())supplyObserversFromRacks(view);
             for(TileEntityConstructor observer:observers)if(live(observer))observer.sampleCarriedObserver();
         }finally{
             view.controlUpdates=controlUpdates;
@@ -173,15 +175,16 @@ public final class VehicleResources {
     void flushChanges(Set<BlockPos> dirty,boolean force){
         if(indexed==craft.view&&(force||tick%SYNC_INTERVAL==0)){dirty.addAll(changed);changed.clear();}
     }
-    void close(){changed.clear();indexed=null;ports.clear();observers.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();}
+    void close(){changed.clear();indexed=null;ports.clear();observers.clear();racks.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();}
 
     private void index(VehicleWorld view){
         if(indexed!=view)changed.clear();
         indexed=view;revision=view.tileRevision;
-        ports.clear();observers.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();
+        ports.clear();observers.clear();racks.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();
         nextChannel=nextRoute=0;
         for(TileEntity tile:view.tiles.values()){
             if(tile instanceof ResourcePortTile)ports.add((ResourcePortTile)tile);
+            if(tile instanceof TileEntityModuleRack)racks.add((TileEntityModuleRack)tile);
             if(tile instanceof TileEntityConstructor){
                 TileEntityConstructor core=(TileEntityConstructor)tile;
                 if(core.observer())observers.add(core);
@@ -198,6 +201,32 @@ public final class VehicleResources {
         }
         indexChannels(view,POWER);
         indexChannels(view,FLUID);
+    }
+
+    /** In Flight, Module Rack Battery Modules cover whatever this tick's wired supply left unmet.
+     * Wired routes run first, so a powered Fluxduct keeps the rack's charge in reserve. A rack
+     * only pays for a full tick of observer demand; partial charge stays in the module.
+     */
+    private void supplyObserversFromRacks(VehicleWorld view){
+        for(TileEntityConstructor observer:observers){
+            if(!live(observer))continue;
+            IEnergyStorage inlet=endpoint(view.getTileEntity(observer.observerPowerPort()),EnumFacing.DOWN,CapabilityEnergy.ENERGY);
+            if(inlet==null||!inlet.canReceive())continue;
+            int wanted=Math.max(0,inlet.receiveEnergy(com.vandorlabs.navigation.ObserverPower.RF_PER_TICK,true)),available=0;
+            if(wanted<=0)continue;
+            for(TileEntityModuleRack rack:racks)if(available<wanted)available+=rack.extractCarriedBatteryEnergy(wanted-available,true);
+            if(available<wanted)continue;
+            for(TileEntityModuleRack rack:racks){
+                if(wanted<=0)break;
+                int offered=rack.extractCarriedBatteryEnergy(wanted,true);
+                if(offered<=0)continue;
+                int delivered=inlet.receiveEnergy(offered,false);
+                if(delivered>0&&rack.extractCarriedBatteryEnergy(delivered,false)!=delivered)
+                    throw new IllegalStateException("Carried Battery Module changed its charge during one transfer");
+                wanted-=delivered;
+                if(delivered<offered)break;
+            }
+        }
     }
 
     private void indexChannels(VehicleWorld view,int kind){

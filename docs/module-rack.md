@@ -89,6 +89,8 @@ the handles, lighting individual pixel columns with charge. The item tooltip sho
 
 Connect RF to the Power Port on the rear face. In the Rack dialog, choose **Power Port: In** to charge inserted batteries or **Out** to discharge them. The port follows the rack’s facing, including floor and ceiling placements. Only the rear face transfers RF. Output mode supplies up to 1,000 RF per tick, limited by available charge and the receiver; compatible cables can also extract through that face. The setting and each module’s charge survive saving and reloading.
 
+On a Forge 1.12.2 vehicle, the captured Rack's Battery Modules power every carried Survey Dish and Sentinel Array whose scanning is on, but only while the vehicle is in Flight. This includes high cruise and the descent after selecting Taxi or Hover. Each observer needs 20 RF per tick. RF wired to the observer's Power Port is used first, so the modules supply only the remainder. The Power Port In/Out setting does not affect this. Taxi and Hover never draw on the modules. Their charge is saved with the vehicle and remains in the Rack after parking and recapture. Recharge the modules on the parked Rack.
+
 Craft one with Programmable Matter Ingots in the four corners, Gold Ingots at
 the middle of each edge, and Redstone Dust in the center:
 
