@@ -2,6 +2,8 @@
 
 ## 3.0.0 (in development)
 
+- Build Rocket Thrusters, Ion Drives, Plasma Vents, Impulse Engines, Antigravity Plates, Repulsor Arrays and Vertical Hover Thrusters in the Forge Enclosed Gantry, alongside the arms and landing gear. Their crafting-table recipes are removed. Existing blocks and items are unchanged.
+
 - Power a carried Survey Dish or Sentinel Array from the Battery Modules in a Forge vehicle's Module Rack while the vehicle is in Flight, including high cruise. Wired RF to the observer's Power Port is used first. The modules are not drained in Taxi or Hover and keep their charge through saving, parking and recapture.
 
 - Keep Forge aircraft moving and steering on descent while terrain loads under the hull and ahead along its course. Ease into cruise speed on climb and start shedding excess airspeed well above the terrain handoff.

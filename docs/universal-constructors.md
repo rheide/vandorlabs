@@ -142,9 +142,11 @@ item in either chamber to collect it, or use the dialog/adjacent output.
 | Builder | Designs available without a Catalog Chip | Master Catalog additions |
 | --- | --- | --- |
 | Assembly Press | Data Chip, Access Card, Programmable Plate | Battery Module, Autonavigation Module (Autopilot Module on NeoForge), Navigation Data Module |
-| Enclosed Gantry | Regular and Large Extending/Rotating Arms, regular and Large Landing Wheels, Landing Ski, Landing Plate, Coupler and Coupler Slab | The same mechanical designs |
+| Enclosed Gantry | Regular and Large Extending/Rotating Arms, regular and Large Landing Wheels, Landing Ski, Landing Plate, Coupler and Coupler Slab, Rocket Thruster, Ion Drive, Plasma Vent, Impulse Engine, Antigravity Plate, Repulsor Array and Vertical Hover Thruster | The same mechanical and propulsion designs |
 
 Craft Programmable Armor by arranging Programmable Plates in the standard armor patterns.
+
+On Forge 1.12.2, thrusters and hover lift blocks have no crafting-table recipe. Build them in an Enclosed Gantry like any other Gantry design.
 
 Catalog permissions apply when starting a job. A started job retains its own
 blueprint if the chip or selected design changes. Dismantling returns the

@@ -7,7 +7,8 @@ public final class CatalogChipPolicy {
  private static final String[][] MASTER={
   {"synthesis_tower_core","assembly_press_core","enclosed_gantry_core","standalone_antenna_core","standalone_dish_core","vector_fold_array_core","meridian_drive_core","longburn_drive_core","oculus_drive_core","vehicle_controller","programmable_ramp"},
   {"data_chip","access_card","battery_module","autopilot_module","navigation_data_module"},
-  {"gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab"}};
+  {"gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab",
+   "rocket_thruster","ion_drive","plasma_vent","impulse_engine","antigravity_plate","repulsor_array","vertical_hover_thruster"}};
  public static boolean isMaster(String chipType,String catalogName,boolean hasDigitizedTemplate){
   return "catalog".equals(chipType)&&"Master".equals(catalogName)&&!hasDigitizedTemplate;
  }

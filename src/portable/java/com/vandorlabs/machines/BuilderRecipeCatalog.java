@@ -7,7 +7,8 @@ public final class BuilderRecipeCatalog {
     private static final List<String> TOWER=immutable("synthesis_tower_core","assembly_press_core","enclosed_gantry_core","standalone_antenna_core","standalone_dish_core","vector_fold_array_core","meridian_drive_core","longburn_drive_core","oculus_drive_core","vehicle_controller","programmable_ramp","digitized_block");
     private static final List<String> PRESS=immutable("data_chip","access_card","battery_module","autopilot_module","navigation_data_module","programmable_plate");
     private static final List<String> PRESS_DEFAULTS=immutable("data_chip","access_card","programmable_plate");
-    private static final List<String> GANTRY=immutable("gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab");
+    private static final List<String> GANTRY=immutable("gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab",
+            "rocket_thruster","ion_drive","plasma_vent","impulse_engine","antigravity_plate","repulsor_array","vertical_hover_thruster");
     private static List<String> immutable(String... ids){return Collections.unmodifiableList(Arrays.asList(ids));}
     public static String canonical(String id){return "survey_dish_core".equals(id)?"standalone_dish_core":"sentinel_array_core".equals(id)?"standalone_antenna_core":id;}
     public static boolean machine(String id){return "synthesis_tower".equals(id)||"assembly_press".equals(id)||"enclosed_gantry".equals(id);}

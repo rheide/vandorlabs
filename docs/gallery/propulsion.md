@@ -17,6 +17,8 @@ Each family supports **Off**, **On**, and **On + Particle Stream**. The stream u
 
 ![Connected thruster emitting particles](../images/gallery/propulsion/connected-particle-mode.png)
 
+On Forge 1.12.2, build all seven propulsion blocks in an [Enclosed Gantry](../universal-constructors.md#assembly-press-and-enclosed-gantry-production-forge-1122). Each takes one Programmable frame block and 8,000 RF. They have no crafting-table recipe.
+
 The Antigravity, Repulsor, and Vertical Hover blocks have their own configurable Join behavior. They also emit light, use manual or redstone activation, and can select a particle stream.
 
 ## Signal-dependent brightness

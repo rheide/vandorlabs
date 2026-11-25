@@ -250,11 +250,11 @@ final class ItemRuntimeChecks {
                 new ItemStack(Items.DYE, 1, 4), new ItemStack(Items.GLOWSTONE_DUST),
                 new ItemStack(Items.QUARTZ), new ItemStack(Items.FEATHER),
                 new ItemStack(Blocks.PISTON), new ItemStack(Items.FEATHER)};
+        // Thrusters and lift blocks are Enclosed Gantry designs; the former crafting shapes stay retired.
         for (int variant = 0; variant < ids.length; variant++) {
             String id = ids[variant];
-            IRecipe recipe = CraftingManager.REGISTRY.getObject(
-                    new ResourceLocation("vandorlabs", id));
-            require(recipe != null, id + " recipe missing");
+            require(CraftingManager.REGISTRY.getObject(new ResourceLocation("vandorlabs", id)) == null,
+                    id + " crafting recipe is retired");
             for (int slot = 0; slot < 9; slot++) {
                 ItemStack ingredient = slot == 4 ? centers[variant]
                         : slot == 3 || slot == 5 ? sides[variant]
@@ -262,17 +262,15 @@ final class ItemRuntimeChecks {
                         : new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT);
                 grid.setInventorySlotContents(slot, ingredient.copy());
             }
-            require(recipe.matches(grid, player.world), id + " recipe does not match");
-            ItemStack result = CraftingManager.findMatchingResult(grid, player.world);
-            require(result.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(
-                            new ResourceLocation("vandorlabs", id))) && result.getCount() == 1,
-                    id + " recipe crafts the wrong result");
-            grid.setInventorySlotContents(4, ItemStack.EMPTY);
-            require(!recipe.matches(grid, player.world), id + " accepts a missing center");
-            grid.setInventorySlotContents(4, centers[variant].copy());
-            grid.setInventorySlotContents(0, ItemStack.EMPTY);
-            require(!recipe.matches(grid, player.world), id + " accepts a missing alloy ingot");
+            require(CraftingManager.findMatchingResult(grid, player.world).isEmpty(),
+                    id + " former crafting pattern still produces an item");
+            require(com.vandorlabs.machines.BuilderRecipeCatalog.defaults("enclosed_gantry").contains(id),
+                    id + " is a default Enclosed Gantry design");
+            Item output = Item.REGISTRY.getObject(new ResourceLocation("vandorlabs", id));
+            require(output != null && output == Item.getItemFromBlock(Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", id))),
+                    id + " Gantry design resolves to its block item");
         }
+        for (int slot = 0; slot < 9; slot++) grid.setInventorySlotContents(slot, ItemStack.EMPTY);
     }
 
     private static void checkConfiguredItemModels(Minecraft mc) {
