@@ -568,12 +568,12 @@ final class VehicleFlightClientChecks {
         final double ground;
         volatile boolean done;
         String failure;
-        double contactZ,approachSpeed;
+        double contactZ,approachSpeed,startSpeed;
         int rolloutTicks;
 
         PoweredLanding(EntityGroundVehicle craft,double ground){
             this.craft=craft;this.ground=ground;
-            approachSpeed=craft.driveSpeed;
+            approachSpeed=startSpeed=craft.driveSpeed;
         }
         @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
         public void tick(net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent event){
@@ -585,7 +585,10 @@ final class VehicleFlightClientChecks {
                 if(craft.driveSpeed<approachSpeed*.85||craft.driveSpeed<=.45||craft.vehicleMode()!=1||
                         !craft.onGround||craft.flightPitch()!=0||craft.flightBank()!=0||Math.abs(bottom-ground)>.02)
                     failure="server contact "+flightState(craft)+" grounded="+craft.onGround+" bottom="+bottom+" runway="+ground+" approach="+approachSpeed;
-                System.out.println("[vandorlabs] powered runway approach="+approachSpeed+" contact="+craft.driveSpeed+" bottom="+bottom+" runway="+ground);
+                // A low approach eases toward takeoff speed instead of touching down at cruise speed.
+                if(failure==null&&!(approachSpeed<startSpeed-.1))
+                    failure="low approach keeps its speed: started="+startSpeed+" before contact="+approachSpeed;
+                System.out.println("[vandorlabs] powered runway start="+startSpeed+" approach="+approachSpeed+" contact="+craft.driveSpeed+" bottom="+bottom+" runway="+ground);
             }
             if(rolloutTicks<7)return;
             double distance=contactZ-craft.posZ;

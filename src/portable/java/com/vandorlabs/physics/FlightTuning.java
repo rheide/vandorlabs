@@ -106,6 +106,13 @@ public final class FlightTuning {
 
     // Takeoff run: from RUNWAY_MIN blocks with no load to RUNWAY_MAX at the takeoff limit, scaled by load^EXPONENT.
     public static final double RUNWAY_TAKEOFF_SPEED = .6;
+    /** Landing approach below the world ceiling: speed eases from the normal target at APPROACH_CEILING blocks of
+     *  smoothed ground clearance down to APPROACH_SPEED at APPROACH_FLOOR. */
+    public static final double APPROACH_CEILING = 30, APPROACH_FLOOR = 4, APPROACH_SPEED = RUNWAY_TAKEOFF_SPEED;
+    /** Share of the current ground clearance blended into the approach average each tick (about a four-tick window). */
+    public static final double APPROACH_SMOOTHING = .25;
+    /** Speed shed per tick while the approach rule lowers the target. */
+    public static final double APPROACH_DECELERATION = .06;
     public static final double RUNWAY_MIN = 30, RUNWAY_MAX = 200, RUNWAY_LOAD_EXPONENT = 2;
 
     /** Powered Flight speed below the cruise band, from MIN at the takeoff limit to MAX with twice the thrust needed. */

@@ -120,6 +120,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean cruisingRecovery;
     private int initialClimb;
     private float flightPitch,targetPitch,flightBank,targetBank,flightRollRate,flightElevatorRate;
+    private double approachClearance=Double.NaN;
+    private boolean approaching;
     private float flightViewYaw=Float.NaN;
     private final VehicleFlightReadout.Sampler flightSampler=new VehicleFlightReadout.Sampler();
     private VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
@@ -953,11 +955,18 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         double noseDown=Math.max(0,-pitch);
         double speed=gliding?FlightTuning.GLIDE_SPEED+Math.min(FlightTuning.GLIDE_DIVE_MAX_GAIN,noseDown*FlightTuning.GLIDE_DIVE_GAIN_PER_DEGREE)
                 :Math.max(FlightTuning.MIN_FLIGHT_SPEED,flightReadout.cruiseSpeed(altitude));
+        if(!gliding&&!cruise.active()&&dimension==0&&altitude<FlightEnvelope.WORLD_CEILING){
+            // Ease off on a low approach; climbing away or 30+ blocks of clearance keeps the normal target.
+            approachClearance=FlightEnvelope.smoothClearance(approachClearance,groundClearance());
+            double approach=FlightEnvelope.approachSpeed(speed,approachClearance,motionY>.05&&pitch>2);
+            approaching=approach<speed;speed=approach;
+        }else{approachClearance=Double.NaN;approaching=false;}
         if(canHoldSpeed()&&speedHoldSetting()>0)speed=Math.min(speed,speedHoldSetting()/720D);
         double acceleration=gliding?FlightTuning.GLIDE_ACCELERATION:FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)
                 *AircraftAttitude.propulsion(pitch)*(1+speed/10);
         // Existing airspeed bleeds off gradually when the throttle or supported altitude falls.
         double deceleration=Math.min(FlightTuning.MAX_FLIGHT_DECELERATION,FlightTuning.FLIGHT_DECELERATION+Math.max(0,driveSpeed-speed)*FlightTuning.FLIGHT_DECELERATION_PER_EXCESS);
+        if(approaching)deceleration=Math.max(deceleration,FlightTuning.APPROACH_DECELERATION);
         driveSpeed=approach(driveSpeed,speed,driveSpeed<=speed?acceleration:deceleration);
 
         double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);

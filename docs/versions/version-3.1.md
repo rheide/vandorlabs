@@ -30,6 +30,8 @@ Hold **W** along the runway and press **S** once the craft reaches takeoff speed
 
 Below Y=256, powered Flight targets **72 kb/h** at the takeoff limit and rises to **144 kb/h** once the drives give twice the thrust the craft needs. Above Y=256, airspeed still builds with altitude toward 1,080 kb/h at Y=10,000.
 
+
+On a landing approach the aircraft slows itself. Within 30 blocks of the ground, averaged over the last few ticks, the speed target eases down to the 43.2 kb/h takeoff speed near touchdown. Pulling up into a climb, or flying higher than 30 blocks above the ground, returns to the normal speed.
 ## Maxwell Drive fuel
 
 Each running drive burns **100 mB per minute per thrust unit** at full throttle when the craft is at its takeoff limit. A lighter craft burns less: 85% of the burn follows effective weight ÷ takeoff limit, so an almost empty craft burns 15% of the full rate. Analog throttle still scales thrust and burn together. A placed drive fired by redstone burns at the full rate.

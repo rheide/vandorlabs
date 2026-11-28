@@ -76,6 +76,20 @@ public final class FlightEnvelopeTest {
                 &&Math.abs(FlightEnvelope.burnLoadFactor(0,1)-(1-FlightTuning.MAXWELL_LOAD_BURN_SHARE))<1e-12
                 &&FlightEnvelope.burnLoadFactor(100*k,1)<FlightEnvelope.burnLoadFactor(400*k,1),"lighter craft burn less");
 
+        // 3.1 landing approach.
+        require(FlightEnvelope.approachSpeed(2,40,false)==2&&FlightEnvelope.approachSpeed(2,10,true)==2,"approach rule leaves high and climbing flight alone");
+        require(Math.abs(FlightEnvelope.approachSpeed(2,FlightTuning.APPROACH_FLOOR,false)-FlightTuning.APPROACH_SPEED)<1e-9
+                &&FlightEnvelope.approachSpeed(2,1,false)==FlightTuning.APPROACH_SPEED,"near the ground the target is the approach speed");
+        double previousTarget=0;
+        for(int h=0;h<=30;h++){double v=FlightEnvelope.approachSpeed(2,h,false);require(v>=previousTarget&&v<=2,"approach target rises with clearance");previousTarget=v;}
+        require(FlightEnvelope.approachSpeed(.5,1,false)==.5,"a slower target is never raised");
+        double average=FlightEnvelope.smoothClearance(Double.NaN,80);
+        average=FlightEnvelope.smoothClearance(average,5);
+        require(average>30,"a one-tick dip over a tall feature does not trigger the approach: "+average);
+        for(int tick=0;tick<16;tick++)average=FlightEnvelope.smoothClearance(average,5);
+        require(average<8,"sustained low flight converges on the clearance: "+average);
+        require(FlightEnvelope.smoothClearance(10,Double.POSITIVE_INFINITY)>10,"unknown clearance reads as high");
+
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
         require(!hull.intersects(pane)&&hull.sweepsInto(pane,1.5,0,0),"thin terrain crossed between positional samples");

@@ -39,6 +39,24 @@ public final class FlightEnvelope {
         return thrust * MASS_PER_THRUST;
     }
 
+    /**
+     * 3.1 Forge rule: powered speed target on a low approach. Above {@link FlightTuning#APPROACH_CEILING} blocks of
+     * smoothed ground clearance, or while climbing, the target is unchanged; below it eases to the approach speed.
+     */
+    public static double approachSpeed(double target, double clearance, boolean climbing) {
+        if (climbing || !(clearance < FlightTuning.APPROACH_CEILING) || target <= FlightTuning.APPROACH_SPEED) return target;
+        double t = Math.max(0, Math.min(1, (clearance - FlightTuning.APPROACH_FLOOR) / (FlightTuning.APPROACH_CEILING - FlightTuning.APPROACH_FLOOR)));
+        t = t * t * (3 - 2 * t);
+        return FlightTuning.APPROACH_SPEED + (target - FlightTuning.APPROACH_SPEED) * t;
+    }
+
+    /** Moving average of ground clearance for {@link #approachSpeed}; an unknown clearance reads as high. */
+    public static double smoothClearance(double average, double clearance) {
+        double sample = Double.isFinite(clearance) ? Math.min(clearance, 2 * FlightTuning.APPROACH_CEILING) : 2 * FlightTuning.APPROACH_CEILING;
+        if (!Double.isFinite(average)) return sample;
+        return average + (sample - average) * FlightTuning.APPROACH_SMOOTHING;
+    }
+
     public static boolean canFly(double mass, double thrust) {
         return mass > 0 && thrust > 0 && mass <= takeoffMass(thrust);
     }
