@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--reactor-glass', action='store_true', help='Run standalone Mekanism reactor glass transfer checks')
     parser.add_argument('--arm-machines', action='store_true', help='Run installed standalone machine saved-data/rotation matrix')
     parser.add_argument('--mekanism-transit', action='store_true', help='Run only the native Mekanism item-handler bridge live check')
+    parser.add_argument('--thermal-transfer', action='store_true', help='Run only the fuelled Thermal Fluiduct vehicle scan with client classes absent')
     args = parser.parse_args()
     if args.reactor_glass:
         args.vehicle_world_only = True
@@ -85,7 +86,7 @@ def run_server(args, root, output, owner=None):
            '(expected:')
     # Changing spawn does not synchronously load its chunks. Restart once so the
     # fixture chunk is part of the server's prepared start region before placement.
-    for phase in (('prepare',) if args.vehicle_world_only or args.plate_only or args.arm_machines or args.mekanism_transit else ('prepare', 'place', 'reload')):
+    for phase in (('prepare',) if args.vehicle_world_only or args.plate_only or args.arm_machines or args.mekanism_transit or args.thermal_transfer else ('prepare', 'place', 'reload')):
         path = output / (phase + '.log')
         with path.open('w') as log:
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
@@ -95,6 +96,8 @@ def run_server(args, root, output, owner=None):
                 checks.append('-Dvandorlabs.legacyVehicleFixture='+str(root/'testclient/fixtures/legacy-vehicle-controller-2.6.nbt'))
             if args.mekanism_transit:
                 checks.append('-Dvandorlabs.armNetworkTransit=true')
+            if args.thermal_transfer:
+                checks.append('-Dvandorlabs.thermalTransferChecks=true')
             if args.arm_machines:
                 checks.append('-Dvandorlabs.armMachineChecks=true')
             if args.reactor_glass:
@@ -138,6 +141,8 @@ def run_server(args, root, output, owner=None):
                     wait_for('vehicle-world-compatibility PASS')
                 if args.mekanism_transit:
                     wait_for('arm-network-transit PASS')
+                if args.thermal_transfer:
+                    wait_for('thermal-transfer PASS')
                 if args.arm_machines:
                     wait_for('arm-machine-matrix PASS')
                 if args.reactor_glass:
@@ -148,12 +153,12 @@ def run_server(args, root, output, owner=None):
                     wait_for('constructors PASS ')
                 if args.plate_only:
                     wait_for('programmable plate PASS')
-                if args.vehicle_world_only or args.plate_only or args.arm_machines or args.mekanism_transit:
+                if args.vehicle_world_only or args.plate_only or args.arm_machines or args.mekanism_transit or args.thermal_transfer:
                     command('stop')
                     proc.wait(timeout=45)
                     if proc.returncode:
                         raise RuntimeError(f'{phase}: failed shutdown; see {path}')
-                    focus = 'Mekanism item transit' if args.mekanism_transit else 'standalone machines' if args.arm_machines else 'programmable plate' if args.plate_only else 'vehicle compatibility'
+                    focus = 'Thermal transfer' if args.thermal_transfer else 'Mekanism item transit' if args.mekanism_transit else 'standalone machines' if args.arm_machines else 'programmable plate' if args.plate_only else 'vehicle compatibility'
                     print(f'Physical-server {focus} PASS: {output}')
                     return
                 if phase == 'prepare':

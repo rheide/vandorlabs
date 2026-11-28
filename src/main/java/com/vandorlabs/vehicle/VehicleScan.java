@@ -605,7 +605,11 @@ public final class VehicleScan {
                     candidate=VehicleControlSettings.migratePlaced(world,origin,candidate);}
                 return false; // Validate and encode in separate bounded server ticks before publication.
             }
-        } catch(Exception e) { result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }
+        } catch(Exception e) {
+            result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage();
+            // A wrapped cause is an installed-mod adapter failure, not an ordinary refusal; keep its trace for diagnosis.
+            if(e.getCause()!=null)com.vandorlabs.VandorLabs.logger.warn("Vehicle scan at "+start+" refused: "+error,e);
+        }
         finally{profile(stage,started);}
         return error!=null || result!=null;
     }

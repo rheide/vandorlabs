@@ -36,12 +36,13 @@ public final class TransferNetworkCompat {
     public static List<ItemStack> thermalCopyMaterials(TileEntity tile){
         if(!copyableThermal(tile))throw new IllegalArgumentException("Unsupported Thermal Dynamics copy materials");
         try{
+            ThermalAccess access=thermalAccess(tile);
             List<ItemStack> result=new ArrayList<>();
-            result.add(requireCopyItem(call(tile,"getDrop")));
-            for(String method:new String[]{"getAttachment","getCover"})for(int side=0;side<6;side++){
-                Object part=call(tile,method,side);
+            result.add(requireCopyItem(invoke(access.drop,tile)));
+            for(MethodHandle method:new MethodHandle[]{access.attachment,access.cover})for(int side=0;side<6;side++){
+                Object part=invoke(method,tile,side);
                 if(part==null)continue;
-                List<?> drops=(List<?>)call(part,"getDrops");
+                List<?> drops=(List<?>)invoke(access.drops,part);
                 require(!drops.isEmpty(),"A Thermal Dynamics attachment has no material item");
                 for(Object drop:drops)result.add(requireCopyItem(drop));
             }
@@ -78,6 +79,43 @@ public final class TransferNetworkCompat {
             return MethodHandles.publicLookup().findVirtual(owner,method,MethodType.methodType(result));
         }
     }
+    /**
+     * Thermal Dynamics members by exact descriptor. Enumerating a duct tile's public methods also resolves
+     * TileGrid.getBaseIcon(), whose client-only TextureAtlasSprite is absent on a dedicated server.
+     */
+    private static final class ThermalAccess {
+        final MethodHandle units,grid,token,key,stored,connection,setConnection,nodes,idle,parent,drop,attachment,cover,drops;
+        final Class<?> fluidUnit;
+        ThermalAccess(ClassLoader loader)throws ReflectiveOperationException{
+            Class<?> tile=Class.forName("cofh.thermaldynamics.duct.tiles.TileGrid",false,loader);
+            Class<?> unit=Class.forName("cofh.thermaldynamics.duct.tiles.DuctUnit",false,loader);
+            Class<?> type=Class.forName("cofh.thermaldynamics.duct.tiles.DuctToken",false,loader);
+            Class<?> network=Class.forName("cofh.thermaldynamics.multiblock.MultiBlockGrid",false,loader);
+            Class<?> members=Class.forName("cofh.thermaldynamics.multiblock.NoComodSet",false,loader);
+            Class<?> part=Class.forName("cofh.thermaldynamics.duct.Attachment",false,loader);
+            Class<?> covering=Class.forName("cofh.thermaldynamics.duct.attachments.cover.Cover",false,loader);
+            fluidUnit=Class.forName("cofh.thermaldynamics.duct.fluid.DuctUnitFluid",false,loader);
+            MethodHandles.Lookup lookup=MethodHandles.publicLookup();
+            units=lookup.findVirtual(tile,"getDuctUnits",MethodType.methodType(Iterable.class));
+            drop=lookup.findVirtual(tile,"getDrop",MethodType.methodType(ItemStack.class));
+            attachment=lookup.findVirtual(tile,"getAttachment",MethodType.methodType(part,int.class));
+            cover=lookup.findVirtual(tile,"getCover",MethodType.methodType(covering,int.class));
+            drops=lookup.findVirtual(part,"getDrops",MethodType.methodType(List.class));
+            grid=lookup.findVirtual(unit,"getGrid",MethodType.methodType(network));
+            token=lookup.findVirtual(unit,"getToken",MethodType.methodType(type));
+            parent=lookup.findGetter(unit,"parent",tile);
+            key=lookup.findGetter(type,"key",String.class);
+            nodes=lookup.findGetter(network,"nodeSet",members);
+            idle=lookup.findGetter(network,"idleSet",members);
+            stored=lookup.findGetter(fluidUnit,"fluidForGrid",FluidStack.class);
+            connection=lookup.findGetter(fluidUnit,"myConnectionFluid",FluidStack.class);
+            setConnection=lookup.findSetter(fluidUnit,"myConnectionFluid",FluidStack.class);
+        }
+    }
+    private static ThermalAccess thermal;
+    private static ThermalAccess thermalAccess(TileEntity tile)throws ReflectiveOperationException{
+        if(thermal==null)thermal=new ThermalAccess(tile.getClass().getClassLoader());return thermal;
+    }
     private static MekanismAccess mek;
     private static MekanismAccess mekanismAccess(TileEntity tile)throws ReflectiveOperationException{
         if(mek==null)mek=new MekanismAccess(tile.getClass().getClassLoader());return mek;
@@ -86,9 +124,17 @@ public final class TransferNetworkCompat {
         try{return method.invoke(target);}catch(RuntimeException|LinkageError failure){throw new InvocationTargetException(failure);}
         catch(Error failure){throw failure;}catch(Throwable failure){throw new InvocationTargetException(failure);}
     }
+    private static Object invoke(MethodHandle method,Object target,int value)throws ReflectiveOperationException{
+        try{return method.invoke(target,value);}catch(RuntimeException|LinkageError failure){throw new InvocationTargetException(failure);}
+        catch(Error failure){throw failure;}catch(Throwable failure){throw new InvocationTargetException(failure);}
+    }
+    private static void invoke(MethodHandle method,Object target,Object value)throws ReflectiveOperationException{
+        try{method.invoke(target,value);}catch(RuntimeException|LinkageError failure){throw new InvocationTargetException(failure);}
+        catch(Error failure){throw failure;}catch(Throwable failure){throw new InvocationTargetException(failure);}
+    }
     private static Object field(Object target,String name)throws ReflectiveOperationException{return target.getClass().getField(name).get(target);}
-    private static Iterable<?> units(TileEntity tile)throws ReflectiveOperationException{return (Iterable<?>)call(tile,"getDuctUnits");}
-    private static String token(Object unit)throws ReflectiveOperationException{return (String)field(call(unit,"getToken"),"key");}
+    private static Iterable<?> units(ThermalAccess access,TileEntity tile)throws ReflectiveOperationException{return (Iterable<?>)invoke(access.units,tile);}
+    private static String token(ThermalAccess access,Object unit)throws ReflectiveOperationException{return (String)invoke(access.key,invoke(access.token,unit));}
     private static void require(boolean ok,String message){if(!ok)throw new IllegalArgumentException(message);}
 
     /** Run on the physical server before any member is serialized or detached. */
@@ -98,10 +144,10 @@ public final class TransferNetworkCompat {
         try{
             for(BlockPos pos:positions){TileEntity tile=world.getTileEntity(pos);if(!component(tile))continue;
                 require(world.isBlockLoaded(pos,false)&&tile.getWorld()==world&&!tile.isInvalid(),"Load the complete transfer network before moving it");
-                if(thermal(tile))for(Object unit:units(tile)){
-                    Object grid=call(unit,"getGrid");if(grid==null||!inspected.add(grid))continue;
-                    for(String set:new String[]{"nodeSet","idleSet"})for(Object member:(Iterable<?>)field(grid,set))requireMember(world,selected,(TileEntity)field(member,"parent"));
-                }else if(mekanism(tile)){
+                if(thermal(tile)){ThermalAccess access=thermalAccess(tile);for(Object unit:units(access,tile)){
+                    Object grid=invoke(access.grid,unit);if(grid==null||!inspected.add(grid))continue;
+                    for(MethodHandle set:new MethodHandle[]{access.nodes,access.idle})for(Object member:(Iterable<?>)invoke(set,grid))requireMember(world,selected,(TileEntity)invoke(access.parent,member));
+                }}else if(mekanism(tile)){
                     MekanismAccess access=mekanismAccess(tile);
                     Object transmitter=invoke(access.transmitter,tile);Object grid=invoke(access.network,transmitter);
                     if(grid!=null&&inspected.add(grid)){
@@ -144,14 +190,15 @@ public final class TransferNetworkCompat {
                 return tile.writeToNBT(new NBTTagCompound());
             }
             if(!thermal(tile))return tile.writeToNBT(new NBTTagCompound());
+            ThermalAccess access=thermalAccess(tile);
             Map<String,NBTTagCompound> fluids=new HashMap<>();Map<Object,Object> connections=new IdentityHashMap<>();
-            for(Object unit:units(tile))if(call(unit,"getGrid")==null&&token(unit).equals("Fluid")){
-                FluidStack stored=(FluidStack)field(unit,"fluidForGrid"),connection=(FluidStack)field(unit,"myConnectionFluid");
+            for(Object unit:units(access,tile))if(invoke(access.grid,unit)==null&&access.fluidUnit.isInstance(unit)&&token(access,unit).equals("Fluid")){
+                FluidStack stored=(FluidStack)invoke(access.stored,unit),connection=(FluidStack)invoke(access.connection,unit);
                 NBTTagCompound data=new NBTTagCompound();if(stored!=null)stored.writeToNBT(data);
-                if(connection!=null)data.setTag("ConnFluid",connection.writeToNBT(new NBTTagCompound()));fluids.put(token(unit),data);connections.put(unit,connection);
+                if(connection!=null)data.setTag("ConnFluid",connection.writeToNBT(new NBTTagCompound()));fluids.put(token(access,unit),data);connections.put(unit,connection);
             }
             NBTTagCompound result;
-            try{result=tile.writeToNBT(new NBTTagCompound());}finally{for(Map.Entry<Object,Object> entry:connections.entrySet())entry.getKey().getClass().getField("myConnectionFluid").set(entry.getKey(),entry.getValue());}
+            try{result=tile.writeToNBT(new NBTTagCompound());}finally{for(Map.Entry<Object,Object> entry:connections.entrySet())invoke(access.setConnection,entry.getKey(),entry.getValue());}
             // A joined Fluxduct node writes an explicit zero share. The same empty
             // buffer writes no share after loading without a native grid.
             NBTTagCompound energy=result.getCompoundTag("Energy");
