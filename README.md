@@ -60,6 +60,8 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 
 ## What's in the mod
 
+See [mod compatibility](docs/mod-compatibility.md) for the optional mods Vandor Labs works with.
+
 - **Programmable Display Arm (Forge)**: mount a thin display on any block face, then
   choose full/half height, an optional input deck, screen direction, three position
   offsets and yaw/tilt/roll in one dialog. See the [Display Arm guide](docs/display-arm.md).
