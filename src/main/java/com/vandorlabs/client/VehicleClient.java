@@ -522,17 +522,17 @@ public final class VehicleClient {
             }
             VehicleStructure liftStructure=raw instanceof EntityGroundVehicle?((EntityGroundVehicle)raw).structure:data.structure;
             String hoverLimit=liftStructure==null?null:"Hover lift capacity: "+com.vandorlabs.vehicle.VehicleFlight.hoverCapacity(liftStructure)+" weight units";
-            if(readout.drives==0){
+            if(readout.drives==0&&readout.thrusters==0){
                 if(data.structure==null) {
                     fontRenderer.drawString("Complete and inspect the vehicle to measure its flight envelope.",x,y,0xc4d0d8);
                 } else {
                     fontRenderer.drawString("Theoretical Max Takeoff Weight: 0 units",x,y,0xc4d0d8);
-                    fontRenderer.drawString("Install a Maxwell Drive to fly.",x,y+16,0xc4d0d8);
+                    fontRenderer.drawString("Install a Maxwell Drive or vehicle thrusters to fly.",x,y+16,0xc4d0d8);
                     if(hoverLimit!=null)fontRenderer.drawString(hoverLimit,x,y+32,0xc4d0d8);
                 }
                 return;
             }
-            fontRenderer.drawString("Maxwell Drives: "+readout.drives,x,y,0xdae8f0);
+            fontRenderer.drawString("Maxwell Drives: "+readout.drives+"   Thrusters: "+readout.thrusters+(readout.thrusterOnly()?" (below Y 320, 72 kb/h)":""),x,y,0xdae8f0);
             String partial=readout.partialMass?" (partial)":"";
             fontRenderer.drawString(com.vandorlabs.physics.FlightEnvelope.weightEquation(readout.mass,readout.effectiveMass)+partial,x,y+16,0xc4d0d8);
             fontRenderer.drawString("Theoretical Max Takeoff Weight: "+weightLimit(readout.ratedThrust),x,y+30,0xc4d0d8);

@@ -152,7 +152,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public double cruiseGroundSpeed(){return world.isRemote?reportedGroundSpeed:Math.hypot(motionX,motionZ);}
     double networkDriveSpeed(){return flying()?Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ):driveSpeed;}
     public VehicleFlightReadout flightReadout(){return flightReadout;}
-    void flightPayloadChanged(){if(structure!=null&&(!structure.maxwellCells.isEmpty()||structure.liftCells.size()>=3))flightSampler.inventoryDirty(world.getTotalWorldTime());}
+    void flightPayloadChanged(){if(structure!=null&&(!structure.maxwellCells.isEmpty()||structure.liftCells.size()>=3||structure.activeThrusterCount()>0))flightSampler.inventoryDirty(world.getTotalWorldTime());}
 
     void requestFlight(EntityPlayerMP pilot){
         if(flying()||takeoffRoll())return;
@@ -160,7 +160,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(autopilot.enabled())throw new IllegalArgumentException("Turn off Autonavigation before selecting Flight.");
         if(VehicleCouplingTransfer.busy(this)||VehicleCouplings.preparingArmRelease(this))throw new IllegalArgumentException("Wait for the vehicle coupling transfer.");
         refreshFlightReadout();
-        if(flightReadout.drives==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive.");
+        if(flightReadout.drives==0&&flightReadout.thrusters==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive or vehicle thrusters.");
         if(flightReadout.thrust<=0)throw new IllegalArgumentException("Fuel and enable a Maxwell Drive before selecting Flight.");
         if(!flightReadout.canFly())throw new IllegalArgumentException("Effective weight exceeds the available Maxwell takeoff limit.");
         if(!hover&&(!hasGroundContact()||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)))
@@ -188,7 +188,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
 
     private void refreshFlightReadout(){
-        if(structure.maxwellCells.isEmpty()&&structure.liftCells.size()<3){flightReadout=VehicleFlightReadout.EMPTY;dataManager.set(HOVER_LIFT_READY,false);return;}
+        if(structure.maxwellCells.isEmpty()&&structure.liftCells.size()<3&&structure.activeThrusterCount()==0){flightReadout=VehicleFlightReadout.EMPTY;dataManager.set(HOVER_LIFT_READY,false);return;}
         net.minecraft.tileentity.TileEntity raw=view.getTileEntity(VehicleControlSettings.position(structure));
         com.vandorlabs.tiles.TileEntityVehicleController controller=raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;
         double prior=controller==null?0:Math.max(0,controller.vehicleWeight);
@@ -912,6 +912,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
         double altitude=flightAltitude();
         double ceiling=Math.min(flightReadout.maximumAltitude(),flightMotion.ceiling(rotationYaw,flightPitch,flightBank));
+        // Thruster-only craft never reach the seed-view handoff, whatever the server configures.
+        if(flightReadout.thrusterOnly())ceiling=Math.min(ceiling,cruise.handoffAltitude()-2);
         boolean gliding=flightPhase==GLIDING_FLIGHT;
         boolean limited=altitude>ceiling+.02;
         boolean flare=false;

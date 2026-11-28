@@ -79,7 +79,7 @@ public final class VehicleStatus {
     public static String flightBlocker(EntityGroundVehicle craft,net.minecraft.entity.player.EntityPlayer player){
         if(craft==null||craft.structure==null||craft.flying()||craft.takeoffRoll())return null;
         VehicleFlightReadout readout=craft.flightReadout();
-        if(readout.drives==0)return "Flight needs a Maxwell Drive";
+        if(readout.drives==0&&readout.thrusters==0)return "Flight needs a Maxwell Drive or thrusters";
         if(readout.thrust<=0)return readout.fuel<=0?"Flight: fuel the Maxwell Drive":"Flight: Maxwell Drive has no throttle";
         if(readout.effectiveMass<=0)return "Flight: weighing the craft...";
         if(!readout.canFly())return "Flight: weight "+Math.round(readout.effectiveMass)+" > limit "+(long)Math.floor(readout.takeoffMass());

@@ -334,6 +334,9 @@ case "${1:-}" in
         elif [ "$TARGET" = rack-battery-observers ]; then
             PREFIX=rack_battery_observers_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.rackBatteryObserverChecksOnly=true"
+        elif [ "$TARGET" = thruster-flight ]; then
+            PREFIX=thruster_flight_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.thrusterFlightChecksOnly=true"
         elif [ "$TARGET" = vehicle-duct-fuel ]; then
             PREFIX=vehicle_duct_fuel_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleDuctFuelChecksOnly=true -Dfml.queryResult=confirm"
@@ -1210,6 +1213,11 @@ PYIMAGE
     if [ "$TARGET" = rack-battery-observers ]; then
         grep -q "rack-battery-observers PASS" "$RUN_OUT/client.log"
         echo "Rack battery observer checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = thruster-flight ]; then
+        grep -q "thruster-flight PASS" "$RUN_OUT/client.log"
+        echo "Thruster-only Flight checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-duct-fuel ]; then

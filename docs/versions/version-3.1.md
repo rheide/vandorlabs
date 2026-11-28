@@ -58,6 +58,8 @@ More drives raise the ceiling and top speed, but they also add weight and burn m
 
 Hover and Taxi speed now depend on the vehicle thrusters fitted: each **Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine block moves 200 units of gross weight** at full speed. With fewer thrusters than that, Hover slows in proportion to the square root of the shortfall, down to **35%** of 16 blocks per second. Sprint still adds 25%. Powered Taxi speed scales between 6 and 8 blocks per second the same way. A craft still needs at least one thruster to Hover.
 
+In Flight, each of those thrusters also adds **0.08 thrust units** (about 82 weight units at takeoff), with no fuel. Several thrusters can lift a light craft without a Maxwell Drive, but a craft flying on thrusters alone stays below the seed view (Y=318) and flies at no more than 72 kb/h. With a Maxwell Drive the thrusters simply add to its thrust.
+
 Craft without Maxwell Drives or three lift blocks have no sampled weight, so they keep the full Taxi speed.
 
 [All version guides](README.md)

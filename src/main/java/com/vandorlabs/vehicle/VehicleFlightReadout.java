@@ -8,12 +8,17 @@ import net.minecraft.util.math.BlockPos;
 
 /** One controller's preflight measurements and the carried craft's current propulsion. */
 public final class VehicleFlightReadout {
-    public static final VehicleFlightReadout EMPTY = new VehicleFlightReadout(0, 0, 0, 0, 0, 0, 0, false);
-    public final int drives, fuel, capacity;
+    public static final VehicleFlightReadout EMPTY = new VehicleFlightReadout(0, 0, 0, 0, 0, 0, 0, false, 0);
+    public final int drives, fuel, capacity, thrusters;
     public final double mass, effectiveMass, thrust, ratedThrust;
     public final boolean partialMass;
 
     public VehicleFlightReadout(int drives, int fuel, int capacity, double mass, double effectiveMass, double thrust, double ratedThrust, boolean partialMass) {
+        this(drives, fuel, capacity, mass, effectiveMass, thrust, ratedThrust, partialMass, 0);
+    }
+
+    public VehicleFlightReadout(int drives, int fuel, int capacity, double mass, double effectiveMass, double thrust, double ratedThrust, boolean partialMass, int thrusters) {
+        this.thrusters = thrusters;
         this.drives = drives;
         this.fuel = fuel;
         this.capacity = capacity;
@@ -28,18 +33,22 @@ public final class VehicleFlightReadout {
     /** Maxwell burn multiplier for the current weight and thrust; see {@link FlightEnvelope#burnLoadFactor}. */
     public double burnLoadFactor() { return FlightEnvelope.burnLoadFactor(effectiveMass, thrust); }
     public double takeoffAcceleration() { return FlightEnvelope.takeoffAcceleration(effectiveMass, thrust); }
-    public double maximumAltitude() { return FlightEnvelope.maximumAltitude(effectiveMass, thrust); }
+    /** Flying on vehicle thrusters with no Maxwell Drive: below the seed view and slow. */
+    public boolean thrusterOnly() { return drives == 0 && thrusters > 0; }
+    public double maximumAltitude() { return capAltitude(FlightEnvelope.maximumAltitude(effectiveMass, thrust)); }
     public boolean canFly() { return FlightEnvelope.canFly(effectiveMass, thrust); }
-    public double cruiseSpeed(double altitude) { return FlightEnvelope.reserveCruiseSpeed(altitude, effectiveMass, thrust); }
+    public double cruiseSpeed(double altitude) { return capSpeed(FlightEnvelope.reserveCruiseSpeed(altitude, effectiveMass, thrust)); }
 
     public double projectedAltitude(double dimensionCeiling) {
-        return Math.max(0, Math.min(dimensionCeiling, FlightEnvelope.maximumAltitude(effectiveMass, ratedThrust)));
+        return Math.max(0, Math.min(dimensionCeiling, capAltitude(FlightEnvelope.maximumAltitude(effectiveMass, ratedThrust))));
     }
 
     public double projectedSpeed(double dimensionCeiling) {
         double ceiling = projectedAltitude(dimensionCeiling);
-        return ceiling == 0 ? 0 : FlightEnvelope.reserveCruiseSpeed(ceiling, effectiveMass, ratedThrust);
+        return ceiling == 0 ? 0 : capSpeed(FlightEnvelope.reserveCruiseSpeed(ceiling, effectiveMass, ratedThrust));
     }
+    private double capAltitude(double altitude) { return thrusterOnly() ? Math.min(altitude, FlightTuning.THRUSTER_ONLY_CEILING) : altitude; }
+    private double capSpeed(double speed) { return thrusterOnly() ? Math.min(speed, FlightTuning.THRUSTER_ONLY_MAX_SPEED) : speed; }
 
     private static int liftUnits(VehicleStructure structure) {
         int units = 0;
@@ -70,7 +79,7 @@ public final class VehicleFlightReadout {
         }
 
         VehicleFlightReadout sample(VehicleWorld current, long now, double scannedMass, boolean scannedPartial) {
-            if (current.structure.maxwellCells.isEmpty() && current.structure.liftCells.size()<3) return EMPTY;
+            if (current.structure.maxwellCells.isEmpty() && current.structure.liftCells.size()<3 && current.structure.activeThrusterCount()==0) return EMPTY;
             if (current != view || current.structure != structure) {
                 boolean worldChanged = current != view;
                 boolean topologyChanged = worldChanged || structure.cells.size() != current.structure.cells.size()
@@ -118,11 +127,15 @@ public final class VehicleFlightReadout {
                     thrust += fullThrust * throttle / 15;
                 }
             }
-            return new VehicleFlightReadout(count, fuel, capacity, mass, FlightEnvelope.effectiveMass(mass, liftUnits, 0), thrust, ratedThrust, partial);
+            // Vehicle thrusters add a small share of a Maxwell thrust unit each; they need no fuel.
+            int thrusters = structure.activeThrusterCount();
+            thrust += thrusters * FlightTuning.THRUSTER_FLIGHT_THRUST;
+            ratedThrust += thrusters * FlightTuning.THRUSTER_FLIGHT_THRUST;
+            return new VehicleFlightReadout(count, fuel, capacity, mass, FlightEnvelope.effectiveMass(mass, liftUnits, 0), thrust, ratedThrust, partial, thrusters);
         }
     }
 
     public static VehicleFlightReadout preview(VehicleStructure structure, net.minecraft.world.World world, double mass, boolean partial) {
-        return structure==null||structure.maxwellCells.isEmpty()&&structure.liftCells.isEmpty()?EMPTY:new Sampler().sample(new VehicleWorld(world,structure),0,mass,partial);
+        return structure==null||structure.maxwellCells.isEmpty()&&structure.liftCells.isEmpty()&&structure.activeThrusterCount()==0?EMPTY:new Sampler().sample(new VehicleWorld(world,structure),0,mass,partial);
     }
 }

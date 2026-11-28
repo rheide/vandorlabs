@@ -15,7 +15,7 @@ public final class VehicleNetwork {
     public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18, TELEPORT_DISMOUNT=19;
     public static final int FRAGMENT=28000;
     static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
-    private static final int FLIGHT_STATE_MAGIC=0x4d574633, FLIGHT_STATE_BYTES=35;
+    private static final int FLIGHT_STATE_MAGIC=0x4d574633, FLIGHT_STATE_BYTES=37;
     private static final int FLIGHT_BANK_MAGIC=0x4d57424b, FLIGHT_VIEW_MAGIC=0x4d575659, CRUISE_HANDOFF_MAGIC=0x4352484F;
     static final int SNAPSHOT_SCOPE_MAGIC=0x43535331,SNAPSHOT_SCOPE_BYTES=45;
     public static final class Packet implements IMessage {
@@ -49,11 +49,12 @@ public final class VehicleNetwork {
         private static boolean scopedUpdate(int type){return type==TILE||type==CANOPIES||type==DOORS;}
         private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);writeFlightState(b);if(reindex)b.writeInt(CRUISE_HANDOFF_MAGIC);if(associationGeneration!=null){if(associationGeneration.getMostSignificantBits()==0&&associationGeneration.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}}
         private void writeFlightState(ByteBuf b){
-            if(flightPhase==0&&flightReadout.drives==0)return;
+            if(flightPhase==0&&flightReadout.drives==0&&flightReadout.thrusters==0)return;
             b.writeInt(FLIGHT_STATE_MAGIC);b.writeByte(flightPhase);b.writeFloat(flightPitch);b.writeBoolean(flightLanded);
             b.writeInt(flightReadout.drives);b.writeInt(flightReadout.fuel);b.writeInt(flightReadout.capacity);
             b.writeFloat((float)flightReadout.mass);b.writeFloat((float)flightReadout.effectiveMass);
             b.writeFloat((float)flightReadout.thrust);b.writeFloat((float)flightReadout.ratedThrust);b.writeBoolean(flightReadout.partialMass);
+            b.writeShort(Math.min(Short.MAX_VALUE,flightReadout.thrusters));
             if(flightBank!=0){b.writeInt(FLIGHT_BANK_MAGIC);b.writeFloat(flightBank);}
             if(Float.isFinite(flightViewYaw)){b.writeInt(FLIGHT_VIEW_MAGIC);b.writeFloat(flightViewYaw);}
         }
@@ -61,11 +62,11 @@ public final class VehicleNetwork {
             if(b.readableBytes()<FLIGHT_STATE_BYTES)return false;
             flightPhase=b.readUnsignedByte();flightPitch=b.readFloat();flightLanded=b.readBoolean();
             int drives=b.readInt(),fuel=b.readInt(),capacity=b.readInt();
-            float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat(),rated=b.readFloat();boolean partial=b.readBoolean();
+            float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat(),rated=b.readFloat();boolean partial=b.readBoolean();int thrusters=b.readShort();
             if(flightPhase>EntityGroundVehicle.GLIDING_FLIGHT||!com.vandorlabs.physics.AircraftAttitude.validPitch(flightPitch)||
                 drives<0||fuel<0||capacity<fuel||!Float.isFinite(mass)||mass<0||!Float.isFinite(effective)||effective<0||effective>mass||
-                !Float.isFinite(thrust)||thrust<0||!Float.isFinite(rated)||rated<thrust)return false;
-            flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,rated,partial);return true;
+                !Float.isFinite(thrust)||thrust<0||!Float.isFinite(rated)||rated<thrust||thrusters<0)return false;
+            flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,rated,partial,thrusters);return true;
         }
         public void fromBytes(ByteBuf b){
             valid=false;flightPhase=0;flightPitch=flightBank=0;flightViewYaw=Float.NaN;flightLanded=reindex=false;flightReadout=VehicleFlightReadout.EMPTY;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;

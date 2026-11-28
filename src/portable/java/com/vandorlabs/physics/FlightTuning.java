@@ -37,6 +37,10 @@ public final class FlightTuning {
     public static final double DESCENT_SPEED_STEP = .15;
 
     // Thrust, weight and altitude envelope.
+    /** Flight thrust units each active Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine adds. */
+    public static final double THRUSTER_FLIGHT_THRUST = .08;
+    /** A craft flying on thrusters alone stays below the seed-view handoff and this speed (blocks per tick). */
+    public static final double THRUSTER_ONLY_CEILING = 318, THRUSTER_ONLY_MAX_SPEED = 1.0;
     /** Effective weight units one Maxwell thrust unit lifts at takeoff. */
     public static final double MASS_PER_THRUST = 1024;
     public static final double THRUST_ALTITUDE_LIMIT = 100000;
