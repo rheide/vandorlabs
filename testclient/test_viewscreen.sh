@@ -331,6 +331,10 @@ case "${1:-}" in
         elif [ "$TARGET" = rack-battery-observers ]; then
             PREFIX=rack_battery_observers_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.rackBatteryObserverChecksOnly=true"
+        elif [ "$TARGET" = vehicle-duct-fuel ]; then
+            PREFIX=vehicle_duct_fuel_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleDuctFuelChecksOnly=true -Dfml.queryResult=confirm"
+            export VANDOR_LABS_TEST_PORT_MODS="${VANDOR_LABS_TEST_PORT_MODS:-${VANDOR_LABS_COMPAT_MODS:-$HOME/.minecraft/mods}}"
         elif [ "$TARGET" = vehicle-resources ]; then
             PREFIX=vehicle_resources_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleResourceChecksOnly=true -Dfml.queryResult=confirm"
@@ -398,6 +402,9 @@ case "${1:-}" in
         elif [ "$TARGET" = canopy-stretch ]; then
             PREFIX=canopy-stretch
             export VANDOR_LABS_CANOPY_STRETCH_ONLY=true VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-pilot-hud ]; then
+            PREFIX=canopy_pilot_hud-
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.canopyPilotHudChecksOnly=true"
         elif [ "$TARGET" = canopy-displays ]; then
             PREFIX=shot_canopy-display-
             export VANDOR_LABS_CANOPY_DISPLAY_CHECKS_ONLY=true
@@ -1194,6 +1201,11 @@ PYIMAGE
         echo "Rack battery observer checks passed: $RUN_OUT"
         exit 0
     fi
+    if [ "$TARGET" = vehicle-duct-fuel ]; then
+        grep -q "vehicle-duct-fuel PASS" "$RUN_OUT/client.log"
+        echo "Fuelled Fluiduct vehicle checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = vehicle-resources ]; then
         grep -q "vehicle-resources PASS" "$RUN_OUT/client.log"
         echo "Carried resource network checks passed: $RUN_OUT"
@@ -1340,6 +1352,10 @@ PYIMAGE
     if [ "$TARGET" = canopy-stretch ]; then
         grep -q 'canopy-stretch PASS' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/canopy-stretch-canopy.png" && test -s "$RUN_OUT/canopy-stretch-long.png"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-pilot-hud ]; then
+        grep -q 'canopy-pilot-hud PASS parked and carried' "$RUN_OUT/client.log"
         exit 0
     fi
     if [ "$TARGET" = canopy-displays ]; then

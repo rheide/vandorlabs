@@ -148,6 +148,8 @@ public final class CanopyDisplayRenderer {
             GlStateManager.enableDepth();
             if(hud&&tile.resizable()&&height==128)
                 VehicleInstrumentRenderer.draw(display.requested,tile.getWorld(),tile.getPos(),height,true);
+            else if(hud&&height==128&&longSlope(tile))
+                VehicleInstrumentRenderer.draw(display.requested,tile.getWorld(),tile.getPos(),height,false,true);
             else RedstoneScreenRenderer.drawVehicleSelection(display.requested,tile.getWorld(),tile.getPos(),height);
             display.rendered=display.requested;display.updated=tick;
         }finally{
@@ -157,6 +159,14 @@ public final class CanopyDisplayRenderer {
             GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();
             GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         }
+    }
+
+    /**
+     * A Long Canopy whose main pane is one long slope (Long Angled, Extra Long Angled) seats its pilot under the
+     * rear of that slope, so the glass ahead is foreshortened into a thin band at the nose.
+     */
+    static boolean longSlope(TileEntityCanopy tile){
+        return tile.block()!=null&&"long_canopy".equals(tile.block().kind)&&(tile.large.angle==2||tile.large.angle==3);
     }
 
     private static void emit(BufferBuilder buffer,CanopyMesh.Face face,TileEntityCanopy tile){

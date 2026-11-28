@@ -32,13 +32,22 @@ final class VehicleInstrumentRenderer {
     }
 
     static void draw(VehicleInstrument instrument,World world,BlockPos pos,int height,boolean frontGlass){
+        draw(instrument,world,pos,height,frontGlass,false);
+    }
+
+    /**
+     * @param longSlope the picture covers one long sloping pane read from beneath its rear end. The glass
+     *                  above the pilot's sightline is then very close to their head, so the HUD keeps its
+     *                  horizon on that sightline and lists every readout at or below it.
+     */
+    static void draw(VehicleInstrument instrument,World world,BlockPos pos,int height,boolean frontGlass,boolean longSlope){
         EntityGroundVehicle craft = world instanceof VehicleWorld ? ((VehicleWorld)world).craft : null;
         if (craft == null || craft.structure == null) {
             TileEntity controller = VehicleStatus.controller(world, pos);
             double altitude = controller == null ? pos.getY() : controller.getPos().getY();
             EnumFacing facing = controller == null ? EnumFacing.NORTH : world.getBlockState(controller.getPos())
                     .getValue(com.vandorlabs.blocks.BlockVehicleController.FACING);
-            drawFace(instrument,height,0,0,heading(facing,0),altitude,0,0,frontGlass);
+            drawFace(instrument,height,0,0,heading(facing,0),altitude,0,0,frontGlass,longSlope);
             return;
         }
         VehiclePose pose = craft.visualPose(Minecraft.getMinecraft().getRenderPartialTicks());
@@ -46,7 +55,7 @@ final class VehicleInstrumentRenderer {
                 : ((VehicleWorld)world).parent.getActualHeight() - craft.structure.bounds.maxY - 1;
         double projected = craft.flightReadout().projectedSpeed(ceiling) * 72;
         drawFace(instrument,height,pose.pitch,pose.bank,heading(craft.structure.facing,pose.yaw),
-                craft.flightAltitude(),Math.abs(craft.driveSpeed)*72,projected,frontGlass);
+                craft.flightAltitude(),Math.abs(craft.driveSpeed)*72,projected,frontGlass,longSlope);
     }
 
     private static double heading(EnumFacing face, double yaw) {
@@ -55,20 +64,22 @@ final class VehicleInstrumentRenderer {
 
     static void drawFace(VehicleInstrument instrument, int height, double pitch, double bank, double heading,
                          double altitude, double speed, double projectedMax) {
-        drawFace(instrument,height,pitch,bank,heading,altitude,speed,projectedMax,false);
+        drawFace(instrument,height,pitch,bank,heading,altitude,speed,projectedMax,false,false);
     }
 
     private static void drawFace(VehicleInstrument instrument,int height,double pitch,double bank,double heading,
-                                 double altitude,double speed,double projectedMax,boolean frontGlass){
+                                 double altitude,double speed,double projectedMax,boolean frontGlass,boolean longSlope){
         if(instrument.isHud()){
             // Keep the pilot's sightline clear and group the readouts around the pane centre.
             float scale=instrument==VehicleInstrument.HUD?.48F:.72F;
             GlStateManager.pushMatrix();
             try{
-                GlStateManager.translate(64,height*.5,0);
+                // A long slope's picture runs from the nose (bottom) to the rear (top). Two thirds of the
+                // way back is where a seated pilot's forward sightline meets it.
+                GlStateManager.translate(64,height*(longSlope?LONG_SLOPE_HUD_CENTER:.5),0);
                 GlStateManager.scale(scale,scale,1);
                 GlStateManager.translate(-64,-height*(frontGlass?.48:.40),0);
-                drawHud(height,pitch,bank,heading,altitude,speed,frontGlass);
+                drawHud(height,pitch,bank,heading,altitude,speed,frontGlass,longSlope);
             }finally{
                 GlStateManager.popMatrix();
             }
@@ -153,7 +164,9 @@ final class VehicleInstrumentRenderer {
     }
 
     /** Transparent flight symbology. The centre stays clear at the horizon. */
-    private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed,boolean frontGlass){
+    static final double LONG_SLOPE_HUD_CENTER=.33;
+
+    private static void drawHud(int height,double pitch,double bank,double heading,double altitude,double speed,boolean frontGlass,boolean longSlope){
         final int green=0xff8dffbf;
         double x=frontGlass?45:64,y=height*(frontGlass?.35:.38),angle=Math.toRadians(bank),nx=Math.sin(angle),ny=Math.cos(angle);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
@@ -162,7 +175,8 @@ final class VehicleInstrumentRenderer {
         b.begin(7,BlockSurfaceFormat.get());
         for(int mark=-90;mark<=90;mark+=10){
             double offset=(pitch-mark)*height/(frontGlass?130:120);
-            if(Math.abs(offset)>height*(frontGlass?.09:.13))continue;
+            // Rungs above a long slope's horizon would be magnified just over the pilot's head.
+            if(Math.abs(offset)>height*(frontGlass?.09:longSlope?.07:.13))continue;
             double cx=x+nx*offset,cy=y+ny*offset,span=mark==0?(frontGlass?12:22):7;
             line(b,cx-ny*span,cy+nx*span,cx-ny*3,cy+nx*3,1,.03,green);
             line(b,cx+ny*3,cy-nx*3,cx+ny*span,cy-nx*span,1,.03,green);
@@ -173,8 +187,9 @@ final class VehicleInstrumentRenderer {
         line(b,x+2,y,x+7,y,1,.04,POINTER);
         Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        double headingX=frontGlass?83:64,headingY=height*(frontGlass?.29:.26);
-        double speedX=frontGlass?44:28,altX=frontGlass?84:100;
+        // On a long slope the heading sits under the pitch readout instead of above the horizon.
+        double headingX=frontGlass?83:64,headingY=height*(frontGlass?.29:longSlope?.62:.26);
+        double speedX=frontGlass||longSlope?44:28,altX=frontGlass||longSlope?84:100;
         double valueY=height*(frontGlass?.66:.43);
         hudLabel(font,String.format(Locale.ROOT,"%03d°",Math.floorMod(Math.round(heading),360L)),headingX,headingY,34,1,green);
         hudLabel(font,"SPD",speedX,valueY-9,32,.8F,green);

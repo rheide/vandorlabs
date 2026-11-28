@@ -120,6 +120,11 @@ final class CanopyDisplayRuntimeChecks {
             aim(mc,tile,true);next(7);return false;
         }
         if(stage==20&&ticks>12&&aligned(mc)){
+            // OptiFine without shaders reportedly flashed HUD glass solid white. Watch many frames, not one.
+            if(hudSamples<HUD_SAMPLES){whiteShare(mc);hudSamples++;return false;}
+            System.out.println("[vandorlabs] canopy HUD flash "+KINDS[variant]+" worst white share="+String.format(java.util.Locale.ROOT,"%.4f",worstWhite)+" over "+hudSamples+" frames");
+            require(worstWhite<.08,"HUD glass never flashes solid white: worst frame white share="+worstWhite+" at frame "+worstFrame+" of "+hudSamples);
+            hudSamples=0;worstWhite=0;worstFrame=-1;
             shot(mc,output,"pilot-hud");aim(mc,tile,true);next(7);return false;
         }
         if(stage==7&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,side(),true)){
@@ -247,6 +252,24 @@ final class CanopyDisplayRuntimeChecks {
     private static VehicleInstrument main(){return joined()?VehicleInstrument.STATUS:variant==1?VehicleInstrument.HUD:variant==2?VehicleInstrument.HUD_LARGE:CHOICES[variant%CHOICES.length];}
     private static VehicleInstrument side(){return CHOICES[(variant+2)%CHOICES.length];}
     private static void next(int value){stage=value;ticks=0;}
+    private static final int HUD_SAMPLES=90;
+    private static int hudSamples,worstFrame=-1;
+    private static double worstWhite;
+    /** Share of near-white pixels in the central half of the last rendered frame, where the pilot sees the HUD pane. */
+    private static void whiteShare(Minecraft mc){
+        net.minecraft.client.shader.Framebuffer main=mc.getFramebuffer();
+        int w=mc.displayWidth/2,h=mc.displayHeight/2,x=mc.displayWidth/4,y=mc.displayHeight/4;
+        java.nio.ByteBuffer pixels=org.lwjgl.BufferUtils.createByteBuffer(w*h*4);
+        int previous=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING);
+        if(net.minecraft.client.renderer.OpenGlHelper.isFramebufferEnabled())main.bindFramebuffer(false);
+        org.lwjgl.opengl.GL11.glPixelStorei(org.lwjgl.opengl.GL11.GL_PACK_ALIGNMENT,1);
+        org.lwjgl.opengl.GL11.glReadPixels(x,y,w,h,org.lwjgl.opengl.GL11.GL_RGBA,org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE,pixels);
+        net.minecraft.client.renderer.OpenGlHelper.glBindFramebuffer(net.minecraft.client.renderer.OpenGlHelper.GL_FRAMEBUFFER,previous);
+        int white=0;
+        for(int i=0;i<w*h;i++){int r=pixels.get(i*4)&255,g=pixels.get(i*4+1)&255,b=pixels.get(i*4+2)&255;if(r>=248&&g>=248&&b>=248)white++;}
+        double share=white/(double)(w*h);
+        if(share>worstWhite){worstWhite=share;worstFrame=hudSamples;}
+    }
     private static void require(boolean ok,String message){
         if(!ok)throw new IllegalStateException("Canopy display "+KINDS[variant]+" stage="+stage+" "+message);
     }
