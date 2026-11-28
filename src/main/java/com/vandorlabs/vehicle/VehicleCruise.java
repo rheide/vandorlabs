@@ -221,7 +221,31 @@ public final class VehicleCruise {
     void preloadTerrain() {
         if (!active() && craft.dimension == 0 && craft.posY >= 200 && craft.flying())
             updateTerrain(craft.posX, craft.posZ, Math.max(craft.posY,FlightEnvelope.WORLD_CEILING));
+        lookAhead();
     }
+
+    /** Seconds of travel whose terrain is loaded ahead of low Flight. */
+    static final double LOOKAHEAD_SECONDS=6;
+    private CruiseArrival lookahead;
+    /**
+     * Below the seed view, vanilla loads the square around each rider nearest first, so the chunks the craft
+     * is about to reach arrive last. Load a corridor along the heading, front first, several seconds ahead.
+     */
+    private void lookAhead() {
+        double speed=Math.hypot(craft.motionX,craft.motionZ);
+        boolean wanted=!active()&&craft.dimension==0&&craft.flying()&&craft.posY<handoffAltitude()&&speed>.25
+                &&craft.world instanceof net.minecraft.world.WorldServer&&!craft.getPassengers().isEmpty();
+        if(!wanted){if(lookahead!=null){lookahead.close();lookahead=null;}return;}
+        if(craft.world.getTotalWorldTime()%2!=0)return;
+        if(lookahead==null)lookahead=new CruiseArrival((net.minecraft.world.WorldServer)craft.world);
+        int view=craft.world.getMinecraftServer().getPlayerList().getViewDistance();
+        int lead=Math.max(3,Math.min(view+4,(int)Math.ceil(speed*20*LOOKAHEAD_SECONDS/16)));
+        VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw,0,0,craft.structure.facing);
+        lookahead.ready(craft,pose,craft.getEntityBoundingBox(),craft.motionX,craft.motionZ,lead);
+    }
+    void closeLookAhead(){if(lookahead!=null){lookahead.close();lookahead=null;}}
+    /** Whether low-flight lookahead has asked for the chunk column; for live checks. */
+    public boolean lookingAhead(int chunkX,int chunkZ){return lookahead!=null&&lookahead.requested(new net.minecraft.util.math.ChunkPos(chunkX,chunkZ));}
 
     private void updateTerrain(double x, double z, double height) {
         tiles.update(craft,x,z,height);

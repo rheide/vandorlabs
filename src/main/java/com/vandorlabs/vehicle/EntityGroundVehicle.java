@@ -711,7 +711,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         return true;
     }
     @Override public void onAddedToWorld(){super.onAddedToWorld();signals.open();VehicleLookup.update(this);}
-    @Override public void onRemovedFromWorld(){cruise.cancelArrival();VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
+    @Override public void onRemovedFromWorld(){cruise.cancelArrival();cruise.closeLookAhead();VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.onRemovedFromWorld();}
     @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
@@ -778,6 +778,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     private void updateAnimatedVehicle() {
         retryOwnershipSource();
+        if(!world.isRemote&&!flying())cruise.closeLookAhead();
         if(world.isRemote&&view!=null&&!couplerScopeReady()){
             super.onUpdate();motionX=motionY=motionZ=0;
             if(ticksExisted%40==1&&(com.vandorlabs.VandorLabs.proxy==null||!com.vandorlabs.VandorLabs.proxy.vehicleSnapshotPending(getUniqueID())))VehicleNetwork.request(this);

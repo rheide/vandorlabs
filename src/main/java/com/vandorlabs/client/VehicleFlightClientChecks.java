@@ -222,6 +222,15 @@ final class VehicleFlightClientChecks {
         if(stage==4&&frame>=23){
             if(craft.posY<=climbY+1&&frame<60)return false;
             need(craft.posY>climbY+1&&craft.driveSpeed>FlightTuning.RUNWAY_TAKEOFF_SPEED,"released keys preserve forward flight and climb");
+            String ahead=mc.getIntegratedServer().callFromMainThread(()->{
+                // Low Flight loads a corridor along the heading, several seconds of travel ahead.
+                EntityGroundVehicle actual=server(mc);double speed=Math.hypot(actual.motionX,actual.motionZ);
+                if(speed<.3)return "slow "+speed;
+                int cx=net.minecraft.util.math.MathHelper.floor(actual.posX)>>4,cz=net.minecraft.util.math.MathHelper.floor(actual.posZ)>>4;
+                int x=cx+(int)Math.round(3*actual.motionX/speed),z=cz+(int)Math.round(3*actual.motionZ/speed);
+                return actual.cruise.lookingAhead(x,z)?"":"chunk "+x+","+z+" three ahead of "+cx+","+cz+" not requested at speed "+speed;
+            }).get();
+            need(ahead.isEmpty(),"low Flight requests terrain ahead along its heading: "+ahead);
             if(!checkSpeedPanel(mc,craft,output))return false;
             mc.getIntegratedServer().addScheduledTask(()->stagePose(server(mc),runwayY+25,12,0)).get();
             turnYaw=0;turnX=ORIGIN.getX();turnZ=ORIGIN.getZ()-5;

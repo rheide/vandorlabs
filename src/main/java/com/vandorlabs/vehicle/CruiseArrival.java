@@ -26,7 +26,7 @@ final class CruiseArrival {
     private static final Map<WorldServer,Budget> BUDGETS=new WeakHashMap<>();
     private static final Method WATCH_ENTRY=ReflectionHelper.findMethod(PlayerChunkMap.class,
         "getOrCreateEntry","func_187302_c",int.class,int.class);
-    private int left,right,back,front,leadX,leadZ;
+    private int left,right,back,front,leadX,leadZ,corridor;
     private final java.util.Set<ChunkPos> requested=new java.util.HashSet<>();
     private final java.util.Set<ChunkPos> reading=new java.util.HashSet<>();
     private final WorldServer world;
@@ -40,16 +40,30 @@ final class CruiseArrival {
         watches=world.getPlayerChunkMap();
     }
 
-    private void plan(VehiclePose pose,AxisAlignedBB hull,double dx,double dz) {
+    private void plan(VehiclePose pose,AxisAlignedBB hull,double dx,double dz,int lead) {
         int cx=section(pose.x),cz=section(pose.z);
         int minX=Math.min(cx-1,section(hull.minX)),maxX=Math.max(cx+1,section(hull.maxX));
         int minZ=Math.min(cz-1,section(hull.minZ)),maxZ=Math.max(cz+1,section(hull.maxZ));
         double speed=Math.hypot(dx,dz);
         int aheadX=speed<.01?0:(int)Math.round(2*dx/speed);
         int aheadZ=speed<.01?0:(int)Math.round(2*dz/speed);
-        if(!prepare.isEmpty()&&left==minX&&right==maxX&&back==minZ&&front==maxZ&&aheadX==leadX&&aheadZ==leadZ)return;
-        left=minX;right=maxX;back=minZ;front=maxZ;leadX=aheadX;leadZ=aheadZ;
+        // A longer lead follows the heading as a three-chunk corridor; quantize it so small turns keep the plan.
+        int corridorX=lead<=2||speed<.01?0:(int)Math.round(lead*dx/speed),corridorZ=lead<=2||speed<.01?0:(int)Math.round(lead*dz/speed);
+        int corridorKey=lead<=2?0:(corridorX*4099+corridorZ);
+        if(!prepare.isEmpty()&&left==minX&&right==maxX&&back==minZ&&front==maxZ&&aheadX==leadX&&aheadZ==leadZ&&corridorKey==corridor)return;
+        left=minX;right=maxX;back=minZ;front=maxZ;leadX=aheadX;leadZ=aheadZ;corridor=corridorKey;
         prepare.clear();footprint.clear();
+        if(lead>2){
+            java.util.Set<ChunkPos> watched=new java.util.LinkedHashSet<>(),loaded=new java.util.LinkedHashSet<>();
+            for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++)watched.add(new ChunkPos(x,z));
+            for(int step=1;step<=lead;step++){
+                int px=cx+(int)Math.round(step*dx/speed),pz=cz+(int)Math.round(step*dz/speed);
+                for(int ox=-1;ox<=1;ox++)for(int oz=-1;oz<=1;oz++)watched.add(new ChunkPos(px+ox,pz+oz));
+            }
+            // The population border keeps every corridor chunk sendable when the riders reach it.
+            for(ChunkPos column:watched)for(int ox=-1;ox<=1;ox++)for(int oz=-1;oz<=1;oz++)loaded.add(new ChunkPos(column.x+ox,column.z+oz));
+            footprint.addAll(watched);prepare.addAll(loaded);
+        }else{
         // Ship the hull and its approach, including the vanilla population border.
         minX=Math.min(minX,cx+aheadX);maxX=Math.max(maxX,cx+aheadX);
         minZ=Math.min(minZ,cz+aheadZ);maxZ=Math.max(maxZ,cz+aheadZ);
@@ -58,8 +72,9 @@ final class CruiseArrival {
             prepare.add(column);
             if(x>=minX&&x<=maxX&&z>=minZ&&z<=maxZ)footprint.add(column);
         }
-        Comparator<ChunkPos> closestFirst=Comparator.comparingDouble(c->
-                Math.pow(c.x-cx-aheadX*.5,2)+Math.pow(c.z-cz-aheadZ*.5,2));
+        }
+        Comparator<ChunkPos> closestFirst=lead>2?Comparator.comparingDouble(c->Math.pow(c.x-cx,2)+Math.pow(c.z-cz,2))
+                :Comparator.comparingDouble(c->Math.pow(c.x-cx-aheadX*.5,2)+Math.pow(c.z-cz-aheadZ*.5,2));
         prepare.sort(closestFirst);footprint.sort(closestFirst);
         for(Map.Entry<EntityPlayerMP,List<PlayerChunkMapEntry>> entry:added.entrySet()){
             entry.getValue().removeIf(watch->{
@@ -76,7 +91,12 @@ final class CruiseArrival {
     }
 
     boolean ready(EntityGroundVehicle craft,VehiclePose pose,AxisAlignedBB hull,double dx,double dz) {
-        plan(pose,hull,dx,dz);
+        return ready(craft,pose,hull,dx,dz,2);
+    }
+
+    /** @param lead chunks to prepare along the heading; more than two follows a corridor rather than a box */
+    boolean ready(EntityGroundVehicle craft,VehiclePose pose,AxisAlignedBB hull,double dx,double dz,int lead) {
+        plan(pose,hull,dx,dz,lead);
         Budget budget=BUDGETS.computeIfAbsent(world,ignored->new Budget());
         budget.reset(world.getTotalWorldTime());
         net.minecraft.world.gen.ChunkProviderServer provider=world.getChunkProvider();
@@ -132,6 +152,8 @@ final class CruiseArrival {
         }
         return ready;
     }
+
+    boolean requested(ChunkPos column){return requested.contains(column)||prepare.contains(column);}
 
     void close() {
         for(Map.Entry<EntityPlayerMP,List<PlayerChunkMapEntry>> entry:added.entrySet())
