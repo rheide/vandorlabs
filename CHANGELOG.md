@@ -10,6 +10,7 @@
 - Hover and Taxi speed depend on thrusters: each Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine moves 200 units of gross weight at full speed. Heavier craft hover more slowly, down to 35% of full speed.
 - Explain a greyed Flight button on the full Vehicle Status screen: missing or unpowered Maxwell Drive, weight over the takeoff limit, pilot not seated, Autonav on, landing gear retracted or craft not on the ground.
 - Fix vehicle conversion on dedicated servers for craft carrying Thermal Dynamics ducts. A Fluiduct joining a tank to a Maxwell Drive no longer stops conversion with "Cannot preserve the installed transfer buffer".
+- Fix a GL error raised on every canopy display refresh with shader packs on NVIDIA drivers, which could leave rendering state corrupted while flying with a canopy HUD or Status display.
 - Centre the small and large HUD on the pilot's forward sightline under a Long Canopy with a Long Angled or Extra Long Angled front. Every readout stays on or just below the horizon line, so none is magnified across the glass above the pilot's head.
 - Plan aircraft and hover craft with the offline [flight calculator](docs/flight-calculator.html). Enter hull weight, lift blocks, thrusters and Maxwell Drives to see mode readiness, effective weight, altitude ceiling, speed by altitude, a takeoff and climb profile, endurance, range by throttle, trip time and how many drives a target altitude needs. Share a build as a compact link.
 

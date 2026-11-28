@@ -133,7 +133,10 @@ public final class CanopyDisplayRenderer {
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();
         GlStateManager.loadIdentity();GlStateManager.ortho(0,128,height,0,-10,10);
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
-        try(TurntableRenderState saved=new TurntableRenderState()){
+        // Rebind the caller's framebuffer before popping the saved attributes: glPopAttrib restores the
+        // draw buffers too, and GL_BACK on this capture's FBO is GL_INVALID_OPERATION on NVIDIA (shaders).
+        TurntableRenderState saved=new TurntableRenderState();
+        try{
             if(program!=0)GL20.glUseProgram(0);
             boolean hud=display.requested!=null&&display.requested.isHud();
             int density=hud?4:2;
@@ -155,6 +158,7 @@ public final class CanopyDisplayRenderer {
         }finally{
             OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,target);
             if(program!=0)GL20.glUseProgram(program);
+            saved.close();
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();
             GlStateManager.matrixMode(GL11.GL_MODELVIEW);
