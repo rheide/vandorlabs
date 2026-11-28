@@ -119,7 +119,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean landedFromFlight;
     private boolean cruisingRecovery;
     private int initialClimb;
-    private float flightPitch,targetPitch,flightBank,targetBank,flightRollRate;
+    private float flightPitch,targetPitch,flightBank,targetBank,flightRollRate,flightElevatorRate;
     private float flightViewYaw=Float.NaN;
     private final VehicleFlightReadout.Sampler flightSampler=new VehicleFlightReadout.Sampler();
     private VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
@@ -165,7 +165,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             throw new IllegalArgumentException("Takeoff requires ground contact and extended Taxi landing gear.");
         flightPhase=hover?POWERED_FLIGHT:TAKEOFF_ROLL;
         flightViewYaw=hover?MathHelper.wrapDegrees(rotationYaw):Float.NaN;
-        flightPitch=flightBank=flightRollRate=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
+        flightPitch=flightBank=flightRollRate=flightElevatorRate=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
         serverInputs.clear();forward=strafe=0;brake=false;
         taxiReturnPending=false;
         if(hover)VehicleLandingGear.refreshSignals(this);
@@ -231,7 +231,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         flightRollRate=0;
         float savedViewYaw=tag.hasKey("MaxwellFlightViewYaw",5)?tag.getFloat("MaxwellFlightViewYaw"):rotationYaw;
         flightViewYaw=flying()?MathHelper.wrapDegrees(Float.isFinite(savedViewYaw)?savedViewYaw:rotationYaw):Float.NaN;
-        if(flightPhase==NO_FLIGHT){flightPitch=flightBank=flightRollRate=0;landedFromFlight=cruisingRecovery=false;return;}
+        if(flightPhase==NO_FLIGHT){flightPitch=flightBank=flightRollRate=flightElevatorRate=0;landedFromFlight=cruisingRecovery=false;return;}
         double savedSpeed=tag.getDouble("MaxwellFlightSpeed");float savedPitch=tag.getFloat("MaxwellFlightPitch");
         driveSpeed=Double.isFinite(savedSpeed)?MathHelper.clamp(savedSpeed,0,FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)):0;
         flightPitch=Float.isFinite(savedPitch)?MathHelper.clamp(savedPitch,AircraftAttitude.MIN_PITCH,AircraftAttitude.MAX_PITCH):0;
@@ -639,7 +639,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(transferInProgress||player.getRidingEntity()!=this)return;
         if(cabin.walking(player)){cabin.input(player,sequence,forward,strafe,brake);return;}
         if(getControllingPassenger()!=player)return;
-        if(!(hover||poweredFlight()||flying()?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
+        if(!(hover||poweredFlight()||flying()?serverInputs.offerLatest(sequence,forward,strafe,brake,flying()):serverInputs.offer(sequence,forward,strafe,brake)))return;
         couplingInput(forward,strafe,brake);
         recordCurrentCouplingDriver();
         lastInput=world.getTotalWorldTime();
@@ -931,7 +931,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         flightRollRate=AircraftAttitude.rollRate(flightRollRate,steer,response);
         float bank=AircraftAttitude.bank(flightBank,flightRollRate);
         double roll=Math.toRadians(bank);
-        float elevator=controlled&&!launching?-forward*(float)(FlightTuning.PITCH_RATE+FlightTuning.PITCH_RATE_PER_RESPONSE*response):0;
+        flightElevatorRate=AircraftAttitude.elevatorRate(flightElevatorRate,controlled&&!launching?-forward*(float)(FlightTuning.PITCH_RATE+FlightTuning.PITCH_RATE_PER_RESPONSE*response):0);
+        float elevator=flightElevatorRate;
         float pitch=AircraftAttitude.pitch(flightPitch,(float)(elevator*Math.cos(roll)));
         float yaw=rotationYaw+AircraftAttitude.coordinatedTurn(roll,response)+(float)(elevator*Math.sin(roll));
         if(getControllingPassenger()==null||cabin.walking(getControllingPassenger())){

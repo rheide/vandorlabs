@@ -13,6 +13,12 @@ public final class AircraftAttitudeTest {
         for(int tick=0;tick<150;tick++)recovered=AircraftAttitude.pitch(recovered,0);
         require(Math.abs(recovered-45)<.001,"trim settles at 45 degrees");
 
+        float elevator=AircraftAttitude.elevatorRate(0,2);
+        require(elevator>.6F&&elevator<.75F,"a one-tick pitch tap gives about a third of the commanded rate: "+elevator);
+        for(int tick=0;tick<3;tick++)elevator=AircraftAttitude.elevatorRate(elevator,2);
+        require(elevator==2,"a held pitch key reaches the full rate within four ticks");
+        require(AircraftAttitude.elevatorRate(elevator,0)==0,"release stops the elevator at once");
+        require(AircraftAttitude.elevatorRate(2,-2)<0&&AircraftAttitude.elevatorRate(2,-2)>-.75F,"reversing starts from neutral with a small step");
         float rate=0,bank=0,travel=0;
         boolean inverted=false;
         for(int tick=0;tick<55;tick++){

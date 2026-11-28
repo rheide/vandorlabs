@@ -37,7 +37,13 @@ final class HoverClientRuntimeChecks {
         require(!inputs.offerLatest(199,(byte)1,(byte)1,false),"stale input cannot replace release");
         require(!inputs.offerLatest(201,(byte)2,(byte)0,false),"invalid input cannot replace release");
         VehicleControls.Command latest=inputs.poll();require(latest!=null&&latest.sequence==200&&latest.forward==0&&latest.strafe==0&&inputs.poll()==null&&inputs.acknowledged()==200,"release takes effect on the next step without queued movement");
-        System.out.println("[vandorlabs][reprolab] hover-input-burst PASS latest-release next-step bounded-queue stale-invalid-rejected");
+        VehicleControls flight=new VehicleControls();
+        require(flight.offerLatest(1,(byte)0,(byte)1,false,true)&&flight.offerLatest(2,(byte)0,(byte)0,false,true),"Flight accepts a tap and its release");
+        VehicleControls.Command tap=flight.poll(),after=flight.poll();
+        require(tap!=null&&tap.strafe==1&&after!=null&&after.strafe==0&&flight.poll()==null,"a Flight tap released within one server tick still steers for one tick");
+        require(flight.offerLatest(3,(byte)0,(byte)1,false,true)&&flight.poll().strafe==1&&flight.offerLatest(4,(byte)0,(byte)1,false,true)&&flight.offerLatest(5,(byte)0,(byte)0,false,true)
+                &&flight.poll().strafe==0&&flight.poll()==null,"a continued Flight hold stops on the next step after release");
+        System.out.println("[vandorlabs][reprolab] hover-input-burst PASS latest-release next-step bounded-queue stale-invalid-rejected flight-tap-kept");
         key(mc.gameSettings.keyBindJump,false);key(mc.gameSettings.keyBindSneak,false);key(mc.gameSettings.keyBindSprint,false);
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=player(mc);player.setSneaking(false);player.dismountRidingEntity();

@@ -70,6 +70,8 @@ public final class FlightTuning {
     /** Thrust lost at MAX_PITCH, scaled from zero at TRIM_PITCH. */
     public static final double STEEP_CLIMB_THRUST_LOSS = .65;
     public static final double PITCH_RATE = .7, PITCH_RATE_PER_RESPONSE = .36;
+    /** Share of the commanded elevator rate gained each tick a pitch key is held, so short taps give fine adjustments. */
+    public static final float ELEVATOR_EASE = .34F;
     public static final float ROLL_RATE = 8.5F;
     public static final double ROLL_SHARE = .72, ROLL_SHARE_PER_RESPONSE = .07;
     public static final double TURN_RATE = .95, TURN_RATE_PER_RESPONSE = .3;

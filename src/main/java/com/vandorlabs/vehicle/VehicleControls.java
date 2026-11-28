@@ -38,12 +38,20 @@ public final class VehicleControls {
         received=sequence;queue.addLast(new Command(sequence,forward,strafe,brake));return true;
     }
     /** Hover has no client prediction replay; an input burst is the latest held state. */
-    public boolean offerLatest(int sequence,byte forward,byte strafe,boolean brake){
+    public boolean offerLatest(int sequence,byte forward,byte strafe,boolean brake){return offerLatest(sequence,forward,strafe,brake,false);}
+    /** @param keepTaps Flight: an unapplied new press survives the release that follows it within one server tick */
+    public boolean offerLatest(int sequence,byte forward,byte strafe,boolean brake,boolean keepTaps){
         if(sequence<=received || forward< -1 || forward>1 || strafe< -1 || strafe>1)return false;
-        received=sequence;queue.clear();queue.addLast(new Command(sequence,forward,strafe,brake));return true;
+        // Keep an unapplied steering or pitch press ahead of the release that ends it: on a slow server
+        // both can arrive within one tick, and dropping the press would turn a brief tap into nothing.
+        Command pending=queue.peekLast();
+        boolean tap=keepTaps&&pending!=null&&(pending.forward!=0||pending.strafe!=0)&&(pending.forward!=forward||pending.strafe!=strafe)
+                &&(pending.forward!=appliedForward||pending.strafe!=appliedStrafe);
+        received=sequence;queue.clear();if(tap)queue.addLast(pending);queue.addLast(new Command(sequence,forward,strafe,brake));return true;
     }
-    public Command poll(){Command command=queue.pollFirst();if(command!=null)applied=command.sequence;return command;}
+    private byte appliedForward,appliedStrafe;
+    public Command poll(){Command command=queue.pollFirst();if(command!=null){applied=command.sequence;appliedForward=command.forward;appliedStrafe=command.strafe;}return command;}
     public int acknowledged(){return applied;}
     public int size(){return queue.size();}
-    public void clear(){queue.clear();received=applied=-1;}
+    public void clear(){queue.clear();received=applied=-1;appliedForward=appliedStrafe=0;}
 }

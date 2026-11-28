@@ -19,6 +19,16 @@ public final class AircraftAttitude {
         return approach(current, target, steer == 0 ? 2.25F : 1.35F);
     }
 
+    /**
+     * Elevator rate in degrees per tick, eased toward the commanded rate so a one-tick tap gives about a
+     * third of it and a held key reaches it within four ticks. Release stops it twice as fast.
+     */
+    public static float elevatorRate(float current, float target) {
+        float step = target == 0 ? Math.max(Math.abs(current), .01F) : Math.max(Math.abs(target) * FlightTuning.ELEVATOR_EASE, .01F);
+        if (target != 0 && Math.signum(target) != Math.signum(current)) current = 0;
+        return approach(current, target, step);
+    }
+
     public static float bank(float current, float rate) {
         return wrap(current + rate);
     }
