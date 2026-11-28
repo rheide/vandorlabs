@@ -116,7 +116,7 @@ pre.java{background:#0f171e;border:1px solid var(--line);border-radius:5px;paddi
 <body>
 <header>
   <h1>Flight calculator</h1>
-  <p>Plan a Vandor Labs vehicle before you build it. Enter the hull weight, lift blocks, thrusters and Maxwell Drives to see Taxi, Hover and Flight readiness, takeoff limits, altitude ceiling, speeds, climb profile, endurance and range. Numbers follow the Vandor Labs 3.1 rules on Forge 1.12.2. NeoForge 1.21.1 shares the altitude envelope but still uses the 3.0 drive, runway and speed rules.</p>
+  <p>Plan a Vandor Labs vehicle before you build it. Enter the hull weight, lift blocks, thrusters and Maxwell Drives to see Taxi, Hover and Flight readiness, takeoff limits, altitude ceiling, speeds, climb profile, endurance and range. Numbers follow the Vandor Labs 3.1 rules on Forge 1.12.2, where one Maxwell thrust unit lifts 1,024 effective weight units at takeoff. NeoForge 1.21.1 shares that takeoff limit and the altitude envelope but still uses the 3.0 drive, runway and speed rules.</p>
   <nav><a href="https://github.com/rheide/vandorlabs/blob/master/docs/multiblocks/maxwell-drive/README.md">Maxwell Drive guide</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/versions/version-3.0.md#taking-off">Flight controls</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/pilot-seat-taxi.md">Taxi and Hover</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/pilot-seat-taxi.md#estimated-vehicle-weight">Vehicle weight rules</a> · <a href="https://github.com/rheide/vandorlabs/blob/master/docs/vanilla-vehicle-weights.md">Block weights</a></nav>
 </header>
 
@@ -207,7 +207,7 @@ pre.java{background:#0f171e;border:1px solid var(--line);border-radius:5px;paddi
 
   <section aria-labelledby="labH" class="lab-only">
     <h2 id="labH">3.0 and lab tuning</h2>
-    <p class="lede">The same build under the 3.0 rules and under the lab values from the left panel, which start at the 3.1 rules. 3.1 burns fuel per thrust unit and less when lightly loaded, scales the takeoff run with load, varies drive weight and burn by size, scales Hover and Taxi speed with thrusters, and lets spare thrust raise low-altitude speed. Lift-block RF draw is a planned rule and is off in 3.1.</p>
+    <p class="lede">The same build under the 3.0 rules and under the lab values from the left panel, which start at the 3.1 rules. 3.1 doubles the weight each thrust unit lifts (512 to 1,024), burns fuel per thrust unit and less when lightly loaded, scales the takeoff run with load, varies drive weight and burn by size, scales Hover and Taxi speed with thrusters, and lets spare thrust raise low-altitude speed. Lift-block RF draw is a planned rule and is off in 3.1.</p>
     <div class="scroll" id="cmpTable"></div>
     <div class="grid2">
       <div>
@@ -314,7 +314,7 @@ const T = {
   WORLD_CEILING: 256, MAX_ALTITUDE: 10000,
   TAKEOFF_SPEED: .32, LOW_SPEED: 1.5, MAX_CRUISE_SPEED: 15, MIN_FLIGHT_SPEED: .95,
   EARLY_CRUISE_SHARE: .55, EARLY_CLIMB_HEIGHT: 320,
-  MASS_PER_THRUST: 512, THRUST_ALTITUDE_LIMIT: 100000, ALTITUDE_THRUST_FACTOR: 24,
+  MASS_PER_THRUST: 512 /* 3.0; 3.1 doubles it (lab: massPerThrust) */, THRUST_ALTITUDE_LIMIT: 100000, ALTITUDE_THRUST_FACTOR: 24,
   LIFT_REDUCTION_PER_UNIT: 24, MIN_EFFECTIVE_SHARE: .25,
   BASE_ACCELERATION: .012, MIN_RESPONSE: 1, MAX_RESPONSE: 4,
   DECEL_BASE: .019, DECEL_PER_EXCESS: .024, DECEL_MAX: .12,
@@ -365,6 +365,9 @@ const PDEF = [
   ['Low-altitude speed'],
   ['lowMin', 'Below Y 256 at the takeoff limit (blocks/tick)', 1, .1, 'LOW_SPEED_MIN'],
   ['lowMax', 'Below Y 256 with 2× thrust (blocks/tick)', 2, .1, 'LOW_SPEED_MAX'],
+  // Append new rows here: share links store lab values in this order.
+  ['Thrust'],
+  ['massPerThrust', 'Effective weight one thrust unit lifts at takeoff', 1024, 32, 'MASS_PER_THRUST'],
 ];
 const PKEYS = PDEF.filter(r => r.length > 1).map(r => r[0]);
 
@@ -376,24 +379,26 @@ function effectiveMass(m, liftUnits){
   const r = liftUnits*T.LIFT_REDUCTION_PER_UNIT;
   return m*(T.MIN_EFFECTIVE_SHARE + (1-T.MIN_EFFECTIVE_SHARE)/(1 + r/Math.max(1,m)));
 }
-const takeoffMass = th => th*T.MASS_PER_THRUST;
-const canFly = (m,th) => m > 0 && th > 0 && m <= takeoffMass(th);
+// Every thrust-dependent rule takes the rule model M: 3.0 lifts 512 per thrust unit, 3.1 lifts 1,024.
+const massPerThrust = M => (M && M.mpt) || T.MASS_PER_THRUST;
+const takeoffMass = (th, M) => th*massPerThrust(M);
+const canFly = (m,th,M) => m > 0 && th > 0 && m <= takeoffMass(th,M);
 function altitudeFactor(y){ return y <= T.WORLD_CEILING ? 1 : 1 + T.ALTITUDE_THRUST_FACTOR*(y-T.WORLD_CEILING)/(T.THRUST_ALTITUDE_LIMIT-y); }
-function maximumAltitude(m, th){
-  if(!canFly(m,th)) return 0;
-  const load = m/takeoffMass(th), reserve = 1-load, wl = T.ALTITUDE_THRUST_FACTOR*load;
+function maximumAltitude(m, th, M){
+  if(!canFly(m,th,M)) return 0;
+  const load = m/takeoffMass(th,M), reserve = 1-load, wl = T.ALTITUDE_THRUST_FACTOR*load;
   return Math.min(T.MAX_ALTITUDE, (reserve*T.THRUST_ALTITUDE_LIMIT + wl*T.WORLD_CEILING)/(reserve+wl));
 }
 const EARLY_AT_LIMIT = (()=>{const h=T.MAX_ALTITUDE-T.WORLD_CEILING;return h*h/(T.EARLY_CLIMB_HEIGHT**2+h*h);})();
 const BLEND_AT_LIMIT = T.EARLY_CRUISE_SHARE*EARLY_AT_LIMIT + (1-T.EARLY_CRUISE_SHARE);
-const power = (m, th) => Math.min(1, takeoffMass(th)/(2*m));
+const power = (m, th, M) => Math.min(1, takeoffMass(th,M)/(2*m));
 function cruiseBlend(alt, ceiling){
   const climb = Math.max(0, Math.min(alt, ceiling) - T.WORLD_CEILING);
   const fraction = climb/(T.MAX_ALTITUDE-T.WORLD_CEILING);
   const early = climb*climb/(T.EARLY_CLIMB_HEIGHT**2 + climb*climb);
   return (T.EARLY_CRUISE_SHARE*early + (1-T.EARLY_CRUISE_SHARE)*fraction*fraction)/BLEND_AT_LIMIT;
 }
-const response = (m,th) => clamp(takeoffMass(th)/Math.max(1,m), T.MIN_RESPONSE, T.MAX_RESPONSE);
+const response = (m,th,M) => clamp(takeoffMass(th,M)/Math.max(1,m), T.MIN_RESPONSE, T.MAX_RESPONSE);
 const propulsion = p => 1 - .65*Math.min(1, Math.max(0, (p-T.TRIM_PITCH)/(T.MAX_PITCH-T.TRIM_PITCH)));
 function sustainableClimb(vertical, remaining){
   if(vertical <= 0) return vertical;
@@ -404,31 +409,32 @@ const bankSink = (roll, speed) => (1-Math.cos(roll))*Math.min(.28, .065 + speed*
 
 // --------------------------- tuning models -----------------------------------
 const CURRENT = {
-  id:'current', label:'3.0', proposed:false,
+  id:'current', label:'3.0', proposed:false, mpt: T.MASS_PER_THRUST,
   dry: d => T.MAXWELL_DRY_MASS_PER_THRUST*d.thrust,
   tank: () => T.MAXWELL_CAPACITY,
   // mB per tick for all drives. Every running drive burns the same, whatever its size or load.
   burn: (b, throttle) => b.nDrives*throttle/T.BURN_UNITS_PER_MB,
   takeoffSpeed: T.TAKEOFF_SPEED,
   rollLimit: () => Math.max(T.TAXI_SPEED, T.TAKEOFF_SPEED),
-  rollAccel: (eff, th) => T.BASE_ACCELERATION*response(eff, th),
+  rollAccel: (eff, th) => T.BASE_ACCELERATION*response(eff, th, CURRENT),
   lowSpeed: () => T.LOW_SPEED,
-  cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; return T.LOW_SPEED + (T.MAX_CRUISE_SPEED-T.LOW_SPEED)*power(m,th)*cruiseBlend(alt, ceiling); },
+  cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; return T.LOW_SPEED + (T.MAX_CRUISE_SPEED-T.LOW_SPEED)*power(m,th,CURRENT)*cruiseBlend(alt, ceiling); },
   thrustShare: () => 1,
   taxiSpeed: s => s.thrusters >= 1 ? T.TAXI_SPEED : T.UNPOWERED_TAXI_SPEED,
   liftRF: () => 0
 };
 function makeProposed(P){
   const fullBurnPerUnit = P.burnRate/1200; // mB per tick per thrust unit, full throttle, full load
-  const lowSpeed = (m, th) => P.lowMin + (P.lowMax-P.lowMin)*clamp((power(m,th)-.5)/.5, 0, 1);
+  const R = {mpt: P.massPerThrust};
+  const lowSpeed = (m, th) => P.lowMin + (P.lowMax-P.lowMin)*clamp((power(m,th,R)-.5)/.5, 0, 1);
   const shareOf = (s, gross) => { if(s.thrusters < 1) return 0; const r = s.thrusters*P.thrusterPush/Math.max(1,gross); return clamp(Math.sqrt(Math.min(1, r)), P.minThrustShare, 1); };
   return {
-    id:'proposed', label:P.label || 'Lab', proposed:true, P,
+    id:'proposed', label:P.label || 'Lab', proposed:true, P, mpt: R.mpt,
     dry: d => P['dry'+d.w]*d.thrust,
     tank: d => P.tankPerThrust*d.thrust,
     burn(b, throttle, thrust){
       const th = thrust ?? b.rated*throttle/15;
-      const load = th > 0 ? Math.min(1, b.eff/takeoffMass(th)) : 1;
+      const load = th > 0 ? Math.min(1, b.eff/takeoffMass(th,R)) : 1;
       const factor = 1 - P.loadShare + P.loadShare*load;
       let units = 0; for(const d of DRIVES) units += b.s[d.id]*d.thrust*P['burn'+d.w];
       return units*fullBurnPerUnit*throttle/15*factor;
@@ -436,12 +442,12 @@ function makeProposed(P){
     takeoffSpeed: P.takeoffSpeed,
     rollLimit: () => P.takeoffSpeed,
     rollAccel(eff, th){
-      const load = clamp(eff/takeoffMass(th), 0, 1);
+      const load = clamp(eff/takeoffMass(th,R), 0, 1);
       const run = P.runwayMin + (P.runwayMax-P.runwayMin)*load**P.runwayExp;
       return P.takeoffSpeed**2/(2*Math.max(1, run));
     },
     lowSpeed,
-    cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; const low = lowSpeed(m, th); return low + (T.MAX_CRUISE_SPEED-low)*power(m,th)*cruiseBlend(alt, ceiling); },
+    cruiseSpeed(alt, m, th, ceiling){ if(!ceiling) return 0; const low = lowSpeed(m, th); return low + (T.MAX_CRUISE_SPEED-low)*power(m,th,R)*cruiseBlend(alt, ceiling); },
     thrustShare: (s, gross) => shareOf(s, gross),
     taxiSpeed: (s, gross) => s.thrusters >= 1 ? T.UNPOWERED_TAXI_SPEED + (T.TAXI_SPEED-T.UNPOWERED_TAXI_SPEED)*Math.min(1, s.thrusters*P.thrusterPush/Math.max(1,gross)) : T.UNPOWERED_TAXI_SPEED,
     liftRF: s => s.plates*P.plateRF + s.repulsors*P.repulsorRF + s.vht*P.vhtRF
@@ -475,11 +481,11 @@ function build(s, M){
   const thrust = fueled ? rated*s.throttle/15 : 0;
   const capacity = T.PLATE_LIFT*s.plates + T.REPULSOR_LIFT*s.repulsors + T.VERTICAL_THRUSTER_LIFT*s.vht;
   const dimCeiling = s.dim === 0 ? T.MAX_ALTITUDE : Math.max(0, s.dim - s.height - 1);
-  const ceilingRaw = maximumAltitude(eff, thrust);
+  const ceilingRaw = maximumAltitude(eff, thrust, M);
   const ceiling = Math.min(ceilingRaw, dimCeiling);
   const b = {s, M, nDrives, rated, drivesDry, fill, driveFuel, tankTotal, fuelTotal, fuelUnitWeight, fuelW, liftBlocks, liftW, thrW, parts, gross,
     baseNoDrives, liftUnits, eff, thrust, capacity, dimCeiling, ceilingRaw, ceiling, fueled, liftRF, rfNet, powered,
-    flies: canFly(eff, thrust) && ceiling > 0, resp: response(eff, thrust)};
+    flies: canFly(eff, thrust, M) && ceiling > 0, resp: response(eff, thrust, M)};
   b.burnPerTick = fueled ? M.burn(b, s.throttle, thrust) : 0;
   b.thrustShare = M.thrustShare(s, gross);
   return b;
@@ -489,11 +495,11 @@ function build(s, M){
 function simulate(b, opts={}){
   const s = b.s, M = b.M, th = opts.thrust ?? b.thrust, burn = opts.burn ?? b.burnPerTick;
   const eff = b.eff, record = opts.record !== false;
-  if(!canFly(eff, th)) return {ok:false};
-  const ceilingRaw = maximumAltitude(eff, th), ceiling = Math.min(ceilingRaw, b.dimCeiling);
+  if(!canFly(eff, th, M)) return {ok:false};
+  const ceilingRaw = maximumAltitude(eff, th, M), ceiling = Math.min(ceilingRaw, b.dimCeiling);
   if(ceiling <= 0) return {ok:false};
   const target = Math.max(s.startY, Math.min(s.target, ceiling));
-  const r = response(eff, th), pitchRate = .7 + .36*r;
+  const r = response(eff, th, M), pitchRate = .7 + .36*r;
   const maxPitch = Math.min(T.MAX_PITCH, T.TRIM_PITCH + pitchRate/T.PITCH_TRIM_DECAY);
   const climbPitch = Math.min(s.pitch, maxPitch);
   const hold = s.hold > 0 ? s.hold/72 : 0;
@@ -546,7 +552,7 @@ function simulate(b, opts={}){
     }
   }
   const climbTicks = reachedTick < 0 ? t : reachedTick;
-  const cruiseAt = (alt2, eff2) => { const c = Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(alt2, eff2, th, maximumAltitude(eff2, th))); return hold ? Math.min(c, hold) : c; };
+  const cruiseAt = (alt2, eff2) => { const c = Math.max(T.MIN_FLIGHT_SPEED, M.cruiseSpeed(alt2, eff2, th, maximumAltitude(eff2, th, M))); return hold ? Math.min(c, hold) : c; };
   const cruiseSpeed = cruiseAt(alt, eff);
   // Cruise until the fuel runs out. Under the proposal, lift blocks also need RF; when it runs out the
   // craft carries its full weight, flies on at its lower ceiling if it still can, or has to land.
@@ -561,9 +567,9 @@ function simulate(b, opts={}){
     powerOut = true; liftLostAt = endurance;
     remaining -= burn*tPow;
     const heavy = b.gross;
-    if(canFly(heavy, th)){
+    if(canFly(heavy, th, M)){
       const burn2 = M.burn({...b, eff: heavy}, opts.throttle ?? s.throttle, th);
-      const alt2 = Math.min(alt, maximumAltitude(heavy, th), b.dimCeiling);
+      const alt2 = Math.min(alt, maximumAltitude(heavy, th, M), b.dimCeiling);
       const t2 = burn2 > 0 ? remaining/burn2 : Infinity;
       range += cruiseAt(alt2, heavy)*t2; endurance += t2;
     }
@@ -578,7 +584,7 @@ function throttleSweep(b){
   const res = [];
   for(let t=1;t<=15;t++){
     const th = b.rated*t/15, burn = b.M.burn(b, t, th);
-    const r = canFly(b.eff, th) ? simulate(b, {thrust:th, burn, throttle:t, record:false}) : {ok:false};
+    const r = canFly(b.eff, th, b.M) ? simulate(b, {thrust:th, burn, throttle:t, record:false}) : {ok:false};
     res.push({t, ok:r.ok, range:r.ok ? r.range : 0, ceil:r.ok ? r.ceiling : 0, v:r.ok ? r.cruiseSpeed : 0, end:r.ok ? r.endurance : 0, alt:r.ok ? r.cruiseAlt : 0});
   }
   const best = res.reduce((a,r)=> r.range > a.range ? r : a, res[0]);
@@ -899,7 +905,7 @@ function update(){
   $('tiles').innerHTML =
     tile('Gross weight', nf(b.gross,1), 'Hover compares this with lift') +
     tile('Effective weight', nf(b.eff,1), b.powered ? `${nf(b.gross-b.eff,1)} removed by lift` : 'Lift blocks have no power') +
-    tile('Takeoff limit', b.thrust ? nf(Math.floor(takeoffMass(b.thrust))) : '—', b.rated ? `Theoretical max ${nf(Math.floor(takeoffMass(b.rated)))}` : 'Add a fueled Maxwell Drive') +
+    tile('Takeoff limit', b.thrust ? nf(Math.floor(takeoffMass(b.thrust, M))) : '—', b.rated ? `Theoretical max ${nf(Math.floor(takeoffMass(b.rated, M)))}` : 'Add a fueled Maxwell Drive') +
     tile('Thrust', `${nf(b.thrust,2)}`, `${nf(b.rated,2)} rated · response ×${nf(b.resp,2)}`) +
     tile('Altitude ceiling', b.flies ? `Y ${nf(b.ceiling)}` : '—', b.flies && b.ceilingRaw > b.dimCeiling ? 'Limited by the dimension' : b.flies && b.ceiling >= T.MAX_ALTITUDE ? 'Overworld maximum' : '') +
     tile('Top speed', b.flies ? speedFmt(topSpeed) : '—', b.flies ? `at Y ${nf(b.ceiling)}` : '') +
@@ -923,11 +929,11 @@ function update(){
   const flightReasons = [];
   if(!b.nDrives) flightReasons.push('Needs a formed Maxwell Drive');
   else if(!b.fueled) flightReasons.push('Drives need fuel');
-  else if(!canFly(b.eff, b.thrust)){
-    flightReasons.push(`Effective weight ${nf(b.eff,1)} exceeds the takeoff limit ${nf(takeoffMass(b.thrust))}: needs ${nf(b.eff/T.MASS_PER_THRUST - b.thrust,2)} more thrust`);
-    const needLift = b.powered ? solveCount(n => effectiveMass(b.gross + n*s.propW, b.liftUnits + n) <= takeoffMass(b.thrust), 1e6) : -1;
+  else if(!canFly(b.eff, b.thrust, M)){
+    flightReasons.push(`Effective weight ${nf(b.eff,1)} exceeds the takeoff limit ${nf(takeoffMass(b.thrust, M))}: needs ${nf(b.eff/massPerThrust(M) - b.thrust,2)} more thrust`);
+    const needLift = b.powered ? solveCount(n => effectiveMass(b.gross + n*s.propW, b.liftUnits + n) <= takeoffMass(b.thrust, M), 1e6) : -1;
     if(needLift > 0) flightReasons.push(`or about ${nf(needLift)} more Antigravity Plates`);
-    if(s.throttle < 15 && canFly(b.eff, b.rated)) flightReasons.push('Raising the throttle would be enough');
+    if(s.throttle < 15 && canFly(b.eff, b.rated, M)) flightReasons.push('Raising the throttle would be enough');
   } else if(b.ceiling <= 0) flightReasons.push('No room under this dimension’s ceiling');
   const hoverItems = hoverOk ? [
       `Lift <b>${nf(b.capacity)}</b> for <b>${nf(b.gross,1)}</b> gross (${nf(load*100,0)}% load, ${nf(b.capacity-b.gross,1)} spare)`,
@@ -944,7 +950,7 @@ function update(){
       `Takeoff run <b>${nf(sim.runway,1)} blocks</b> in ${timeFmt(sim.takeoffTick)}`,
       `Ceiling <b>Y ${nf(b.ceiling)}</b>, reached in ${timeFmt(sim.climbTicks)}`,
       `${speedFmt(lowV)} below Y 256, <b>${speedFmt(topSpeed)}</b> at the ceiling`,
-      `Weight margin: <b>${nf(solveMargin(d => canFly(effectiveMass(b.gross+d, b.liftUnits), b.thrust)),0)}</b> more gross units still take off`] : flightReasons}
+      `Weight margin: <b>${nf(solveMargin(d => canFly(effectiveMass(b.gross+d, b.liftUnits), b.thrust, M)),0)}</b> more gross units still take off`] : flightReasons}
   ];
   $('modes').innerHTML = modes.map(m => `<div class="mode ${m.ok?'ok':'no'}"><h3>${m.name} <span class="badge">${m.ok?'✓ Available':'✗ Not available'}</span></h3><ul>${m.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('');
 
@@ -1009,7 +1015,7 @@ function update(){
   const top = s.dim === 0 ? T.MAX_ALTITUDE : Math.max(T.WORLD_CEILING, b.dimCeiling);
   if(b.thrust > 0 || b.rated > 0){
     const thr = b.thrust || b.rated, pts = [], ptsR = [];
-    for(let y = 0; y <= top; y += top/200){ pts.push([y, takeoffMass(thr)/altitudeFactor(y)]); if(s.throttle < 15) ptsR.push([y, takeoffMass(b.rated)/altitudeFactor(y)]); }
+    for(let y = 0; y <= top; y += top/200){ pts.push([y, takeoffMass(thr, M)/altitudeFactor(y)]); if(s.throttle < 15) ptsR.push([y, takeoffMass(b.rated, M)/altitudeFactor(y)]); }
     const series = [{name: s.throttle < 15 ? `Throttle ${s.throttle}` : 'Your thrust', color:HEX[0], data:pts}];
     if(ptsR.length) series.push({name:'Full throttle', color:HEX[2], data:ptsR, dash:true});
     lineChart($('chEnv'), {aria:'Supportable effective weight by altitude', series, height:220, xMin:0, xMax:top,
@@ -1062,8 +1068,8 @@ function update(){
     : 'Drives of one size needed to reach each altitude with this hull, cargo and lift at full throttle. Counts include each drive’s own weight. Every drive size has the same thrust per weight, but one large drive burns the same fuel as one small drive.';
   const alts = [['Takeoff', T.WORLD_CEILING], ['Y 1,000', 1000], ['Y 5,000', 5000], ['Y 10,000', 10000]];
   if(s.target > T.WORLD_CEILING && !alts.some(a=>a[1]===s.target) && s.target <= T.MAX_ALTITUDE) alts.push([`Your target Y ${nf(s.target)}`, s.target]);
-  const needDrives = (d, y) => solveCount(n => n > 0 && n*d.thrust*T.MASS_PER_THRUST >= effectiveMass(b.baseNoDrives + n*(M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight), b.liftUnits)*altitudeFactor(y), 4096);
-  const tankLasts = d => { const one = {...b, s:{...s, d3:0,d4:0,d5:0,d6:0,d9:0, [d.id]:1}, nDrives:1, rated:d.thrust, eff: takeoffMass(d.thrust)}; return M.tank(d)/M.burn(one, 15, d.thrust); };
+  const needDrives = (d, y) => solveCount(n => n > 0 && takeoffMass(n*d.thrust, M) >= effectiveMass(b.baseNoDrives + n*(M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight), b.liftUnits)*altitudeFactor(y), 4096);
+  const tankLasts = d => { const one = {...b, s:{...s, d3:0,d4:0,d5:0,d6:0,d9:0, [d.id]:1}, nDrives:1, rated:d.thrust, eff: takeoffMass(d.thrust, M)}; return M.tank(d)/M.burn(one, 15, d.thrust); };
   $('driveTable').innerHTML = `<table><thead><tr><th>Drive size</th><th>Thrust</th><th>Dry weight</th>${alts.map(a=>`<th>${a[0]}</th>`).join('')}<th>One tank at the takeoff limit</th></tr></thead><tbody>${
     DRIVES.map(d => `<tr><td>${d.label}${s[d.id] ? ` <small style="color:var(--muted)">(you have ${s[d.id]})</small>` : ''}</td><td>${nf(d.thrust,2)}</td><td>${nf(M.dry(d),1)}</td>${
       alts.map(a => { const n = needDrives(d, a[1]); return n < 0 ? '<td class="na" title="Each extra drive adds more effective weight than it can lift here">never</td>' : `<td>${nf(n)}</td>`; }).join('')
@@ -1087,24 +1093,24 @@ function update(){
 
   // ---------- tips
   const tips = [];
-  if(!b.nDrives) tips.push('Flight needs a Maxwell Drive. A 3 × 3 × 4 drive lifts 512 effective units at takeoff.');
+  if(!b.nDrives) tips.push(`Flight needs a Maxwell Drive. A 3 × 3 × 4 drive lifts ${nf(takeoffMass(1, M))} effective units at takeoff.`);
   if(s.vht > 0) tips.push(`<b>Vertical Hover Thrusters</b> add Hover lift but do not reduce Flight weight. Swapping your ${s.vht} for Antigravity Plates keeps the same Hover lift and lowers effective weight to ${nf(effectiveMass(b.gross, b.liftUnits + s.vht),1)}.`);
   if(b.liftUnits > 0 && b.eff < b.gross*.4) tips.push(`Lift has strong diminishing returns here: effective weight is already ${nf(b.eff/b.gross*100,0)}% of gross and can never drop below 25%. Thrust is the better lever now.`);
   if(b.flies && sweep && sweep.best && sweep.best.t !== s.throttle && sweep.best.range > sim.range*1.02)
     tips.push(`Set an analog throttle of <b>${sweep.best.t}</b> for about ${nf((sweep.best.range/sim.range-1)*100,0)}% more range (${distFmt(sweep.best.range)}).`);
   if(!prop && b.nDrives > 1) tips.push(`Every drive burns the same fuel regardless of size. Your ${b.nDrives} drives burn ${b.nDrives}× the fuel of one drive; fewer, larger drives with the same total thrust stretch an onboard reserve further.`);
   if(prop && b.flies){
-    const loadNow = b.eff/takeoffMass(b.thrust);
+    const loadNow = b.eff/takeoffMass(b.thrust, M);
     tips.push(`At ${nf(loadNow*100)}% of the takeoff limit, the drives burn ${nf((1 - M.P.loadShare + M.P.loadShare*loadNow)*100)}% of their full-load rate. Shedding weight stretches every tank.`);
     if(s.thrusters && b.thrustShare < 1) tips.push(`Hover runs at ${nf(b.thrustShare*100)}% speed: ${nf(Math.ceil(b.gross/M.P.thrusterPush))} thrusters would reach the full 16 blocks/s.`);
     if(s.reserve === 0) tips.push(`Drive tanks hold only ${nf(M.P.tankPerThrust)} mB per thrust unit. Pipe an onboard reserve tank to an inlet for real range; fuel weighs only 0.4 units per 1,000 mB.`);
     if(sim.ok && sim.powerOut) tips.push(`Lift power runs out after ${timeFmt(sim.liftLostAt)}, well before the fuel. Add Battery Blocks or RF generation.`);
   }
   if(b.flies && b.ceiling < T.MAX_ALTITUDE && s.dim === 0){
-    const opts = DRIVES.map(d => { const e2 = effectiveMass(b.gross + M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight*(s.scanned?0:1), b.liftUnits); return [d, Math.min(T.MAX_ALTITUDE, maximumAltitude(e2, b.thrust + d.thrust*s.throttle/15))]; });
+    const opts = DRIVES.map(d => { const e2 = effectiveMass(b.gross + M.dry(d) + M.tank(d)*b.fill*b.fuelUnitWeight*(s.scanned?0:1), b.liftUnits); return [d, Math.min(T.MAX_ALTITUDE, maximumAltitude(e2, b.thrust + d.thrust*s.throttle/15, M))]; });
     tips.push('One more drive would raise the ceiling to: ' + opts.map(([d,c]) => `${d.label} → Y ${nf(c)}`).join(', ') + '.');
   }
-  if(b.flies && b.thrust*T.MASS_PER_THRUST < 2*b.eff) tips.push(`Doubling your thrust reserve raises top speed: cruise speed scales with thrust until the takeoff limit is twice the effective weight (now ${nf(takeoffMass(b.thrust)/b.eff,2)}×).`);
+  if(b.flies && takeoffMass(b.thrust, M) < 2*b.eff) tips.push(`Doubling your thrust reserve raises top speed: cruise speed scales with thrust until the takeoff limit is twice the effective weight (now ${nf(takeoffMass(b.thrust, M)/b.eff,2)}×).`);
   if(b.flies && sim.ok) tips.push(`From Taxi, hold <b>W</b> until ${speedFmt(M.takeoffSpeed)} (${nf(sim.runway,1)} blocks) and then press <b>S</b>. Selecting Flight from Hover needs no runway.`);
   if(hoverOk && b.capacity - b.gross < b.capacity*.1) tips.push('Hover is close to its lift limit: a little more cargo or fuel will make Hover unavailable, and climbs respond slowly.');
   if(s.dim !== 0 && b.flies) tips.push('Outside the Overworld there is no high cruise: the ceiling is the dimension height and speed stays at the low-altitude limit.');
@@ -1192,6 +1198,7 @@ function renderLab(){
   $('javaOut').textContent = [
     '// Lab values exported from docs/flight-calculator.html (tuning lab), for FlightTuning.java.',
     `public static final double TAKEOFF_SPEED = ${p('takeoffSpeed')};`,
+    `public static final double MASS_PER_THRUST = ${p('massPerThrust')};`,
     `public static final double RUNWAY_MIN = ${p('runwayMin')}, RUNWAY_MAX = ${p('runwayMax')}, RUNWAY_LOAD_EXPONENT = ${p('runwayExp')};`,
     `public static final double MAXWELL_TANK_PER_THRUST = ${p('tankPerThrust')};`,
     `public static final double MAXWELL_BURN_PER_MINUTE = ${p('burnRate')};`,

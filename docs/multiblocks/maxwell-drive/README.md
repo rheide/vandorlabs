@@ -18,13 +18,13 @@ Read the **effective weight** on the Vehicle Controller. It includes the install
 
 | Drive size | Takeoff / Y=256 | Y=1,000 | Y=5,000 | Y=10,000 | Example ceiling with one drive |
 | --- | ---: | ---: | ---: | ---: | --- |
-| 3 × 3 × 4 | 512 | 433 | 232 | 142 | 400 units reach Y≈1,406 |
-| 4 × 4 × 5 | 1,137 | 963 | 517 | 316 | 1,000 units reach Y≈825 |
-| 5 × 5 × 7 | 2,488 | 2,108 | 1,132 | 691 | 1,000 units reach Y≈6,082 |
-| 6 × 6 × 8 | 4,096 | 3,470 | 1,863 | 1,138 | 1,000 units reach Y=10,000 |
-| 9 × 9 × 12 | 13,824 | 11,711 | 6,287 | 3,841 | 5,000 units reach Y≈7,088 |
+| 3 × 3 × 4 | 1,024 | 867 | 465 | 284 | 800 units reach Y≈1,406 |
+| 4 × 4 × 5 | 2,275 | 1,927 | 1,035 | 632 | 2,000 units reach Y≈825 |
+| 5 × 5 × 7 | 4,977 | 4,217 | 2,264 | 1,383 | 2,000 units reach Y≈6,082 |
+| 6 × 6 × 8 | 8,192 | 6,940 | 3,726 | 2,276 | 2,000 units reach Y=10,000 |
+| 9 × 9 × 12 | 27,648 | 23,423 | 12,575 | 7,683 | 10,000 units reach Y≈7,088 |
 
-Choose the column for your target altitude and add the capacities of the drives you plan to run. For example, a finished craft weighing **1,000 effective units** can take off with **two 3 × 3 × 4 drives** (2 × 512), but needs **five** of that size for Y=5,000 (5 × 232). **One 5 × 5 × 7** also covers that climb. Recheck the weight after adding engines or loading cargo.
+Choose the column for your target altitude and add the capacities of the drives you plan to run. For example, a finished craft weighing **1,000 effective units** can take off with **one 3 × 3 × 4 drive** (1,024), but needs **three** of that size for Y=5,000 (3 × 465). **One 5 × 5 × 7** also covers that climb. Recheck the weight after adding engines or loading cargo.
 
 To plan a whole craft, use the [flight calculator](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/flight-calculator.html). Enter the hull weight, lift blocks, thrusters and drives to see Hover and Flight readiness, the altitude ceiling, top speed, a takeoff and climb profile, and range for your fuel. For offline use, open `docs/flight-calculator.html` from a checkout.
 

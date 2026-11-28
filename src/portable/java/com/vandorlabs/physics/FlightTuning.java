@@ -38,7 +38,7 @@ public final class FlightTuning {
 
     // Thrust, weight and altitude envelope.
     /** Effective weight units one Maxwell thrust unit lifts at takeoff. */
-    public static final double MASS_PER_THRUST = 512;
+    public static final double MASS_PER_THRUST = 1024;
     public static final double THRUST_ALTITUDE_LIMIT = 100000;
     public static final double ALTITUDE_THRUST_FACTOR = 24;
     /** Effective weight removed per Flight lift unit, before diminishing returns. */

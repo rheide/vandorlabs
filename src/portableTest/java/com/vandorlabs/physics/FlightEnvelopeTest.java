@@ -9,30 +9,32 @@ public final class FlightEnvelopeTest {
     public static void main(String[] args) {
         require(FlightEnvelope.weightEquation(230,200).equals("Weight: 230 actual - 30 hover plates = 200"),"displayed lift reduction");
         double limit=FlightEnvelope.takeoffMass(1);
+        // Masses below were chosen against the original 512 takeoff limit; keep them proportional.
+        double k=limit/512;
         require(FlightEnvelope.canFly(limit,1)&&!FlightEnvelope.canFly(Math.nextUp(limit),1),"maximum weight inclusive");
         require(!FlightEnvelope.canFly(1,0)&&FlightEnvelope.maximumAltitude(1,0)==0,"no fueled drive");
         require(FlightEnvelope.effectiveMass(100,0,0)==100,"unassisted mass");
         double assisted=FlightEnvelope.effectiveMass(100,2,3);
         require(assisted<FlightEnvelope.effectiveMass(100,1,0)&&assisted>25,"lift reduction has diminishing returns");
-        require(FlightEnvelope.acceleration(assisted,1)>FlightEnvelope.acceleration(470,1),"light craft accelerate faster");
+        require(FlightEnvelope.acceleration(assisted,1)>FlightEnvelope.acceleration(470*k,1),"light craft accelerate faster");
         require(FlightEnvelope.maximumAltitude(limit,1)==FlightEnvelope.WORLD_CEILING,"zero altitude reserve at takeoff limit");
-        require(FlightEnvelope.maximumAltitude(470,1)>FlightEnvelope.WORLD_CEILING&&FlightEnvelope.maximumAltitude(470,1)<FlightEnvelope.MAX_ALTITUDE,"underpowered altitude envelope");
+        require(FlightEnvelope.maximumAltitude(470*k,1)>FlightEnvelope.WORLD_CEILING&&FlightEnvelope.maximumAltitude(470*k,1)<FlightEnvelope.MAX_ALTITUDE,"underpowered altitude envelope");
         require(Math.abs(FlightEnvelope.maximumAltitude(limit,2)-4245.76)<.01,"twice takeoff thrust reaches Y=4246");
         require(FlightEnvelope.maximumAltitude(limit,3.59)<FlightEnvelope.MAX_ALTITUDE&&
                 FlightEnvelope.maximumAltitude(limit,3.60)==FlightEnvelope.MAX_ALTITUDE,"Y=10000 needs about 3.60 times takeoff thrust");
         require(FlightEnvelope.cruiseSpeed(256)==1.5&&FlightEnvelope.cruiseSpeed(300)<1.51,"continuous handoff at build height");
         require(FlightEnvelope.cruiseSpeed(10000)==15&&FlightEnvelope.cruiseSpeed(20000)==15,"speed cap");
 
-        require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"light drive handoff is continuous");
-        require(FlightEnvelope.cruiseSpeed(257,200,1)<1.62,"first cruise block has no speed jump");
-        require(FlightEnvelope.cruiseSpeed(320,200,1)<1.8,"low approach speed at terrain handoff");
-        require(FlightEnvelope.cruiseSpeed(600,200,1)*20>=100,"cruise performance returns above the transition");
+        require(FlightEnvelope.cruiseSpeed(256,200*k,1)==1.5,"light drive handoff is continuous");
+        require(FlightEnvelope.cruiseSpeed(257,200*k,1)<1.62,"first cruise block has no speed jump");
+        require(FlightEnvelope.cruiseSpeed(320,200*k,1)<1.8,"low approach speed at terrain handoff");
+        require(FlightEnvelope.cruiseSpeed(600,200*k,1)*20>=100,"cruise performance returns above the transition");
         for(int y=256;y<=512;y++)
-            require(FlightEnvelope.cruiseSpeed(y+1,200,1)-FlightEnvelope.cruiseSpeed(y,200,1)<.016,
+            require(FlightEnvelope.cruiseSpeed(y+1,200*k,1)-FlightEnvelope.cruiseSpeed(y,200*k,1)<.016,
                     "climb speed changes gradually throughout the approach");
-        require(FlightEnvelope.cruiseSpeed(800,400,1)<FlightEnvelope.cruiseSpeed(800,200,1),"payload reduces cruise speed");
-        require(FlightEnvelope.cruiseSpeed(10000,120,1)==15,"light craft retain the absolute speed cap");
-        require(FlightEnvelope.cruiseSpeed(10000,512,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
+        require(FlightEnvelope.cruiseSpeed(800,400*k,1)<FlightEnvelope.cruiseSpeed(800,200*k,1),"payload reduces cruise speed");
+        require(FlightEnvelope.cruiseSpeed(10000,120*k,1)==15,"light craft retain the absolute speed cap");
+        require(FlightEnvelope.cruiseSpeed(10000,limit,1)==1.5,"takeoff-limited load cannot accelerate into cruise");
 
         require(FlightEnvelope.seedOpacity(255,512)==0&&FlightEnvelope.seedOpacity(288)==.5&&FlightEnvelope.seedOpacity(513,512)==1,
                 "seed transition endpoints and midpoint");
@@ -57,8 +59,8 @@ public final class FlightEnvelopeTest {
         // 3.1 Forge rules.
         require(Math.abs(FlightEnvelope.runwayLength(0,1)-FlightTuning.RUNWAY_MIN)<1e-9
                 &&Math.abs(FlightEnvelope.runwayLength(limit,1)-FlightTuning.RUNWAY_MAX)<1e-9
-                &&FlightEnvelope.runwayLength(256,1)>FlightTuning.RUNWAY_MIN&&FlightEnvelope.runwayLength(256,1)<FlightTuning.RUNWAY_MAX,"runway grows with load");
-        for(double mass:new double[]{1,128,300,512}){
+                &&FlightEnvelope.runwayLength(limit/2,1)>FlightTuning.RUNWAY_MIN&&FlightEnvelope.runwayLength(limit/2,1)<FlightTuning.RUNWAY_MAX,"runway grows with load");
+        for(double mass:new double[]{1,limit/4,limit*300/512,limit}){
             double a=FlightEnvelope.takeoffAcceleration(mass,1),v=0,run=0;
             while(v<FlightTuning.RUNWAY_TAKEOFF_SPEED){v=Math.min(FlightTuning.RUNWAY_TAKEOFF_SPEED,v+a);run+=v;}
             require(Math.abs(run-FlightEnvelope.runwayLength(mass,1))<1,"discrete roll covers the planned runway, mass="+mass+" run="+run);
@@ -67,12 +69,12 @@ public final class FlightEnvelopeTest {
                 &&FlightEnvelope.lowAltitudeSpeed(limit/4,1)==FlightTuning.LOW_SPEED_MAX,"low-altitude speed follows thrust reserve up to twice the need");
         require(FlightEnvelope.reserveCruiseSpeed(200,limit/2,1)==FlightTuning.LOW_SPEED_MAX
                 &&FlightEnvelope.reserveCruiseSpeed(256,limit,1)==FlightTuning.LOW_SPEED_MIN,"reserve speed holds below the cruise band");
-        require(FlightEnvelope.reserveCruiseSpeed(10000,120,1)==15&&FlightEnvelope.reserveCruiseSpeed(1,1,0)==0,"reserve speed keeps the cap and needs thrust");
-        for(int h=256;h<=600;h++)require(FlightEnvelope.reserveCruiseSpeed(h+1,300,1)>=FlightEnvelope.reserveCruiseSpeed(h,300,1),"reserve speed rises with altitude");
-        require(FlightEnvelope.cruiseSpeed(256,200,1)==1.5,"3.0 cruise speed is unchanged for NeoForge");
+        require(FlightEnvelope.reserveCruiseSpeed(10000,120*k,1)==15&&FlightEnvelope.reserveCruiseSpeed(1,1,0)==0,"reserve speed keeps the cap and needs thrust");
+        for(int h=256;h<=600;h++)require(FlightEnvelope.reserveCruiseSpeed(h+1,300*k,1)>=FlightEnvelope.reserveCruiseSpeed(h,300*k,1),"reserve speed rises with altitude");
+        require(FlightEnvelope.cruiseSpeed(256,200*k,1)==1.5,"3.0 cruise speed is unchanged for NeoForge");
         require(Math.abs(FlightEnvelope.burnLoadFactor(limit,1)-1)<1e-12&&Math.abs(FlightEnvelope.burnLoadFactor(1,0)-1)<1e-12
                 &&Math.abs(FlightEnvelope.burnLoadFactor(0,1)-(1-FlightTuning.MAXWELL_LOAD_BURN_SHARE))<1e-12
-                &&FlightEnvelope.burnLoadFactor(100,1)<FlightEnvelope.burnLoadFactor(400,1),"lighter craft burn less");
+                &&FlightEnvelope.burnLoadFactor(100*k,1)<FlightEnvelope.burnLoadFactor(400*k,1),"lighter craft burn less");
 
         OrientedBounds hull=new OrientedBounds(0,0,0,.04,.5,.5,RigidTransform.IDENTITY);
         OrientedBounds pane=new OrientedBounds(.4,0,0,.42,.5,.5,RigidTransform.IDENTITY);
