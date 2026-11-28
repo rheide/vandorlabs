@@ -774,6 +774,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("machinery live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.journeyMapLabelChecksOnly")) {
+            try{if(JourneyMapLabelChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("JourneyMap labels",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.canopyPilotHudChecksOnly")) {
             try{if(CanopyPilotHudChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Seated canopy HUD",failure);}

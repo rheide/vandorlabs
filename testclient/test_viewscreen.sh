@@ -405,6 +405,9 @@ case "${1:-}" in
         elif [ "$TARGET" = canopy-stretch ]; then
             PREFIX=canopy-stretch
             export VANDOR_LABS_CANOPY_STRETCH_ONLY=true VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = journeymap-labels ]; then
+            PREFIX=journeymap_label-
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.journeyMapLabelChecksOnly=true"
         elif [ "$TARGET" = canopy-pilot-hud ]; then
             PREFIX=canopy_pilot_hud-
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.canopyPilotHudChecksOnly=true"
@@ -579,7 +582,7 @@ fi
 if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
     cp "$VANDOR_LABS_TEST_JEI" "$TEST_RUNTIME_GAME/mods/"
 fi
-if { [ "${TARGET:-}" = maxwell-cruise ] || [ "${TARGET:-}" = cruise-physical ]; } && [ -n "${VANDOR_LABS_TEST_JOURNEYMAP:-}" ]; then
+if { [ "${TARGET:-}" = maxwell-cruise ] || [ "${TARGET:-}" = cruise-physical ] || [ "${TARGET:-}" = journeymap-labels ]; } && [ -n "${VANDOR_LABS_TEST_JOURNEYMAP:-}" ]; then
     cp "$VANDOR_LABS_TEST_JOURNEYMAP" "$TEST_RUNTIME_GAME/mods/"
 fi
 if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
@@ -1360,6 +1363,10 @@ PYIMAGE
     if [ "$TARGET" = canopy-stretch ]; then
         grep -q 'canopy-stretch PASS' "$RUN_OUT/client.log"
         test -s "$RUN_OUT/canopy-stretch-canopy.png" && test -s "$RUN_OUT/canopy-stretch-long.png"
+        exit 0
+    fi
+    if [ "$TARGET" = journeymap-labels ]; then
+        grep -q 'journeymap-labels PASS' "$RUN_OUT/client.log"
         exit 0
     fi
     if [ "$TARGET" = canopy-pilot-hud ]; then
