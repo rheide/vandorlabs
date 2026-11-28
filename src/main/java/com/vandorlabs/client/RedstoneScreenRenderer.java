@@ -204,7 +204,10 @@ final class RedstoneScreenRenderer {
                 }else{
                     statusText(font,elevation,8,79,50,0xC1E8FF);
                     statusText(font,autopilot==null?motion:autopilot.status,59,79,61,0xCEE9ED);
-                    statusText(font,location,8,89,112,0xC1E8FF);
+                    // A greyed Flight button explains itself in place of the ground clearance.
+                    String blocker=VehicleStatus.flightBlocker(craft,Minecraft.getMinecraft().player);
+                    if(blocker!=null)statusText(font,blocker,8,89,112,0xFFD19B);
+                    else statusText(font,location,8,89,112,0xC1E8FF);
                     statusText(font,fuel,8,99,112,0xC1E8FF);
                 }
             }

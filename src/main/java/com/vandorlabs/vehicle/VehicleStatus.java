@@ -63,8 +63,7 @@ public final class VehicleStatus {
         boolean taxi=transitioning||VehicleSkiTraction.allowed(craft)&&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft));
         if(taxi)modes|=1<<VehicleStatusLayout.TAXI;
         if(craft.hoverAvailable())modes|=1<<VehicleStatusLayout.HOVER;
-        if(!transitioning&&!craft.autopilot.enabled()&&craft.flightReadout().canFly()&&player!=null&&craft.getControllingPassenger()==player
-                &&(craft.hover||taxi&&(craft.onGround||craft.groundClearance()<=.001)&&VehicleLandingGear.extended(craft)))modes|=1<<VehicleStatusLayout.FLIGHT;
+        if(!transitioning&&flightBlocker(craft,player)==null)modes|=1<<VehicleStatusLayout.FLIGHT;
         if((!transitioning||craft.flightLanded())&&!craft.cruise.active()&&craft.stopped()
                 &&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft))
                 &&Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(craft.rotationYaw-Math.round(craft.rotationYaw/90F)*90F))<=12)
@@ -72,6 +71,25 @@ public final class VehicleStatus {
         if (highModeLocked(craft,VehicleStatusLayout.TAXI))
             modes &= ~((1<<VehicleStatusLayout.TAXI)|(1<<VehicleStatusLayout.HOVER));
         return modes;
+    }
+    /**
+     * Why a carried craft cannot select Flight now, or null when it can (or is already flying). The client
+     * draws the Flight button and this reason from the same rule, so the Status screen explains a greyed button.
+     */
+    public static String flightBlocker(EntityGroundVehicle craft,net.minecraft.entity.player.EntityPlayer player){
+        if(craft==null||craft.structure==null||craft.flying()||craft.takeoffRoll())return null;
+        VehicleFlightReadout readout=craft.flightReadout();
+        if(readout.drives==0)return "Flight needs a Maxwell Drive";
+        if(readout.thrust<=0)return readout.fuel<=0?"Flight: fuel the Maxwell Drive":"Flight: Maxwell Drive has no throttle";
+        if(readout.effectiveMass<=0)return "Flight: weighing the craft...";
+        if(!readout.canFly())return "Flight: weight "+Math.round(readout.effectiveMass)+" > limit "+(long)Math.floor(readout.takeoffMass());
+        if(player==null||craft.getControllingPassenger()!=player)return "Flight: sit in the Pilot Seat";
+        if(craft.autopilot.enabled())return "Flight: turn off Autonav";
+        if(craft.hover)return null;
+        if(!VehicleSkiTraction.allowed(craft))return "Flight: needs wheels, or skis on ice";
+        if(!VehicleLandingGear.extended(craft))return "Flight: extend the landing gear";
+        if(!craft.onGround&&craft.groundClearance()>.001)return "Flight: settle on the ground";
+        return null;
     }
     public static boolean offersEmergencyPark(World world,net.minecraft.entity.player.EntityPlayer player){
         EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;

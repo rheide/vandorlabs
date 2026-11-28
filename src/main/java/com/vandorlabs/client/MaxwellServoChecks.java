@@ -67,8 +67,9 @@ final class MaxwellServoChecks {
         int stored=tank.tank.getFluidAmount(),inDrive=engine.maxwellFuel(),inDuct=buffer.getFluidAmount();
         String state="tank="+stored+" drive="+inDrive+" duct="+inDuct+" capacity="+buffer.getCapacity();
         if(stored+inDrive+inDuct!=16000)throw new IllegalStateException("Lost fluid: "+state);
-        int expectedDuct=longerNetwork?15000:6000;
-        if(inDrive==1000&&inDuct==expectedDuct&&stored==15000-expectedDuct){
+        int expectedDuct=longerNetwork?15000:6000,capacity=engine.maxwellCapacity();
+        // The drive keeps its own sized tank (250 mB for a 3 x 3 x 4 since 3.1); the duct grid holds its buffer.
+        if(inDrive==capacity&&inDuct==Math.min(expectedDuct,16000-capacity)&&stored==16000-capacity-inDuct){
             if(++stable<15)return false;
             System.out.println("[vandorlabs] Maxwell servo PASS "+state+" total=16000");
             if(longerNetwork)return true;
