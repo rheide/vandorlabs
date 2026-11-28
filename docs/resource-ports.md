@@ -71,7 +71,7 @@ craft. Set the face touching the RF route to Output where the storage block
 offers face settings. Use Thermal Dynamics Fluxducts, Mekanism Universal Cables,
 or Galacticraft Aluminum Wire to reach the down-facing Power Port under the
 centre of a Survey Dish or Sentinel Array. A direct connection to that face
-also works. In Flight, a [Module Rack Battery Module](module-rack.md#battery-module)
+also works. On a moving craft, a [Module Rack Battery Module](module-rack.md#battery-module)
 on the craft covers whatever this wired supply does not deliver.
 
 Use Thermal Dynamics Fluiducts, Mekanism Mechanical Pipes, or Galacticraft Fluid

@@ -165,7 +165,8 @@ public final class VehicleResources {
                 Channel channel=channels.get(nextChannel);nextChannel=(nextChannel+1)%size;
                 work=channel.transfer(view,work);
             }
-            if(craft.flying()&&!racks.isEmpty())supplyObserversFromRacks(view);
+            // Carried racks act as connected batteries in every vehicle mode, like the APU-style vehicle RF bus.
+            if(!racks.isEmpty())supplyObserversFromRacks(view);
             for(TileEntityConstructor observer:observers)if(live(observer))observer.sampleCarriedObserver();
         }finally{
             view.controlUpdates=controlUpdates;

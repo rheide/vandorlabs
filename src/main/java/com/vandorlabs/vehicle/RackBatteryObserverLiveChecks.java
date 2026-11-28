@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.concurrent.Future;
 
 /**
- * A captured Module Rack Battery Module powers a carried Survey Dish only in Flight, while a
+ * A captured Module Rack Battery Module powers a carried Survey Dish in Taxi, Hover and Flight, while a
  * Sentinel Array keeps its wired Battery Block supply. The charge survives save, parking and
  * recapture, and keeps powering the dish in high cruise.
  */
@@ -35,7 +35,8 @@ import java.util.concurrent.Future;
 public final class RackBatteryObserverLiveChecks {
     private static final BlockPos ROOT=new BlockPos(149,150,149);
     private static final BlockPos RACK=ROOT.add(2,0,0),DISH=ROOT.add(1,0,3),ARRAY=ROOT.add(6,0,3),DRIVE=ROOT.add(5,0,6),PARK=ROOT.add(20,-2,0);
-    private static final int WIRED_CHARGE=60000;
+    private static final int WIRED_CHARGE=60000,NAV_CHANNEL=642;
+    private static volatile boolean clientDishPowered,clientDishScanning;
     private static Future<Boolean> pending;
     private static int stage,ticks,total,attempts;
     private static volatile EntityGroundVehicle craft;
@@ -78,18 +79,19 @@ public final class RackBatteryObserverLiveChecks {
             require(charged==WIRED_CHARGE,"charged the carried wired Battery Block: "+charged);
             next();return false;
         }
-        if(stage==2){ // Taxi: wired supply only, rack battery untouched.
+        if(stage==2){ // Taxi: the rack battery already powers the dish.
             if(ticks==10)sample(world);
             if(ticks<50)return false;
-            requireIdle(world,"Taxi");
+            requireDraw(world,"Taxi");
+            require(!navigationNoPower(),"Taxi: a carried display on the dish channel reports power");
             craft.hover=true;craft.hoverTarget=craft.posY+12;craft.setPosition(craft.posX,craft.hoverTarget,craft.posZ);
             next();return false;
         }
-        if(stage==3){ // Hover: still no rack draw.
+        if(stage==3){ // Hover: still drawing.
             if(ticks==10)sample(world);
             if(ticks<50)return false;
             require(craft.vehicleMode()==2,"craft reports Hover");
-            requireIdle(world,"Hover");
+            requireDraw(world,"Hover");
             next();return false;
         }
         if(stage==4){
@@ -100,7 +102,9 @@ public final class RackBatteryObserverLiveChecks {
             require(craft.flying(),"craft remains in powered Flight: "+state());
             if(ticks==10){sample(world);return false;}
             if(ticks<70)return false;
-            requireFlightDraw(world,"powered Flight");
+            requireDraw(world,"powered Flight");
+            require(!navigationNoPower(),"Flight: a carried display on the dish channel no longer reports NO POWER");
+            require(clientDishPowered&&clientDishScanning,"Flight: the client's carried Survey Dish shows power and scanning (animation): powered="+clientDishPowered+" scanning="+clientDishScanning);
             NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());
             EntityGroundVehicle reloaded=new EntityGroundVehicle(world);reloaded.readFromNBT(saved);
             try{
@@ -118,9 +122,15 @@ public final class RackBatteryObserverLiveChecks {
         if(stage==7){
             if(ticks==10)sample(world);
             if(ticks<50)return false;
-            requireIdle(world,"Taxi after Flight");
             int charge=rack(craft).batteryEnergy();
-            require(charge<ModuleBatteryData.CAPACITY,"Flight spent rack charge");
+            if(charge>=ObserverPower.RF_PER_TICK)requireDraw(world,"Taxi after Flight");
+            else{
+                // An empty rack leaves the dish unpowered and the carried display says so.
+                require(!observer(dishLocal).observerPowered(),"empty rack leaves the Survey Dish unpowered");
+                require(navigationNoPower(),"empty rack: a carried display on the dish channel reports NO POWER");
+            }
+            charge=rack(craft).batteryEnergy();
+            require(charge<ModuleBatteryData.CAPACITY,"carried modes spent rack charge");
             require(clientSeen>=charge&&clientSeen<ModuleBatteryData.CAPACITY,"client vehicle view receives the spent rack charge: "+clientSeen);
             craft.stopForParking();craft.rotationYaw=assembledYaw;craft.setPosition(PARK.getX(),PARK.getY(),PARK.getZ());
             sampleRack=charge;
@@ -163,9 +173,9 @@ public final class RackBatteryObserverLiveChecks {
             require(craft.flying()&&craft.cruise.active(),"craft remains in high cruise: "+state());
             if(ticks==10){sample(world);return false;}
             if(ticks<60)return false;
-            requireFlightDraw(world,"high cruise");
-            System.out.println("[vandorlabs] rack-battery-observers PASS Taxi/Hover hold charge, Flight and cruise draw "+ObserverPower.RF_PER_TICK
-                    +" RF/t for the dish only, wired array unchanged, save/park/recapture keep charge; flight spent "+flightDrawn+" RF");
+            requireDraw(world,"high cruise");
+            System.out.println("[vandorlabs] rack-battery-observers PASS Taxi, Hover, Flight and cruise draw "+ObserverPower.RF_PER_TICK
+                    +" RF/t for the dish only, carried display and client dish show power, wired array unchanged, save/park/recapture keep charge; spent "+flightDrawn+" RF");
             return true;
         }
         return false;
@@ -187,7 +197,8 @@ public final class RackBatteryObserverLiveChecks {
         ItemStack battery=new ItemStack(ModItems.BATTERY_MODULE);ModuleBatteryData.receive(battery,ModuleBatteryData.CAPACITY,false);
         require(((TileEntityModuleRack)world.getTileEntity(RACK)).insertModule(0,battery,true),"charged Battery Module installs in the rack");
         TileEntityConstructor drive=MaxwellRuntimeChecks.assemble(world,DRIVE,4,EnumFacing.NORTH,0,0);
-        require(MaxwellRuntimeChecks.inlet(drive,drive.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,"fuel the drive");
+        int tank=drive.maxwellCapacity();
+        require(MaxwellRuntimeChecks.inlet(drive,drive.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),tank),true)==tank,"fuel the drive to its sized tank: "+tank);
         TileEntityConstructor dish=formed(world,DISH,"standalone_dish",3,3,3),array=formed(world,ARRAY,"standalone_antenna",2,4,2);
         BlockPos wired=array.observerPowerPort().down();
         require(world.getBlockState(dish.observerPowerPort().down()).getBlock()==Blocks.STONE,"dish inlet has no wired supply");
@@ -196,6 +207,8 @@ public final class RackBatteryObserverLiveChecks {
         ((TileEntityBattery)world.getTileEntity(wired)).place(EnumFacing.DOWN);
         DeferredTileLoad.flush(world);
         require(dish.screenOn()&&array.screenOn()&&dish.observerScanEnabled()&&array.observerScanEnabled(),"observers are on and scanning-enabled before capture");
+        // A carried navigation display listens on the dish's channel, as in the reported craft.
+        com.vandorlabs.redstone.TransmitterSlots.configure(dish,com.vandorlabs.redstone.ChannelList.of(NAV_CHANNEL),256,false);
         VehicleScan scan=new VehicleScan(world,ROOT);scan.holdSource();
         for(int i=0;i<300&&!scan.step(128);i++){}
         require(scan.result!=null,"source scan "+scan.error);
@@ -231,15 +244,7 @@ public final class RackBatteryObserverLiveChecks {
     private static void sample(WorldServer world){
         sampleTime=world.getTotalWorldTime();sampleRack=rack(craft).batteryEnergy();sampleWired=wired().stored();
     }
-    private static void requireIdle(WorldServer world,String mode){
-        long elapsed=world.getTotalWorldTime()-sampleTime;
-        require(elapsed>=30,mode+" observed long enough: "+elapsed);
-        require(rack(craft).batteryEnergy()==sampleRack,mode+" leaves the rack battery untouched: "+sampleRack+" -> "+rack(craft).batteryEnergy());
-        require(!observer(dishLocal).observerPowered(),mode+" leaves the rack-only Survey Dish unpowered");
-        require(observer(arrayLocal).observerPowered()&&observer(arrayLocal).observerScanning(),mode+" keeps the wired Sentinel Array powered");
-        require(wired().stored()<sampleWired,mode+" draws the array's wired Battery Block");
-    }
-    private static void requireFlightDraw(WorldServer world,String mode){
+    private static void requireDraw(WorldServer world,String mode){
         long elapsed=world.getTotalWorldTime()-sampleTime;
         int drawn=sampleRack-rack(craft).batteryEnergy(),wiredDrawn=sampleWired-wired().stored();
         require(elapsed>=40,mode+" observed long enough: "+elapsed);
@@ -254,12 +259,21 @@ public final class RackBatteryObserverLiveChecks {
     private static void clientChecks(Minecraft client){
         EntityGroundVehicle craft=RackBatteryObserverLiveChecks.craft;
         if(stage<5||stage>7||craft==null||rackLocal==null)return;
+        Entity carried=client.world==null?null:client.world.getEntityByID(craft.getEntityId());
+        if(stage==5&&ticks>=40&&carried instanceof EntityGroundVehicle&&((EntityGroundVehicle)carried).view!=null){
+            TileEntity dish=((EntityGroundVehicle)carried).view.getTileEntity(dishLocal);
+            if(dish instanceof TileEntityConstructor){clientDishPowered|=((TileEntityConstructor)dish).observerPowered();clientDishScanning|=((TileEntityConstructor)dish).observerScanning();}
+        }
         Entity entity=client.world==null?null:client.world.getEntityByID(craft.getEntityId());
         if(!(entity instanceof EntityGroundVehicle)||((EntityGroundVehicle)entity).view==null)return;
         TileEntity tile=((EntityGroundVehicle)entity).view.getTileEntity(rackLocal);
         if(tile instanceof TileEntityModuleRack&&((TileEntityModuleRack)tile).batteryEnergy()<ModuleBatteryData.CAPACITY)clientSeen=((TileEntityModuleRack)tile).batteryEnergy();
     }
 
+    /** What a carried navigation screen at the pilot seat shows: the server's NO POWER state for the dish channel. */
+    private static boolean navigationNoPower(){
+        return com.vandorlabs.navigation.NavigationSources.noPower(craft.view,ROOT.subtract(origin),com.vandorlabs.redstone.ChannelList.of(NAV_CHANNEL));
+    }
     private static TileEntityModuleRack rack(EntityGroundVehicle vehicle){
         TileEntity tile=vehicle.view==null?null:vehicle.view.getTileEntity(rackLocal);
         require(tile instanceof TileEntityModuleRack,"carried Module Rack at "+rackLocal);

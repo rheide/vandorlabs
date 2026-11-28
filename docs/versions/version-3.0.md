@@ -80,7 +80,7 @@ Place two or more Canopies side by side facing the same direction, or use a row 
 
 Connect an onboard tank's output to a Maxwell inlet with a compatible fluid pipe. For example, a Mekanism Mechanical Pipe can supply the engine from storage, and a Thermal Dynamics Fluxduct can carry RF from an unlinked RFTools Power Cell to the bottom of a Survey Dish. An Arm can pass its selected resource between its base and tip once it reaches a settled position. See the [onboard connection guide](../resource-ports.md#vehicle-mode-on-forge-1122) for supported pipes, storage and endpoint settings.
 
-In Flight, a charged Battery Module in a [Module Rack](../module-rack.md#battery-module) anywhere on the craft also powers each switched-on Survey Dish and Sentinel Array at 20 RF per tick. Wired supply is used first, and the rack covers the rest. The modules stay untouched in Taxi and Hover, and their charge carries through saving, parking and recapture.
+In Taxi, Hover and Flight, a charged Battery Module in a [Module Rack](../module-rack.md#battery-module) anywhere on the craft also powers each switched-on Survey Dish and Sentinel Array at 20 RF per tick. Wired supply is used first, and the rack covers the rest. Their charge carries through saving, parking and recapture.
 
 ## Reading a channel
 
