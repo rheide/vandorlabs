@@ -35,6 +35,7 @@ public class ModBlocks {
 
     public static Block ANIMATED_SCREEN_SELECTOR;
     public static Block PROGRAMMABLE_CONSOLE;
+    public static Block PROGRAMMABLE_DISPLAY_ARM;
     public static Block PROGRAMMABLE_WALL;
     public static Block PROGRAMMABLE_BLOCK;
     public static Block PROGRAMMABLE_STORAGE;
@@ -213,6 +214,8 @@ public class ModBlocks {
         add(ANIMATED_SCREEN_SELECTOR);
         PROGRAMMABLE_CONSOLE = new BlockProgrammableConsole();
         add(PROGRAMMABLE_CONSOLE);
+        PROGRAMMABLE_DISPLAY_ARM = new BlockDisplayArm();
+        add(PROGRAMMABLE_DISPLAY_ARM);
         PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
                 BlockProgrammableWall.Shape.PLAIN));
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
@@ -492,6 +495,7 @@ public class ModBlocks {
             if (!NO_ITEM.contains(block)) {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
+                        : block == PROGRAMMABLE_DISPLAY_ARM ? new com.vandorlabs.items.ItemDisplayArm(block)
                         : block instanceof BlockCockpit || block instanceof BlockCockpitPeripheral ? new com.vandorlabs.items.ItemCockpit(block)
                         : block instanceof com.vandorlabs.programmer.ProgrammerBlock ? new com.vandorlabs.programmer.ProgrammerBlock.BlockItem(block)
                         : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
@@ -514,6 +518,7 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/screen_white"));
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/port"));
         for(int size=0;size<2;size++)for(int tint=0;tint<com.vandorlabs.tiles.GlassTextures.TINT_COUNT;tint++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
             event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size,tint)));
@@ -880,6 +885,9 @@ public class ModBlocks {
             }
         }
         ModelResourceLocation diagonalScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_screen","inventory");
+        ModelResourceLocation displayArmItem=new ModelResourceLocation("vandorlabs:programmable_display_arm","inventory");
+        if(event.getModelRegistry().getObject(displayArmItem)!=null)
+            event.getModelRegistry().putObject(displayArmItem,new com.vandorlabs.client.DisplayArmItemModel(event.getModelRegistry().getObject(displayArmItem)));
         if(event.getModelRegistry().getObject(diagonalScreenItem)!=null)
             event.getModelRegistry().putObject(diagonalScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(diagonalScreenItem)));
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");

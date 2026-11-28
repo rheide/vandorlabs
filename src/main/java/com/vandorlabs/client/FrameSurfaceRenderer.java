@@ -16,6 +16,8 @@ final class FrameSurfaceRenderer {
     private static final java.util.Map<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector,java.util.Map<ScreenSurface.Quad,Content>> CONTENT=new java.util.WeakHashMap<>();
     private static final class Content {double l,r,t,b;ScreenSurface.Quad quad;}
     static boolean applies(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
+        if(tile instanceof com.vandorlabs.tiles.TileEntityDisplayArm
+                &&quad==((com.vandorlabs.tiles.TileEntityDisplayArm)tile).geometry().surface(1))return false;
         net.minecraft.block.Block block=tile.getBlockType();
         return !(block instanceof com.vandorlabs.blocks.BlockProgrammableConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole)
             ||quad!=ScreenSurface.input(com.vandorlabs.render.InputSurfaceLayout.halfConsoleFront())&&quad!=com.vandorlabs.blocks.ScreenChipSupport.deck();

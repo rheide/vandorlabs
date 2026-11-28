@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [" S ", " I ", "AAA"],
+  "key": {
+    "S": { "item": "vandorlabs:programmable_input" },
+    "I": { "item": "minecraft:iron_bars" },
+    "A": { "item": "vandorlabs:industrial_alloy_ingot" }
+  },
+  "result": { "item": "vandorlabs:programmable_display_arm", "count": 1 }
+}

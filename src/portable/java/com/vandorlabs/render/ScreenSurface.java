@@ -58,6 +58,10 @@ public final class ScreenSurface {
     private static final Quad HALF_DIAGONAL=new Quad(0,16,2.125,10.125,7.425,15.425);
     private static final Quad HALF_DIAGONAL_UPPER=new Quad(.5,15.5,8.575,15.425,13.875,10.125);
     private ScreenSurface() { }
+    /** Canonical X-aligned surface for independently posed displays and input decks. */
+    public static Quad quad(double x0,double x1,double bottomY,double bottomZ,double topY,double topZ) {
+        return new Quad(x0,x1,bottomY,bottomZ,topY,topZ);
+    }
     public static Quad quad(Kind kind,boolean inverted) {
         if (kind==Kind.CONSOLE) return CONSOLE;
         if (kind==Kind.DIAGONAL) return diagonal(inverted,false);

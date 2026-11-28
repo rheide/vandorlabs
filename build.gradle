@@ -409,6 +409,41 @@ task checkPortableBoundary(type: Exec) {
     commandLine pythonExecutable, 'tools/check_portable_boundary.py'
 }
 
+task testDisplayArmGeometry(type: JavaExec) {
+    group = 'verification'
+    description = 'Check mount-independent display poses, component rays and bounds'
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.display.DisplayArmGeometryTest'
+}
+
+task testDisplayArm(type: JavaExec) {
+    group = 'verification'
+    description = 'Check display arm persistence, placement, interaction transforms and packet limits'
+    dependsOn compileNonRenderingChecks, testDisplayArmGeometry
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DisplayArmChecks'
+}
+check.dependsOn testDisplayArm
+
+task testDisplayArmItems(type: JavaExec) {
+    group = 'verification'
+    description = 'Check configured display arm mesh, artwork and inventory padding'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DisplayArmItemModelChecks'
+}
+check.dependsOn testDisplayArmItems
+
+task testDisplayArmRotation(type: JavaExec) {
+    group = 'verification'
+    description = 'Check display arm mount and pose preservation through cardinal structure rotations'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DisplayArmRotationChecks'
+}
+check.dependsOn testDisplayArmRotation
+
 task testPortableParity(type: Exec) {
     group = 'verification'
     description = 'Compare shared contracts under Java 8 and Java 21'

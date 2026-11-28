@@ -81,5 +81,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageVehicleNavigationImage.Handler.class,MessageVehicleNavigationImage.class,id++,Side.CLIENT);
         INSTANCE.registerMessage(MessageCornerGlassGeometry.Handler.class,MessageCornerGlassGeometry.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageCruiseTerrain.Handler.class,MessageCruiseTerrain.class,id++,Side.CLIENT);
+        INSTANCE.registerMessage(MessageDisplayArm.Handler.class,MessageDisplayArm.class,id++,Side.SERVER);
     }
 }

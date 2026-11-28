@@ -17,7 +17,7 @@ Edit the generated file rather than replacing it with this partial example. The 
 | Key | Blocks |
 | --- | --- |
 | `screens` | Programmable Viewscreen |
-| `consoles_inputs` | Regular programmable consoles and inputs |
+| `consoles_inputs` | Regular programmable consoles, inputs and configurable display arms |
 | `programmable_solids` | Programmable blocks, walls, slabs, stairs, storage and portholes |
 | `diagonals` | All diagonal variants, including diagonal glass, screens, consoles and trapdoors |
 | `glass` | Regular programmable glass |

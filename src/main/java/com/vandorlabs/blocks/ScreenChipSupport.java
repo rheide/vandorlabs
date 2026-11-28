@@ -15,7 +15,7 @@ public final class ScreenChipSupport {
     private ScreenChipSupport(){}
     private static final ScreenSurface.Quad DECK=ScreenSurface.inset(ScreenSurface.input(com.vandorlabs.render.InputSurfaceLayout.halfConsoleFront()),.40,0,0,0);
     public static ScreenSurface.Quad deck(){return DECK;}
-    public static boolean integrated(Block block){return block instanceof BlockDiagonalHalfConsole||block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole||block instanceof BlockProgrammableDiagonalScreen;}
+    public static boolean integrated(Block block){return !(block instanceof BlockDisplayArm)&&(block instanceof BlockDiagonalHalfConsole||block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole||block instanceof BlockProgrammableDiagonalScreen);}
     public static int displaySlot(Block block){return block instanceof BlockProgrammableHalfConsole?1:0;}
     public static boolean selected(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())&&(tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.CHIP_SURFACE||tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.NAVIGATION_SURFACE);}
     public static TileEntityTokenSlot attached(TileEntityAnimatedScreenSelector tile){

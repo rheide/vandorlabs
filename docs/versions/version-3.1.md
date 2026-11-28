@@ -4,6 +4,10 @@ Vandor Labs 3.1 rebalances Forge 1.12.2 Flight so that a craft's weight, its dri
 
 Plan a build with the [flight calculator](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/flight-calculator.html), or open `docs/flight-calculator.html` from a checkout to use it offline. It shows every number below for your own craft, including a takeoff and climb profile, range by throttle and how long a trip takes. **Copy link** saves the build in a short link you can share.
 
+## Display Arm
+
+The Forge [Programmable Display Arm](../display-arm.md) combines full/half-height screens and an optional input deck in one block. Mount its plate on any block face, then set the screen's position and angles independently in the Arm tab.
+
 ## Maxwell Drive thrust
 
 Each Maxwell thrust unit now lifts **1,024 effective weight units** at takeoff, twice the 3.0 figure, on Forge and NeoForge. A single 3 × 3 × 4 drive takes a 1,000-unit craft off the ground, and every drive supports twice the weight at each altitude. The [Maxwell Drive guide](../multiblocks/maxwell-drive/README.md#how-many-drives-do-i-need) lists the new limits. Drive weight, tank size and burn per thrust unit are unchanged, so a craft that already flew now runs further below its takeoff limit: it needs a shorter runway, burns less fuel and climbs higher.

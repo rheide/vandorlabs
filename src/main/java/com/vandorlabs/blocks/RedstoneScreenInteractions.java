@@ -71,6 +71,8 @@ public final class RedstoneScreenInteractions {
         return tile.frameAppearance.hasFront()?ScreenSurface.framedSplit(quad):quad;
     }
     public static ScreenSurface.Quad surface(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot){
+        if(tile instanceof com.vandorlabs.tiles.TileEntityDisplayArm)
+            return ((com.vandorlabs.tiles.TileEntityDisplayArm)tile).geometry().surface(slot);
         if(slot>=TileEntityAnimatedScreenSelector.SPLIT_TOP)
             return ScreenSurface.half(splitSurface(tile,surface(state,tile,0)),slot==TileEntityAnimatedScreenSelector.SPLIT_TOP);
         net.minecraft.block.Block block=state.getBlock();
@@ -106,9 +108,23 @@ public final class RedstoneScreenInteractions {
         }
         return new Vec3d((lx+.5)*16,(ly+.5)*16,(lz+.5)*16);
     }
+    /** Display arms keep their artwork in a canonical plane and inverse-transform the ray. */
+    public static Vec3d local(Vec3d point,EnumFacing facing,TileEntityAnimatedScreenSelector tile){
+        if(tile instanceof com.vandorlabs.tiles.TileEntityDisplayArm){
+            com.vandorlabs.display.DisplayArmGeometry.Vec p=((com.vandorlabs.tiles.TileEntityDisplayArm)tile)
+                    .geometry().display.inverse(point.x*16,point.y*16,point.z*16);
+            return new Vec3d(p.x,p.y,p.z);
+        }
+        return local(point,facing);
+    }
+    private static boolean visibleSurface(TileEntityAnimatedScreenSelector tile,int slot){
+        return !(tile instanceof com.vandorlabs.tiles.TileEntityDisplayArm)
+                ||((com.vandorlabs.tiles.TileEntityDisplayArm)tile).geometry().hasSurface(slot);
+    }
     public static double hitColumn(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
+        if(!visibleSurface(tile,slot))return -1;
         ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);
-        Vec3d a=local(start,face),d=local(end,face).subtract(a);
+        Vec3d a=local(start,face,tile),d=local(end,face,tile).subtract(a);
         double denom=q.ny*d.y+q.nz*d.z;if(denom>=-1e-8)return -1;
         double t=(q.ny*(q.topRight.y-a.y)+q.nz*(q.topRight.z-a.z))/denom;
         return t<0 || t>1?-1:(q.topRight.x-a.add(d.scale(t)).x)/(q.topRight.x-q.topLeft.x)*128;
@@ -140,8 +156,9 @@ public final class RedstoneScreenInteractions {
         return com.vandorlabs.vehicle.VehicleStatus.panelAction(tile.getSurfaceTexture(slot),height,x,y);
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){
+        if(!visibleSurface(tile,slot))return -1;
         ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);
-        Vec3d a=local(start,face),d=local(end,face).subtract(a);
+        Vec3d a=local(start,face,tile),d=local(end,face,tile).subtract(a);
         double denom=q.ny*d.y+q.nz*d.z;if(denom>=-1e-8)return -1;
         double t=(q.ny*(q.topRight.y-a.y)+q.nz*(q.topRight.z-a.z))/denom;
         if(t<0 || t>1)return -1;

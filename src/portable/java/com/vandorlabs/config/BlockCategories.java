@@ -18,7 +18,7 @@ public final class BlockCategories {
         if(id.startsWith("rocket_thruster")||id.startsWith("ion_drive")||id.startsWith("plasma_vent")
                 ||id.startsWith("impulse_engine")||id.equals("antigravity_plate")
                 ||id.equals("repulsor_array")||id.equals("vertical_hover_thruster"))return "propulsion";
-        if(id.contains("console")||id.contains("input"))return "consoles_inputs";
+        if(id.equals("programmable_display_arm")||id.contains("console")||id.contains("input"))return "consoles_inputs";
         if(id.contains("screen")||id.equals("programmable_viewscreen"))return "screens";
         if(id.startsWith("programmable_light"))return "lighting";
         if(id.startsWith("programmable_")&&!id.equals("programmable_trigger_block"))return "programmable_solids";

@@ -412,6 +412,10 @@ public class TEAnimatedScreenSelector
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
         if(te.isInvalid()||state.getBlock()!=te.getBlockType())return;
+        if(te instanceof com.vandorlabs.tiles.TileEntityDisplayArm){
+            renderDisplayArm((com.vandorlabs.tiles.TileEntityDisplayArm)te,x,y,z);
+            return;
+        }
         ScreenChipRenderer.reader(te,state,x,y,z,partialTicks);
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass || state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isPortholeShape())if(GlazingRenderOrder.handle(te,x,y,z,partialTicks,destroyStage,alpha))return;
         if(te.initializeDisplayArtwork(state.getBlock()))com.vandorlabs.tiles.GlassMaterials.changed();
@@ -651,6 +655,59 @@ public class TEAnimatedScreenSelector
 
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
+    }
+
+    private static final Map<com.vandorlabs.display.DisplayArmGeometry,java.nio.FloatBuffer> ARM_POSES=new java.util.WeakHashMap<>();
+
+    /** Mount geometry is in block space; only the display surfaces receive the display pose. */
+    private static void renderDisplayArm(com.vandorlabs.tiles.TileEntityDisplayArm tile,double x,double y,double z){
+        com.vandorlabs.display.DisplayArmGeometry geometry=tile.geometry();
+        java.nio.FloatBuffer pose=ARM_POSES.get(geometry);
+        if(pose==null){
+            com.vandorlabs.display.DisplayArmGeometry.Pose p=geometry.display;
+            pose=org.lwjgl.BufferUtils.createFloatBuffer(16);
+            pose.put(new float[]{(float)p.xAxis.x,(float)p.xAxis.y,(float)p.xAxis.z,0,
+                    (float)p.yAxis.x,(float)p.yAxis.y,(float)p.yAxis.z,0,
+                    (float)p.zAxis.x,(float)p.zAxis.y,(float)p.zAxis.z,0,
+                    (float)p.center.x,(float)p.center.y,(float)p.center.z,1}).flip();
+            ARM_POSES.put(geometry,pose);
+        }
+        GlStateManager.pushMatrix();
+        try{
+            GlStateManager.translate(x,y,z);
+            GlStateManager.scale(1D/16,1D/16,1D/16);
+            GlStateManager.disableLighting();
+            GlStateManager.enableCull();
+            GlStateManager.color(1,1,1,1);
+            bindAtlas();setWorldLight(tile);
+            BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+            buffer.setTranslation(0,0,0);
+            buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+            DisplayArmMesh.draw(buffer,geometry,wallSprite(tile),Minecraft.getMinecraft().getTextureMapBlocks()
+                    .getAtlasSprite("vandorlabs:blocks/screen_white"),tile.getWorld().getCombinedLight(tile.getPos(),0));
+            Tessellator.getInstance().draw();
+            pose.rewind();GlStateManager.multMatrix(pose);
+            for(int slot=0;slot<(geometry.settings.input?2:1);slot++){
+                ScreenSurface.Quad quad=geometry.surface(slot);
+                if(!redstoneFace(tile,slot)){
+                    double[] uv=slot==0?bindScreenSurfaceNative(tile):bindInput(tile,tile.getInputPanel(),1);
+                    if(tile.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_OFF)setWorldLight(tile);
+                    else OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
+                    buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+                    if(slot==0&&tile.splitDisplay())drawSplitScreen(tile,FrameSurfaceRenderer.content(tile,quad),buffer);
+                    else{
+                        double u0=uv.length>2?uv[2]:0,u1=uv.length>2?uv[3]:1;
+                        drawScreenQuad(buffer,FrameSurfaceRenderer.content(tile,quad),slot==0?u0:u1,slot==0?u1:u0,uv[0],uv[1],false);
+                    }
+                    Tessellator.getInstance().draw();
+                }
+                FrameSurfaceRenderer.screen(tile,quad);
+            }
+        }finally{
+            GlStateManager.color(1,1,1,1);
+            GlStateManager.enableLighting();GlStateManager.enableCull();
+            GlStateManager.popMatrix();
+        }
     }
 
     private static void beginLocalTransform(double x, double y, double z,
@@ -1528,6 +1585,7 @@ public class TEAnimatedScreenSelector
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
+        ARM_POSES.clear();
         NavigationMapRenderer.clear();NavigationModuleRenderer.clear();
         PortholeGroupCache.clear();
         LightGroupCache.clear();

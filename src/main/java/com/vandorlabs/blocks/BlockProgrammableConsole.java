@@ -16,7 +16,11 @@ public class BlockProgrammableConsole extends BlockAnimatedScreenSelector {
     public static final String NAME = "programmable_console";
 
     public BlockProgrammableConsole() {
-        super(NAME);
+        this(NAME);
+    }
+
+    protected BlockProgrammableConsole(String name) {
+        super(name);
         setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
     }
 

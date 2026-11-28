@@ -60,6 +60,10 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 
 ## What's in the mod
 
+- **Programmable Display Arm (Forge)**: mount a thin display on any block face, then
+  choose full/half height, an optional input deck, screen direction, three position
+  offsets and yaw/tilt/roll in one dialog. See the [Display Arm guide](docs/display-arm.md).
+
 - Module Rack (Forge 1.12.2): four individually selectable slots for animated Blank Modules, vertical end handles, and a recessed panel with per-slot populated indicators. See the [Module Rack guide](docs/module-rack.md).
 
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall

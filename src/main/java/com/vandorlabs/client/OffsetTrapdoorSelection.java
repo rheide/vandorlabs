@@ -40,6 +40,8 @@ public final class OffsetTrapdoorSelection {
         RayTraceResult gear=com.vandorlabs.gear.GearInteractions.trace(mc.world,start,end);
         if(gear!=null&&(leaf==null||start.squareDistanceTo(gear.hitVec)<start.squareDistanceTo(leaf.hitVec)))leaf=gear;
         RayTraceResult segmented=com.vandorlabs.segmented.SegmentedDoorInteractions.trace(mc.world,start,end);if(segmented!=null&&(leaf==null||start.squareDistanceTo(segmented.hitVec)<start.squareDistanceTo(leaf.hitVec)))leaf=segmented;
+        RayTraceResult displayArm=com.vandorlabs.blocks.DisplayArmInteractions.trace(mc.world,start,end);
+        if(displayArm!=null&&(leaf==null||start.squareDistanceTo(displayArm.hitVec)<start.squareDistanceTo(leaf.hitVec)))leaf=displayArm;
         if(leaf!=null && (vanilla==null || vanilla.typeOfHit==RayTraceResult.Type.MISS || start.squareDistanceTo(leaf.hitVec)<=start.squareDistanceTo(vanilla.hitVec))) {
             mc.objectMouseOver=leaf;mc.pointedEntity=null;
         }

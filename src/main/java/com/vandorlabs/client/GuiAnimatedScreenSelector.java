@@ -58,6 +58,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private final boolean console;
     private final boolean diagonalScreen;
     private final boolean fullInput;
+    private final boolean displayArm;
+    private DisplayArmPane armPane;
 
     private ModBlocks.ScreenOption selectedOption;
     private boolean framed;
@@ -106,6 +108,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 .getBlock() instanceof BlockProgrammableDiagonalScreen;
         this.fullInput = te.getWorld() != null && te.getWorld().getBlockState(pos)
                 .getBlock() instanceof BlockProgrammableFullInput;
+        this.displayArm = te instanceof com.vandorlabs.tiles.TileEntityDisplayArm;
+        if (displayArm) textureTab = 11;
         this.xSize = 420;
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
@@ -180,6 +184,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private FrameAppearancePane framePane;
     private boolean splitPage(){return textureTab==0&&!rowsPage()&&framePane!=null&&framePane.splitDisplay();}
     private boolean framePage(){return textureTab==10;}
+    private boolean armPage(){return displayArm&&textureTab==11;}
     private DisplayActivationPane activationPane;
     private ReceiverPane receiver;
     @Override public void initGui() {
@@ -217,6 +222,42 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
         if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te).splitRedstone(this::openRows);framePane.initDisplay(buttonList);}
         if(activationPane==null)activationPane=new DisplayActivationPane(this,te,false);activationPane.init(layout,buttonList,textureTab,console?3:2);
+        if(displayArm){
+            addArmTab();
+            if(armPage()){
+                for(GuiButton button:buttonList)if(button.id!=20&&!isTopTab(button.id))button.visible=false;
+                channelField.setVisible(false);
+                if(armPane==null)armPane=new DisplayArmPane((com.vandorlabs.tiles.TileEntityDisplayArm)te);
+                armPane.init(layout,buttonList);
+            }
+        }
+    }
+
+    private static boolean isTopTab(int id){return id>=90&&id<=93||id==197||id==199||id>=650&&id<=653;}
+
+    /** Activation may expand Displays into several state tabs; reserve space for Arm afterwards. */
+    private void addArmTab(){
+        GuiButton arm=layout.fullTab(199,0,1,"Arm");arm.enabled=!armPage();
+        List<GuiButton> tabs=new ArrayList<>();
+        for(GuiButton button:buttonList)if(isTopTab(button.id))tabs.add(button);
+        tabs.sort(Comparator.comparingInt(button->button.x));
+        tabs.add(arm);
+        int available=layout.width-24-2*(tabs.size()-1),minimum=0;
+        int[] widths=new int[tabs.size()];
+        for(int index=0;index<tabs.size();index++){
+            widths[index]=fontRenderer.getStringWidth(tabs.get(index).displayString)+8;
+            minimum+=widths[index];
+        }
+        int extra=Math.max(0,available-minimum),x=layout.left+12;
+        for(int index=0;index<tabs.size();index++){
+            GuiButton button=tabs.get(index);
+            int tabWidth=minimum>available?available/tabs.size():widths[index]+extra/tabs.size();
+            if(index==tabs.size()-1)tabWidth=layout.left+layout.width-12-x;
+            button.x=x;button.y=layout.top+30;button.width=tabWidth;
+            button.displayString=fontRenderer.trimStringToWidth(button.displayString,Math.max(0,tabWidth-4));
+            x+=tabWidth+2;
+        }
+        buttonList.add(arm);
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
 
@@ -259,6 +300,11 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        if(armPage()){
+            if((button.id==20||isTopTab(button.id))&&!armPane.commit())return;
+            if(armPane.action(button))return;
+        }
+        if(button.id==199){textureTab=11;initGui();return;}
         if(activationPane.action(button)){if(button.id>=650&&button.id<=653){textureTab=0;rowSlot=-1;}redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
         if(button.id==198)return;
 
@@ -351,6 +397,13 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if(armPage()){
+            if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,
+                    DisplayArmPane.SIZE,DisplayArmPane.INPUT,DisplayArmPane.FACING))return;
+            armPane.click(mouseX,mouseY,mouseButton);
+            super.mouseClicked(mouseX,mouseY,mouseButton);
+            return;
+        }
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,33,640,641))return;
         if(mouseButton==0)for(GuiButton option:new java.util.ArrayList<>(buttonList))if((option.id==640||option.id==641)&&option.visible&&option.mousePressed(mc,mouseX,mouseY)){option.playPressSound(mc.getSoundHandler());actionPerformed(option);return;}
         if(activationPane.active()){activationPane.click(mouseX,mouseY,mouseButton);super.mouseClicked(mouseX,mouseY,mouseButton);return;}
@@ -385,6 +438,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if(armPage()){super.mouseClickMove(mouseX,mouseY,clickedMouseButton,timeSinceLastClick);return;}
         if(activationPane.active()){activationPane.drag(mouseY);return;}
         if(framePage()||splitPage()){framePane.drag(mouseY);return;}
         if (housingList != null && housingList.drag(mouseY)) return;
@@ -409,6 +463,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
+        if(armPage())return;
         int wheel = Mouse.getEventDWheel();if(activationPane.active()){activationPane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()||splitPage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
         if (textureTab==(console?2:1) && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
@@ -418,6 +473,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if(armPage()&&armPane.key(typedChar,keyCode))return;
         if(activationPane.key(typedChar,keyCode))return;
         if(rowsPage()&&rowEditors[rowSlot].key(typedChar,keyCode))return;
         if (channelField.getVisible() && channelField.textboxKeyTyped(typedChar,keyCode)) {
@@ -433,7 +489,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         drawDefaultBackground();
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        fontRenderer.drawString(I18n.format(console?"gui.vandorlabs.console.title":fullInput?"gui.vandorlabs.full_input.title":diagonalScreen?"gui.vandorlabs.diagonal_screen.title":"gui.vandorlabs.selector.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        fontRenderer.drawString(displayArm?"Programmable Display Arm":I18n.format(console?"gui.vandorlabs.console.title":fullInput?"gui.vandorlabs.full_input.title":diagonalScreen?"gui.vandorlabs.diagonal_screen.title":"gui.vandorlabs.selector.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(!activationPane.active()){
         if(rowsPage())rowEditors[rowSlot].draw();else if(textureTab==0&&!splitPage())screenList.draw(fontRenderer,mouseX,mouseY);
         else if(console && textureTab==1)inputList.draw(fontRenderer,mouseX,mouseY);
@@ -443,10 +499,12 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         }
         if(textureTab==(console?3:2))receiver.drawLabel();
         if(framePage()||splitPage())framePane.draw(mouseX,mouseY);
+        if(armPage())armPane.draw();
         DialogHeader.logo(guiLeft,guiTop,xSize);activationPane.draw(mouseX,mouseY);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
+        if(armPage())armPane.drawFields();
     }
 
-    @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }
+    @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter();if(armPage())armPane.tick(); }
     @Override public void onGuiClosed() { super.onGuiClosed(); Keyboard.enableRepeatEvents(false); }
 
     @Override

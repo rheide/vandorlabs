@@ -662,6 +662,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.shapeDialogChecksOnly")){try{if(ShapeDialogChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Shape dialog focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.glassDialogChecksOnly")){try{if(GlassDialogChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Glass dialog focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.mountedControlDialogChecksOnly")){try{if(MountedControlDialogChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Mounted control dialog focus",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.displayArmChecksOnly")){try{if(DisplayArmDialogChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Display arm focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.controlLatchLevelsChecksOnly")){try{if(ControlLatchRuntimeChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Control latch levels focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.stairSettingsChecksOnly")){try{
             if(++holdTicks==40)mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(300.5,42,142.5,0,0)).get();

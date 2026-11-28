@@ -28,7 +28,7 @@ public final class DisplayJoinGeometry {
     public static boolean installed(TileEntityAnimatedScreenSelector tile){net.minecraft.world.World world=tile.getWorld();return world!=null&&!tile.isInvalid()&&world.isBlockLoaded(tile.getPos(),false)&&world.getTileEntity(tile.getPos())==tile&&world.getBlockState(tile.getPos()).getBlock()==tile.getBlockType();}
     public static Basis basis(TileEntityAnimatedScreenSelector tile,IBlockState state){return new Basis(tile,state);}
     public static boolean supportsJoining(TileEntityAnimatedScreenSelector tile){
-        return !(tile.getBlockType() instanceof BlockProgrammableHalfConsole||tile.getBlockType() instanceof BlockDiagonalHalfConsole)
+        return !(tile.getBlockType() instanceof BlockDisplayArm||tile.getBlockType() instanceof BlockProgrammableHalfConsole||tile.getBlockType() instanceof BlockDiagonalHalfConsole)
             &&!(tile.isSmallInput()&&tile.getBlockType() instanceof BlockProgrammableFullInput);
     }
     public static boolean sameShape(TileEntityAnimatedScreenSelector a,TileEntityAnimatedScreenSelector b){return a.isShallowDiagonalScreen()==b.isShallowDiagonalScreen()&&a.isCeilingMounted()==b.isCeilingMounted()&&a.isSmallInput()==b.isSmallInput()&&a.getCeilingPosition(-1)==b.getCeilingPosition(-1)&&a.getWallPosition(-1)==b.getWallPosition(-1);}

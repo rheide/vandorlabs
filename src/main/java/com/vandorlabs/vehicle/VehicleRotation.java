@@ -176,6 +176,16 @@ public final class VehicleRotation {
                 BuildingBlockCompat.rotateTile(before.state,data,rotation);VehiclePaintings.rotate(data,width,depth,turns);
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
+                    // Display pose is relative to FACING, which state() rotates below. Only
+                    // the independently clicked support face needs a private-data rotation.
+                    if(before.state.getBlock() instanceof BlockDisplayArm && data.hasKey(TileEntityDisplayArm.SETTINGS,10)){
+                        NBTTagCompound arm=data.getCompoundTag(TileEntityDisplayArm.SETTINGS);
+                        if(arm.hasKey("Mount",1)){
+                            int mount=arm.getByte("Mount");
+                            if(mount<0||mount>=EnumFacing.values().length)throw new IllegalArgumentException("Invalid display arm mount in moving snapshot");
+                            arm.setByte("Mount",(byte)rotation.rotate(EnumFacing.getFront(mount)).getIndex());
+                        }
+                    }
                     if(before.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)com.vandorlabs.coupler.CouplerFrameData.yaw(before.state,data,rotation);
                     if(before.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock||before.state.getBlock() instanceof com.vandorlabs.blocks.BlockBattery&&data.hasKey(com.vandorlabs.ports.ResourcePortData.FACES))com.vandorlabs.ports.ResourcePortData.rotate(data,rotation);
                     if(looseFoot==null&&(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track")))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);

@@ -55,6 +55,9 @@ case "${1:-}" in
         elif [ "$TARGET" = mounted-control-dialog ]; then
             PREFIX=mounted_control_dialog_
             export VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = display-arm ]; then
+            PREFIX=display-arm-
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.displayArmChecksOnly=true"
         elif [ "$TARGET" = control-latch-levels ]; then
             PREFIX=control_latch_
             export VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY=true
@@ -693,6 +696,11 @@ if [ "$MODE" = focus ]; then
         grep -q "mounted-control-dialog legacy PASS" "$RUN_OUT/client.log"
         grep -q "power-lever-size-dialog PASS" "$RUN_OUT/client.log"
         echo "Mounted control dialog passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = display-arm ]; then
+        grep -q "display-arm PASS" "$RUN_OUT/client.log"
+        echo "Display arm placement, dialog and rendering passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = control-latch-levels ]; then

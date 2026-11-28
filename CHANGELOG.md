@@ -2,6 +2,7 @@
 
 ## 3.1.0 (in development)
 
+- Add the Forge Programmable Display Arm: one block with full/half-height screens, an optional input deck, a plate attached to any clicked block face, and independent screen direction, position, yaw, tilt and roll. Preserve configuration in mined items and keep displaced components selectable. See [the guide](docs/display-arm.md).
 - Build Rocket Thrusters, Ion Drives, Plasma Vents, Impulse Engines, Antigravity Plates, Repulsor Arrays and Vertical Hover Thrusters in the Forge Enclosed Gantry, alongside the arms and landing gear. Their crafting-table recipes are removed. Existing blocks and items are unchanged.
 - Power a carried Survey Dish or Sentinel Array from the Battery Modules in a Forge vehicle's Module Rack in Taxi, Hover and Flight, including high cruise, without cabling the observer. Wired RF to the observer's Power Port is used first. The modules keep their charge through saving, parking and recapture.
 - Double Maxwell Drive thrust on Forge and NeoForge: each thrust unit lifts 1,024 effective weight units at takeoff instead of 512, so one 3 × 3 × 4 drive lifts a 1,000-unit craft. Altitude ceilings and speed reserves follow the new limit.
